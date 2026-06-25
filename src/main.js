@@ -2,9 +2,12 @@ import * as THREE from 'three';
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { arrowPaths } from "./arrows/arrowData.js";
+import { arrowFieldSettings } from "./arrows/arrowFieldSettings.js";
 import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
 import { createArrow, setArrowReveal } from "./arrows/createArrow.js";
 import { createArrowRenderPieces } from "./arrows/createArrowRenderPieces.js";
+import { createDebugControls } from "./debug/createDebugControls.js";
+import { createArrowNameLabel } from './debug/createArrowNameLabel.js';
 
 const scene = new THREE.Scene();
 
@@ -45,13 +48,9 @@ const arrowMaterial = new THREE.MeshStandardMaterial({
 
 const arrows = arrowPaths.map((arrowPath) => {
     const segments = createArrowPathSegments(arrowPath);
-    const pieces = createArrowRenderPieces(segments, {
-        cornerRadius: 0.35,
-        cornerSteps: 14,
-        cornerOverlap: 0.04,
-    });
-
-    const arrow = createArrow(pieces, arrowMaterial);
+    const label = createArrowNameLabel(arrowPath.name, segments[0]);
+    const pieces = createArrowRenderPieces(segments, arrowFieldSettings);
+    const arrow = createArrow(pieces, arrowMaterial, arrowFieldSettings);
 
     arrow.userData.name = arrowPath.name;
     arrow.userData.timing = {
@@ -60,6 +59,7 @@ const arrows = arrowPaths.map((arrowPath) => {
     };
 
     scene.add(arrow);
+    scene.add(label);
     setArrowReveal(arrow, 0);
 
     return arrow;
@@ -81,22 +81,38 @@ const timer = new THREE.Timer();
 function animate() {
     timer.update();
 
-    const elapsedTime = timer.getElapsed();
+    const deltaTime = timer.getDelta();
+
+    if (debugControls.state.isPlaying) {
+        debugControls.state.currentTime += deltaTime * debugControls.state.speed;
+
+        if (debugControls.state.isLooping) {
+            debugControls.state.currentTime %= debugControls.state.timelineDuration;
+        } else {
+            debugControls.state.currentTime = THREE.MathUtils.clamp(
+                debugControls.state.currentTime,
+                0,
+                debugControls.state.timelineDuration
+            );
+        }
+
+        debugControls.updateProgressInput();
+    }
 
     arrows.forEach((arrow) => {
         const delay = arrow.userData.timing.delay;
         const duration = arrow.userData.timing.duration;
-        
+
         const revealProgress = THREE.MathUtils.clamp(
-            (elapsedTime - delay) / duration,
+            (debugControls.state.currentTime - delay) / duration,
             0, 1
         );
-        
+
         setArrowReveal(arrow, revealProgress);
     });
 
     controls.update();
-    
+
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
 }
@@ -110,5 +126,15 @@ function handleResize() {
 }
 
 window.addEventListener('resize', handleResize);
+
+//debug controls
+const debugControls = createDebugControls({
+    timelineDuration: 8,
+    speed: 1,
+    isPlaying: true,
+    isLooping: false,
+});
+
+
 
 animate();

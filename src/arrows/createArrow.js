@@ -2,51 +2,39 @@ import * as THREE from 'three';
 
 const worldUp = new THREE.Vector3(0, 1, 0);
 
-const defaultConfig = {
-    bodyWidth: 0.4,
-    bodyDepth: 0.1,
-    headLength: 0.8,
-    headWidth: 0.9,
-    cornerRadius: 0.35
-};
-
-export function createArrow(segments, material, config = {}) {
-    const settings = {
-        ...defaultConfig,
-        ...config
-    };
+export function createArrow(pieces, material, settings) {
 
     const group = new THREE.Group();
-    group.userData.revealSegments = [];
+    group.userData.revealPieces = [];
 
-    segments.forEach((pathSegment) => {
-        const segment = createStraightSegment(
-            pathSegment.startPoint,
-            pathSegment.endPoint,
-            pathSegment.frame,
+    pieces.forEach((piece) => {
+        const pieceGroup = createStraightPiece(
+            piece.startPoint,
+            piece.endPoint,
+            piece.frame,
             material,
             settings
         );
 
-        segment.userData.revealStartPoint = pathSegment.revealStartPoint
-            ? pathSegment.revealStartPoint.clone()
-            : pathSegment.startPoint.clone();
+        pieceGroup.userData.revealStartPoint = piece.revealStartPoint
+            ? piece.revealStartPoint.clone()
+            : piece.startPoint.clone();
 
-        segment.userData.revealEndPoint = pathSegment.revealEndPoint
-            ? pathSegment.revealEndPoint.clone()
-            : pathSegment.endPoint.clone();
+        pieceGroup.userData.revealEndPoint = piece.revealEndPoint
+            ? piece.revealEndPoint.clone()
+            : piece.endPoint.clone();
 
-        segment.userData.revealLength = pathSegment.revealLength
-            ?? segment.userData.segmentLength;
+        pieceGroup.userData.revealLength = piece.revealLength
+            ?? pieceGroup.userData.pieceLength;
 
-        group.add(segment);
-        group.userData.revealSegments.push(segment);
+        group.add(pieceGroup);
+        group.userData.revealPieces.push(pieceGroup);
     });
     
-    const finalSegment = segments[segments.length - 1];
+    const finalPiece = pieces[pieces.length - 1];
     const head = createArrowHead(
-        finalSegment.endPoint,
-        finalSegment.frame,
+        finalPiece.endPoint,
+        finalPiece.frame,
         material,
         settings
     );
@@ -60,7 +48,7 @@ export function createArrow(segments, material, config = {}) {
     return group;
 }
 
-function createStraightSegment(startPoint, endPoint, frame, material, settings) {
+function createStraightPiece(startPoint, endPoint, frame, material, settings) {
     const direction = endPoint.clone().sub(startPoint);
     const length = direction.length();
 
@@ -87,7 +75,7 @@ function createStraightSegment(startPoint, endPoint, frame, material, settings) 
     group.add(mesh);
 
     group.userData.revealMesh = mesh;
-    group.userData.segmentLength = length;
+    group.userData.pieceLength = length;
     group.userData.startPoint = startPoint.clone();
     group.userData.endPoint = endPoint.clone();
     group.userData.frame = frame;
@@ -170,49 +158,49 @@ function createArrowHeadGeometry(settings) {
 
 export function setArrowReveal(arrow, progress) {
     const clampedProgress = THREE.MathUtils.clamp(progress, 0, 1);
-    const revealSegments = arrow.userData.revealSegments || [];
+    const revealPieces = arrow.userData.revealPieces || [];
 
-    if (revealSegments.length === 0) {
+    if (revealPieces.length === 0) {
         return;
     }
 
-    const totalLength = revealSegments.reduce((sum, segment) => {
-        return sum + segment.userData.revealLength;
+    const totalLength = revealPieces.reduce((sum, piece) => {
+        return sum + piece.userData.revealLength;
     }, 0);
 
     const visibleLength = totalLength * clampedProgress;
 
     let consumedLength = 0;
-    let activeSegment = null;
-    let activeSegmentProgress = 0;
+    let activePiece = null;
+    let activePieceProgress = 0;
 
-    revealSegments.forEach((segment) => {
-        const segmentLength = segment.userData.revealLength;
-        const segmentStart = consumedLength;
-        const segmentEnd = consumedLength + segmentLength;
+    revealPieces.forEach((piece) => {
+        const pieceLength = piece.userData.revealLength;
+        const pieceStart = consumedLength;
+        const pieceEnd = consumedLength + pieceLength;
 
-        let segmentProgress = 0;
+        let pieceProgress = 0;
 
-        if (visibleLength >= segmentEnd) {
-            segmentProgress = 1;
-        } else if (visibleLength > segmentStart) {
-            segmentProgress = (visibleLength - segmentStart) / segmentLength;
+        if (visibleLength >= pieceEnd) {
+            pieceProgress = 1;
+        } else if (visibleLength > pieceStart) {
+            pieceProgress = (visibleLength - pieceStart) / pieceLength;
         }
 
-        if (segmentProgress > 0 && segmentProgress < 1) {
-            activeSegment = segment;
-            activeSegmentProgress = segmentProgress;
+        if (pieceProgress > 0 && pieceProgress < 1) {
+            activePiece = piece;
+            activePieceProgress = pieceProgress;
         }
 
-        if (segmentProgress === 1) {
-            activeSegment = segment;
-            activeSegmentProgress = 1;
+        if (pieceProgress === 1) {
+            activePiece = piece;
+            activePieceProgress = 1;
         }
 
-        segment.scale.x = segmentProgress;
-        segment.visible = segmentProgress > 0;
+        piece.scale.x = pieceProgress;
+        piece.visible = pieceProgress > 0;
 
-        consumedLength += segmentLength;
+        consumedLength += pieceLength;
     });
 
     const head = arrow.userData.head;
@@ -221,15 +209,15 @@ export function setArrowReveal(arrow, progress) {
         return;
     }
 
-    if (!activeSegment || clampedProgress <= 0) {
+    if (!activePiece || clampedProgress <= 0) {
         head.visible = false;
         return;
     }
 
-    const segmentLength = activeSegment.userData.revealLength;
-    const frame = activeSegment.userData.frame;
-    const revealStartPoint = activeSegment.userData.revealStartPoint;
-    const revealEndPoint = activeSegment.userData.revealEndPoint;
+    const pieceLength = activePiece.userData.revealLength;
+    const frame = activePiece.userData.frame;
+    const revealStartPoint = activePiece.userData.revealStartPoint;
+    const revealEndPoint = activePiece.userData.revealEndPoint;
 
     const revealDirection = revealEndPoint.clone()
         .sub(revealStartPoint)
@@ -239,7 +227,7 @@ export function setArrowReveal(arrow, progress) {
 
     head.position.copy(
         revealStartPoint.clone().add(
-            revealDirection.multiplyScalar(segmentLength * activeSegmentProgress)
+            revealDirection.multiplyScalar(pieceLength * activePieceProgress)
         )
     );
 
