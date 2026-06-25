@@ -241,3 +241,48 @@ export function setArrowReveal(arrow, progress) {
 
     head.quaternion.setFromRotationMatrix(matrix);
 }
+
+export function updateArrowReveal(arrow, currentTime) {
+    const delay = arrow.userData.timing.delay;
+    const duration = arrow.userData.timing.duration;
+
+    const revealProgress = THREE.MathUtils.clamp(
+        (currentTime - delay) / duration,
+        0, 1
+    );
+
+    setArrowReveal(arrow, revealProgress);
+
+    const headMesh = arrow.userData.head;
+    const headTiming = arrow.userData.headTiming;
+
+    if (!headMesh || headTiming?.hideAt === null) {
+        return;
+    }
+
+    if (currentTime < headTiming.hideAt) {
+        headMesh.scale.set(1, 1, 1);
+    }
+
+    const hideProgress = THREE.MathUtils.clamp(
+        (currentTime - headTiming.hideAt) / headTiming.hideDuration,
+        0, 1
+    );
+
+    const easedHideProgress = THREE.MathUtils.smoothstep(
+        hideProgress,
+        0, 1
+    );
+
+    const headScale = 1 - easedHideProgress;
+
+    headMesh.scale.set(
+        headScale,
+        headScale,
+        headScale
+    );
+
+    if (hideProgress >= 1) {
+        headMesh.visible = false;
+    }
+}

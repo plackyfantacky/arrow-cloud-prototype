@@ -4,10 +4,12 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { arrowPaths } from "./arrows/arrowData.js";
 import { arrowFieldSettings } from "./arrows/arrowFieldSettings.js";
 import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
-import { createArrow, setArrowReveal } from "./arrows/createArrow.js";
+import { createArrow, setArrowReveal, updateArrowReveal } from "./arrows/createArrow.js";
 import { createArrowRenderPieces } from "./arrows/createArrowRenderPieces.js";
 import { createDebugControls } from "./debug/createDebugControls.js";
 import { createArrowNameLabel } from './debug/createArrowNameLabel.js';
+import { createArrowPathComponents, setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
+import { createPathComponentMesh } from "./arrows/pathComponents/index.js";
 
 const scene = new THREE.Scene();
 
@@ -43,20 +45,36 @@ const arrowMaterial = new THREE.MeshStandardMaterial({
     roughness: 0.45,
     metalness: 0.15,
     flatShading: true,
-    side: THREE.FrontSide,
+    side: THREE.FrontSide
 });
+
+const pathComponentMeshes = [];
 
 const arrows = arrowPaths.map((arrowPath) => {
     const segments = createArrowPathSegments(arrowPath);
     const label = createArrowNameLabel(arrowPath.name, segments[0]);
     const pieces = createArrowRenderPieces(segments, arrowFieldSettings);
     const arrow = createArrow(pieces, arrowMaterial, arrowFieldSettings);
+    const components = createArrowPathComponents(arrowPath, segments);
 
     arrow.userData.name = arrowPath.name;
+    
     arrow.userData.timing = {
         delay: arrowPath.timing?.delay || 0,
         duration: arrowPath.timing?.duration || 5,
     };
+
+    arrow.userData.headTiming = {
+        hideAt: arrowPath.head?.hideAt ?? null,
+        hideDuration: arrowPath.head?.hideDuration ?? 0.25,
+    };
+
+    components.forEach((component) => {
+        const componentMesh = createPathComponentMesh(component);
+        
+        scene.add(componentMesh);
+        pathComponentMeshes.push(componentMesh);
+    });
 
     scene.add(arrow);
     scene.add(label);
@@ -82,6 +100,7 @@ function animate() {
     timer.update();
 
     const deltaTime = timer.getDelta();
+    const currentTime = debugControls.state.currentTime;
 
     if (debugControls.state.isPlaying) {
         debugControls.state.currentTime += deltaTime * debugControls.state.speed;
@@ -100,15 +119,19 @@ function animate() {
     }
 
     arrows.forEach((arrow) => {
-        const delay = arrow.userData.timing.delay;
-        const duration = arrow.userData.timing.duration;
+        updateArrowReveal(arrow, currentTime);
+    });
+
+    pathComponentMeshes.forEach((componentMesh) => {
+        const delay = componentMesh.userData.timing.delay;
+        const duration = componentMesh.userData.timing.duration;
 
         const revealProgress = THREE.MathUtils.clamp(
-            (debugControls.state.currentTime - delay) / duration,
+            (currentTime - delay) / duration,
             0, 1
         );
 
-        setArrowReveal(arrow, revealProgress);
+        setPathComponentReveal(componentMesh, revealProgress);
     });
 
     controls.update();
@@ -129,7 +152,7 @@ window.addEventListener('resize', handleResize);
 
 //debug controls
 const debugControls = createDebugControls({
-    timelineDuration: 8,
+    timelineDuration: 3,
     speed: 1,
     isPlaying: true,
     isLooping: false,
