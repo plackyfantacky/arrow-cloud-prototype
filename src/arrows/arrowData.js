@@ -1,3 +1,11 @@
+export const animationSettings = {
+    timelineDuration: 4,
+    speed: 1,
+    isPlaying: true,
+    isLooping: false,
+    debugMode: true
+}
+
 export const arrowPaths = [
     {
         name: 'left-1',
@@ -78,12 +86,13 @@ export const arrowPaths = [
             ['bendDown', 1],
             ['turnRight', 2],
             ['bendDown', 1],
-            
-            ['bendUp', 3],
+            ['bendDown', 4],
+            ['bendUp', 2],            
+            ['bendUp', 6],
         ],
         timing: {
             delay: 0,
-            duration: 2,
+            duration: 4,
         },
         components: [
             {
@@ -93,13 +102,9 @@ export const arrowPaths = [
                     segmentIndex: 2,
                     align: 'centre',
                     anchor: 'centre',
-                    offset: {
-                        side: -0.8
-                    }
-
                 },
                 size: {
-                    width: 2,
+                    width: 1.5,
                     height: 1.2,
                     depth: 0.12
                 },
@@ -107,7 +112,56 @@ export const arrowPaths = [
                     delay: 0.5,
                     duration: 0.5
                 },
-                frameThickness: 0.12
+                frameThickness: 0.12,
+                face: {
+                    color: 0xffffff,
+                    image: {
+                        src: '/images/request-service_hires.png',
+                        fit: 'contain',
+                        rotationDegrees: -90,
+                        padding: 0.12,
+                        aspectRatio: 1,
+                        scale: 1,
+                        offset: {
+                            x: 0,
+                            y: 0
+                        }
+                    }
+                }
+            },
+            {
+                type: 'panel',
+                name: 'test-screen-3',
+                placement: {
+                    segmentIndex: 10,
+                    align: 'centre',
+                    anchor: 'centre',
+                },
+                size: {
+                    width: 1.5,
+                    height: 1.2,
+                    depth: 0.12
+                },
+                timing: {
+                    delay: 3.4,
+                    duration: 0.5
+                },
+                frameThickness: 0.12,
+                face: {
+                    color: 0xffffff,
+                    image: {
+                        src: '/images/request-service_hires.png',
+                        fit: 'contain',
+                        rotationDegrees: 0,
+                        padding: 0.12,
+                        aspectRatio: 1,
+                        scale: 1,
+                        offset: {
+                            x: 0,
+                            y: 0
+                        }
+                    }
+                }
             }
         ]
     },

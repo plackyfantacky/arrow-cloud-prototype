@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-import { arrowPaths } from "./arrows/arrowData.js";
+import { animationSettings, arrowPaths } from "./arrows/arrowData.js";
 import { arrowFieldSettings } from "./arrows/arrowFieldSettings.js";
 import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
 import { createArrow, setArrowReveal, updateArrowReveal } from "./arrows/createArrow.js";
@@ -29,6 +29,10 @@ const renderer = new THREE.WebGLRenderer({
     antialias: true
 });
 
+const debugControls = animationSettings.debugMode
+    ? createDebugControls(animationSettings)
+    : null;
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -52,7 +56,6 @@ const pathComponentMeshes = [];
 
 const arrows = arrowPaths.map((arrowPath) => {
     const segments = createArrowPathSegments(arrowPath);
-    const label = createArrowNameLabel(arrowPath.name, segments[0]);
     const pieces = createArrowRenderPieces(segments, arrowFieldSettings);
     const arrow = createArrow(pieces, arrowMaterial, arrowFieldSettings);
     const components = createArrowPathComponents(arrowPath, segments);
@@ -77,7 +80,12 @@ const arrows = arrowPaths.map((arrowPath) => {
     });
 
     scene.add(arrow);
-    scene.add(label);
+
+    if (animationSettings.debugMode) {
+        const label = createArrowNameLabel(arrowPath.name, segments[0]);
+        scene.add(label);        
+    }
+
     setArrowReveal(arrow, 0);
 
     return arrow;
@@ -100,22 +108,30 @@ function animate() {
     timer.update();
 
     const deltaTime = timer.getDelta();
-    const currentTime = debugControls.state.currentTime;
+    const rawCurrentTime = debugControls
+        ? debugControls.state.currentTime
+        : timer.getElapsed() * animationSettings.speed;
 
-    if (debugControls.state.isPlaying) {
-        debugControls.state.currentTime += deltaTime * debugControls.state.speed;
+    const currentTime = !debugControls && animationSettings.isLooping
+        ? rawCurrentTime % animationSettings.timelineDuration
+        : rawCurrentTime
 
-        if (debugControls.state.isLooping) {
-            debugControls.state.currentTime %= debugControls.state.timelineDuration;
-        } else {
-            debugControls.state.currentTime = THREE.MathUtils.clamp(
-                debugControls.state.currentTime,
-                0,
-                debugControls.state.timelineDuration
-            );
+    if (debugControls) {
+        if (debugControls.state.isPlaying) {
+            debugControls.state.currentTime += deltaTime * debugControls.state.speed;
+    
+            if (debugControls.state.isLooping) {
+                debugControls.state.currentTime %= debugControls.state.timelineDuration;
+            } else {
+                debugControls.state.currentTime = THREE.MathUtils.clamp(
+                    debugControls.state.currentTime,
+                    0,
+                    debugControls.state.timelineDuration
+                );
+            }
+    
+            debugControls.updateProgressInput();
         }
-
-        debugControls.updateProgressInput();
     }
 
     arrows.forEach((arrow) => {
@@ -149,15 +165,5 @@ function handleResize() {
 }
 
 window.addEventListener('resize', handleResize);
-
-//debug controls
-const debugControls = createDebugControls({
-    timelineDuration: 3,
-    speed: 1,
-    isPlaying: true,
-    isLooping: false,
-});
-
-
 
 animate();
