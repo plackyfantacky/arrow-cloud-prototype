@@ -3,7 +3,7 @@ export const animationSettings = {
     speed: 1,
     isPlaying: true,
     isLooping: false,
-    debugMode: true
+    debugMode: false
 }
 
 export const arrowPaths = [

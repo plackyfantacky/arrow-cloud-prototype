@@ -99,8 +99,10 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
 directionalLight.position.set(4, 6, 8);
 scene.add(directionalLight);
 
-const gridHelper = new THREE.GridHelper(14, 14);
-scene.add(gridHelper);
+if (animationSettings.debugMode) {
+    const gridHelper = new THREE.GridHelper(14, 14);
+    scene.add(gridHelper);
+}
 
 const timer = new THREE.Timer();
 
