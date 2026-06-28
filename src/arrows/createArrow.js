@@ -3,18 +3,19 @@ import * as THREE from 'three';
 const worldUp = new THREE.Vector3(0, 1, 0);
 
 export function createArrow(pieces, material, settings) {
-
     const group = new THREE.Group();
     group.userData.revealPieces = [];
 
     pieces.forEach((piece) => {
-        const pieceGroup = createStraightPiece(
-            piece.startPoint,
-            piece.endPoint,
-            piece.frame,
-            material,
-            settings
-        );
+        const pieceGroup = piece.type === 'corner'
+            ? createCornerPiece(piece, material, settings)
+            : createStraightPiece(
+                piece.startPoint,
+                piece.endPoint,
+                piece.frame,
+                material,
+                settings
+            );
 
         pieceGroup.userData.revealStartPoint = piece.revealStartPoint
             ? piece.revealStartPoint.clone()
@@ -32,9 +33,11 @@ export function createArrow(pieces, material, settings) {
     });
     
     const finalPiece = pieces[pieces.length - 1];
+    const finalFrame = finalPiece.frame || finalPiece.endFrame || finalPiece.startFrame;
+
     const head = createArrowHead(
         finalPiece.endPoint,
-        finalPiece.frame,
+        finalFrame,
         material,
         settings
     );
@@ -47,6 +50,8 @@ export function createArrow(pieces, material, settings) {
     
     return group;
 }
+
+// straight pieces
 
 function createStraightPiece(startPoint, endPoint, frame, material, settings) {
     const direction = endPoint.clone().sub(startPoint);
@@ -82,6 +87,195 @@ function createStraightPiece(startPoint, endPoint, frame, material, settings) {
 
     return group;
 }
+
+//corners
+
+function createCornerPiece(piece, material, settings) {
+    const geometry = createCornerGeometry(piece, settings);
+    const mesh = new THREE.Mesh(geometry, material);
+
+    const revealSteps = settings.cornerSteps || 16;
+    const indicesPerStep = 24;
+
+    mesh.visible = false;
+
+    mesh.userData.pieceLength = piece.revealLength;
+    mesh.userData.frame = piece.startFrame;
+    mesh.userData.revealMode = 'drawRange';
+
+    mesh.userData.setRevealProgress = (progress) => {
+        const clampedProgress = THREE.MathUtils.clamp(progress, 0, 1);
+        const visibleSteps = Math.ceil(clampedProgress * revealSteps);
+
+        geometry.setDrawRange(
+            0,
+            visibleSteps * indicesPerStep
+        );
+    };
+
+    mesh.userData.getRevealState = (progress) => {
+        return getCornerRevealState(piece, progress);
+    };
+
+    mesh.userData.setRevealProgress(0);
+
+    return mesh;
+}
+
+function createCornerGeometry(piece, settings) {
+    const divisions = settings.cornerSteps || 16;
+
+    const halfWidth = settings.bodyWidth * 0.5;
+    const halfDepth = settings.bodyDepth * 0.5;
+
+    const vertices = [];
+    const indices = [];
+
+    for (let stepIndex = 0; stepIndex <= divisions; stepIndex++) {
+        const progress = stepIndex / divisions;
+        
+        const position = getQuadraticBezierPoint(
+            piece.startPoint,
+            piece.jointPoint,
+            piece.endPoint,
+            progress
+        );
+
+        const frame = getInterpolatedFrame(piece, progress);
+
+        const ringVertices = [
+            position.clone()
+                .add(frame.normal.clone().multiplyScalar(halfDepth))
+                .add(frame.side.clone().multiplyScalar(halfWidth)),
+
+            position.clone()
+                .add(frame.normal.clone().multiplyScalar(halfDepth))
+                .sub(frame.side.clone().multiplyScalar(halfWidth)),
+
+            position.clone()
+                .sub(frame.normal.clone().multiplyScalar(halfDepth))
+                .sub(frame.side.clone().multiplyScalar(halfWidth)),
+
+            position.clone()
+                .sub(frame.normal.clone().multiplyScalar(halfDepth))
+                .add(frame.side.clone().multiplyScalar(halfWidth)),
+        ];
+
+        ringVertices.forEach((vertex) => {
+            vertices.push(vertex.x, vertex.y, vertex.z);
+        });
+    }
+
+    for (let stepIndex = 0; stepIndex < divisions; stepIndex++) {
+        const current = stepIndex * 4;
+        const next = (stepIndex + 1) * 4;
+
+        indices.push(
+            current, next + 1, current + 1,
+            current, next, next + 1,
+
+            current + 1, next + 2, current + 2,
+            current + 1, next + 1, next + 2,
+
+            current + 2, next + 3, current + 3,
+            current + 2, next + 2, next + 3,
+
+            current + 3, next, current,
+            current + 3, next + 3, next
+        );
+    }
+
+    const geometry = new THREE.BufferGeometry();
+
+    geometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(vertices, 3)
+    );
+
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+
+    return geometry;
+}
+
+function getQuadraticBezierPoint(startPoint, controlPoint, endPoint, progress) {
+    const inverseProgress = 1 - progress;
+
+    return startPoint.clone()
+        .multiplyScalar(inverseProgress * inverseProgress)
+        .add(
+            controlPoint.clone().multiplyScalar(
+                2 * inverseProgress * progress
+            )
+        )
+        .add(
+            endPoint.clone().multiplyScalar(progress * progress)
+        );
+}
+
+function getQuadraticBezierTangent(startPoint, controlPoint, endPoint, progress) {
+    const inverseProgress = 1 - progress;
+
+    return controlPoint.clone()
+        .sub(startPoint)
+        .multiplyScalar(2 * inverseProgress)
+        .add(
+            endPoint.clone()
+                .sub(controlPoint)
+                .multiplyScalar(2 * progress)
+        )
+        .normalize()
+}
+
+function getInterpolatedFrame(piece, progress) {
+    const forward = getQuadraticBezierTangent(
+        piece.startPoint,
+        piece.jointPoint,
+        piece.endPoint,
+        progress
+    );
+
+    const normalReference = piece.startFrame.normal.clone()
+        .lerp(piece.endFrame.normal, progress)
+        .normalize();
+
+    let side = forward.clone()
+        .cross(normalReference);
+
+    if (side.lengthSq() < 0.000001) {
+        side = piece.startFrame.side.clone()
+            .lerp(piece.endFrame.side, progress)
+            .normalize();
+    } else {
+        side.normalize();
+    }
+
+    const normal = side.clone()
+        .cross(forward)
+        .normalize();
+
+    return {
+        forward,
+        normal,
+        side
+    }
+}
+
+function getCornerRevealState(piece, progress) {
+    const clampedProgress = THREE.MathUtils.clamp(progress, 0, 1);
+    
+    return {
+        position: getQuadraticBezierPoint(
+            piece.startPoint,
+            piece.jointPoint,
+            piece.endPoint,
+            clampedProgress
+        ),
+        frame: getInterpolatedFrame(piece, clampedProgress),
+    };
+}
+
+//arrowheads
 
 function createArrowHead(endPoint, frame, material, settings) {
     const geometry = createArrowHeadGeometry(settings);
@@ -196,9 +390,14 @@ export function setArrowReveal(arrow, progress) {
             activePiece = piece;
             activePieceProgress = 1;
         }
-
-        piece.scale.x = pieceProgress;
-        piece.visible = pieceProgress > 0;
+        
+        if (piece.userData.revealMode === 'drawRange') {
+            piece.userData.setRevealProgress(pieceProgress);
+            piece.visible = pieceProgress > 0;
+        } else {
+            piece.scale.x = pieceProgress;
+            piece.visible = pieceProgress > 0;
+        }
 
         consumedLength += pieceLength;
     });
@@ -214,22 +413,34 @@ export function setArrowReveal(arrow, progress) {
         return;
     }
 
-    const pieceLength = activePiece.userData.revealLength;
-    const frame = activePiece.userData.frame;
-    const revealStartPoint = activePiece.userData.revealStartPoint;
-    const revealEndPoint = activePiece.userData.revealEndPoint;
+    let headPosition;
+    let frame;
 
-    const revealDirection = revealEndPoint.clone()
-        .sub(revealStartPoint)
-        .normalize();
+    if (activePiece.userData.getRevealState) {
+        const revealState = activePiece.userData.getRevealState(
+            activePieceProgress
+        );
+
+        headPosition = revealState.position;
+        frame = revealState.frame;
+    } else {
+        const pieceLength = activePiece.userData.revealLength;
+        const revealStartPoint = activePiece.userData.revealStartPoint;
+        const revealEndPoint = activePiece.userData.revealEndPoint;
+
+        const revealDirection = revealEndPoint.clone()
+            .sub(revealStartPoint)
+            .normalize();
+        
+        headPosition = revealStartPoint.clone().add(
+            revealDirection.multiplyScalar(pieceLength * activePieceProgress)
+        );
+
+        frame = activePiece.userData.frame;        
+    }
 
     head.visible = true;
-
-    head.position.copy(
-        revealStartPoint.clone().add(
-            revealDirection.multiplyScalar(pieceLength * activePieceProgress)
-        )
-    );
+    head.position.copy(headPosition);
 
     const matrix = new THREE.Matrix4();
 
@@ -262,6 +473,7 @@ export function updateArrowReveal(arrow, currentTime) {
 
     if (currentTime < headTiming.hideAt) {
         headMesh.scale.set(1, 1, 1);
+        return;
     }
 
     const hideProgress = THREE.MathUtils.clamp(
