@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-import { animationSettings, arrowPaths } from "./arrows/arrowData.js";
+import { animationSettings, arrowPaths, cameraTrack } from "./arrows/arrowData.js";
 import { arrowFieldSettings } from "./arrows/arrowFieldSettings.js";
 import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
 import { createArrow, setArrowReveal, updateArrowReveal } from "./arrows/createArrow.js";
@@ -10,6 +10,12 @@ import { createDebugControls } from "./debug/createDebugControls.js";
 import { createArrowNameLabel } from './debug/createArrowNameLabel.js';
 import { createArrowPathComponents, setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
 import { createPathComponentMesh } from "./arrows/pathComponents/index.js";
+import { positionArrowPathForViewport } from "./positionArrowPathForViewport.js";
+import { getStageSize } from "./stage.js";
+import { getResponsiveCameraDistance, getCameraTrackState } from "./camera.js";
+
+const mountElement = document.querySelector('[data-arrow-cloud]') || document.body;
+const stageSize = getStageSize(mountElement);
 
 const scene = new THREE.Scene();
 
@@ -17,7 +23,7 @@ scene.background = new THREE.Color(0xFFFFFF);
 
 const camera = new THREE.PerspectiveCamera(
     45,
-    window.innerWidth / window.innerHeight,
+    stageSize.width / stageSize.height,
     0.1,
     100
 );
@@ -33,10 +39,10 @@ const debugControls = animationSettings.debugMode
     ? createDebugControls(animationSettings)
     : null;
 
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(stageSize.width, stageSize.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-document.body.appendChild(renderer.domElement);
+mountElement.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -55,21 +61,27 @@ const arrowMaterial = new THREE.MeshStandardMaterial({
 const pathComponentMeshes = [];
 
 const arrows = arrowPaths.map((arrowPath) => {
-    const segments = createArrowPathSegments(arrowPath);
+    const positionedArrowPath = positionArrowPathForViewport(
+        arrowPath,
+        camera,
+        mountElement
+    );
+
+    const segments = createArrowPathSegments(positionedArrowPath);
     const pieces = createArrowRenderPieces(segments, arrowFieldSettings);
     const arrow = createArrow(pieces, arrowMaterial, arrowFieldSettings);
-    const components = createArrowPathComponents(arrowPath, segments);
+    const components = createArrowPathComponents(positionedArrowPath, segments);
 
-    arrow.userData.name = arrowPath.name;
+    arrow.userData.name = positionedArrowPath.name;
     
     arrow.userData.timing = {
-        delay: arrowPath.timing?.delay || 0,
-        duration: arrowPath.timing?.duration || 5,
+        delay: positionedArrowPath.timing?.delay || 0,
+        duration: positionedArrowPath.timing?.duration || 5,
     };
 
     arrow.userData.headTiming = {
-        hideAt: arrowPath.head?.hideAt ?? null,
-        hideDuration: arrowPath.head?.hideDuration ?? 0.25,
+        hideAt: positionedArrowPath.head?.hideAt ?? null,
+        hideDuration: positionedArrowPath.head?.hideDuration ?? 0.25,
     };
 
     components.forEach((component) => {
@@ -82,7 +94,7 @@ const arrows = arrowPaths.map((arrowPath) => {
     scene.add(arrow);
 
     if (animationSettings.debugMode) {
-        const label = createArrowNameLabel(arrowPath.name, segments[0]);
+        const label = createArrowNameLabel(positionedArrowPath.name, segments[0]);
         scene.add(label);        
     }
 
@@ -90,7 +102,6 @@ const arrows = arrowPaths.map((arrowPath) => {
 
     return arrow;
 });
-
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
 scene.add(ambientLight);
@@ -104,9 +115,39 @@ if (animationSettings.debugMode) {
     scene.add(gridHelper);
 }
 
+const cameraTarget = new THREE.Vector3();
+
+function updateCameraTrack(currentTime) {
+    const cameraTrackState = getCameraTrackState(cameraTrack, currentTime);
+
+    if (!cameraTrackState) {
+        return;
+    }
+
+    const responsiveDistance = getResponsiveCameraDistance(mountElement);
+    const desktopDistance = 12.2;
+    const distanceOffset = responsiveDistance - desktopDistance;
+
+    camera.position.set(
+        cameraTrackState.position.x,
+        cameraTrackState.position.y,
+        cameraTrackState.position.z + distanceOffset
+    );
+
+    cameraTarget.set(
+        cameraTrackState.target.x,
+        cameraTrackState.target.y,
+        cameraTrackState.target.z
+    );
+
+    camera.lookAt(cameraTarget);
+}
+
 const timer = new THREE.Timer();
 
 function animate() {
+    requestAnimationFrame(animate);
+
     timer.update();
 
     const deltaTime = timer.getDelta();
@@ -117,6 +158,12 @@ function animate() {
     const currentTime = !debugControls && animationSettings.isLooping
         ? rawCurrentTime % animationSettings.timelineDuration
         : rawCurrentTime
+    
+    const shouldUseCameraTrack = !animationSettings.debugMode;
+
+    if (shouldUseCameraTrack) {
+        updateCameraTrack(currentTime);
+    }
 
     if (debugControls) {
         if (debugControls.state.isPlaying) {
@@ -155,14 +202,16 @@ function animate() {
     controls.update();
 
     renderer.render(scene, camera);
-    requestAnimationFrame(animate);
+
 }
 
 function handleResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const stageSize = getStageSize(mountElement);
+
+    camera.aspect = stageSize.width / stageSize.height;
     camera.updateProjectionMatrix();
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(stageSize.width, stageSize.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 }
 
