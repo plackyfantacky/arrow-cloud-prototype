@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { setupPathComponentMesh } from "./setupPathComponentMesh.js";
+import { createPanelFallbackTexture } from "./createPanelFallbackTexture.js";
 
 function getContainedImageSize({
     availablePlaneX,
@@ -67,13 +68,11 @@ export function createPanelPathComponent(component) {
 
     faceGroup.add(backgroundMesh);
 
-    if (component.face?.image?.src) {
-        const textureLoader = new THREE.TextureLoader();
-        const texture = textureLoader.load(component.face.image.src);
+    if (component.face?.image || component.face?.fallbackImage !== false) {
+        const imageSettings = component.face?.image || {};
+        const fallbackTexture = createPanelFallbackTexture();
 
-        texture.colorSpace = THREE.SRGBColorSpace;
-
-        const imagePadding = component.face.image.padding ?? 0.08;
+        const imagePadding = imageSettings.padding ?? 0.08;
 
         const availablePlaneX = Math.max(
             0.01,
@@ -85,11 +84,11 @@ export function createPanelPathComponent(component) {
             faceWidth - imagePadding * 2
         );
 
-        const rotationDegrees = component.face.image.rotationDegrees ?? 0;
+        const rotationDegrees = imageSettings.rotationDegrees ?? 0;
         const normalisedRotation = Math.abs(rotationDegrees % 180);
         const isQuarterTurn = normalisedRotation === 90;
 
-        const imageAspectRatio = component.face.image.aspectRatio ?? 1;
+        const imageAspectRatio = imageSettings.aspectRatio ?? 1;
 
         const imageSize = getContainedImageSize({
             availablePlaneX: isQuarterTurn ? availablePlaneY : availablePlaneX,
@@ -97,7 +96,7 @@ export function createPanelPathComponent(component) {
             aspectRatio: imageAspectRatio,
         });
 
-        const imageScale = component.face.image.scale ?? 1;
+        const imageScale = imageSettings.scale ?? 1;
 
         const imageGeometry = new THREE.PlaneGeometry(
             imageSize.planeX * imageScale,
@@ -105,29 +104,47 @@ export function createPanelPathComponent(component) {
         );
 
         const imageMaterial = new THREE.MeshBasicMaterial({
-            map: texture,
+            map: fallbackTexture,
             transparent: true,
             alphaTest: 0.01,
             depthWrite: false,
             side: THREE.DoubleSide
         });
 
+        if (imageSettings.src) {
+            const textureLoader = new THREE.TextureLoader();
+
+            textureLoader.load(
+                imageSettings.src,
+                (loadedTexture) => {
+                    loadedTexture.colorSpace = THREE.SRGBColorSpace;
+
+                    imageMaterial.map = loadedTexture;
+                    imageMaterial.needsUpdate = true;
+                },
+                undefined,
+                () => {
+                    console.warn(`Could not load panel image: ${imageSettings.src}`);
+                }
+            );
+        }
+
         const imageMesh = new THREE.Mesh(
             imageGeometry,
             imageMaterial
         );
 
-        const imageOffset = component.face.image.offset || {};
+        const imageOffset = imageSettings.offset || {};
 
         imageMesh.position.x = imageOffset.x || 0;
         imageMesh.position.y = (depth * 0.5) + 0.008;
         imageMesh.position.z = imageOffset.y || 0; //yes I'm aware.
-        
+            
         imageMesh.rotation.x = -Math.PI * 0.5;
 
-        if (typeof component.face.image.rotationDegrees === 'number') {
+        if (typeof imageSettings.rotationDegrees === 'number') {
             imageMesh.rotation.z = THREE.MathUtils.degToRad(
-                component.face.image.rotationDegrees
+                imageSettings.rotationDegrees
             );
         }
 
