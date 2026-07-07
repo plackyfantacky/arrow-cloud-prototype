@@ -1,10 +1,33 @@
 export const animationSettings = {
-    timelineDuration: 4,
+    timelineDuration: 10,
     speed: 1,
     isPlaying: true,
     isLooping: false,
     debugMode: false
 }
+
+export const cameraTrack = [
+    // {
+    //     time: 0,
+    //     position: { x: 0, y: 5, z: 12 },
+    //     target: { x: 0, y: 0, z: 0 }
+    // },
+    // {
+    //     time: 4,
+    //     position: { x: -2, y: 4, z: 9 },
+    //     target: { x: 0, y: 0.5, z: 0 }
+    // },
+    {
+        time: 0,
+        position: { x: 2.5, y: 3.5, z: 8 },
+        target: { x: 0.5, y: 0.5, z: 0 }
+    },
+    {
+        time: 8,
+        position: { x: 1, y: 4, z: 10 },
+        target: { x: 0, y: 0, z: 0 }
+    }
+];
 
 export const arrowPaths = [
     {
@@ -26,8 +49,13 @@ export const arrowPaths = [
         ],
         timing: {
             delay: 0,
-            duration: 2,
-        }
+            duration: 8,
+        },
+        entry: {
+            side: 'left',
+            margin: 1.5,
+            straightUntil: -4.5
+        },
     },
     {
         name: 'left-2',
@@ -45,32 +73,17 @@ export const arrowPaths = [
         ],
         timing: {
             delay: 0,
-            duration: 2.5,
+            duration: 6.5,
         },
-        head: {
-            hideAt: 2.5,
-            hideDuration: 0.5,
+        entry: {
+            side: 'left',
+            margin: 1.5,
+            straightUntil: -4.5
         },
-        components: [
-            {
-                type: 'panel',
-                name: 'test-screen-1',
-                placement: {
-                    segmentIndex: 6,
-                    align: 'end',
-                    anchor: 'start'
-                },
-                size: {
-                    width: 2,
-                    height: 1.2,
-                    depth: 0.08
-                },
-                timing: {
-                    delay: 2.5,
-                    duration: 0.5
-                }
-            }
-        ]
+        // head: {
+        //     hideAt: 6.5,
+        //     hideDuration: 0.5,
+        // }
     },
     {
         name: 'right-1',
@@ -92,14 +105,19 @@ export const arrowPaths = [
         ],
         timing: {
             delay: 0,
-            duration: 4,
+            duration: 8,
+        },
+        entry: {
+            side: 'right',
+            margin: 1.5,
+            straightUntil: 4.5
         },
         components: [
             {
                 type: 'panel',
                 name: 'test-screen-2',
                 placement: {
-                    segmentIndex: 2,
+                    segmentIndex: 3,
                     align: 'centre',
                     anchor: 'centre',
                 },
@@ -109,50 +127,16 @@ export const arrowPaths = [
                     depth: 0.12
                 },
                 timing: {
-                    delay: 0.5,
+                    delay: 2.1,
                     duration: 0.5
                 },
                 frameThickness: 0.12,
                 face: {
-                    color: 0xffffff,
+                    color: 0xFF9D2A,
                     image: {
-                        src: '/images/request-service_hires.png',
+                        src: '/assets/logo-white-outline.svg',
                         fit: 'contain',
                         rotationDegrees: -90,
-                        padding: 0.12,
-                        aspectRatio: 1,
-                        scale: 1,
-                        offset: {
-                            x: 0,
-                            y: 0
-                        }
-                    }
-                }
-            },
-            {
-                type: 'panel',
-                name: 'test-screen-3',
-                placement: {
-                    segmentIndex: 10,
-                    align: 'centre',
-                    anchor: 'centre',
-                },
-                size: {
-                    width: 1.5,
-                    height: 1.2,
-                    depth: 0.12
-                },
-                timing: {
-                    delay: 3.4,
-                    duration: 0.5
-                },
-                frameThickness: 0.12,
-                face: {
-                    color: 0xffffff,
-                    image: {
-                        src: '/images/request-service_hires.png',
-                        fit: 'contain',
-                        rotationDegrees: 0,
                         padding: 0.12,
                         aspectRatio: 1,
                         scale: 1,
