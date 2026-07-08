@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { cloneFrame } from "./helpers.js";
 import { getDirectionVector } from "./directions.js";
 
 const quarterTurn = Math.PI / 2;
@@ -14,7 +15,25 @@ export function createArrowPathSegments(arrowPath) {
 
     frame.side = frame.forward.clone().cross(frame.normal).normalize();
 
-    arrowPath.moves.forEach(([actionName, distance]) => {
+    arrowPath.moves.forEach((move) => {
+        const [actionName, distance, angleDegrees = 0] = move;
+       
+        if (actionName === 'twist') {
+            const twistSegment = createTwistSegment(
+                currentPoint,
+                frame,
+                distance,
+                angleDegrees
+            );
+
+            segments.push(twistSegment.segment);
+
+            currentPoint = twistSegment.nextPoint;
+            frame = twistSegment.nextFrame;
+
+            return;
+        }
+        
         frame = updateFrame(frame, actionName);
 
         const nextPoint = currentPoint.clone().add(
@@ -25,11 +44,7 @@ export function createArrowPathSegments(arrowPath) {
             actionName,
             startPoint: currentPoint.clone(),
             endPoint: nextPoint.clone(),
-            frame: {
-                forward: frame.forward.clone(),
-                normal: frame.normal.clone(),
-                side: frame.side.clone(),
-            },
+            frame: cloneFrame(frame),
         });
 
         currentPoint = nextPoint;
@@ -38,12 +53,37 @@ export function createArrowPathSegments(arrowPath) {
     return segments;
 }
 
-function updateFrame(frame, actionName) {
-    const nextFrame = {
-        forward: frame.forward.clone(),
-        normal: frame.normal.clone(),
-        side: frame.side.clone(),       
+function createTwistSegment(currentPoint, frame, distance, angleDegrees) {
+    const startFrame = cloneFrame(frame);
+    const twistAngle = THREE.MathUtils.degToRad(angleDegrees);
+
+    const endFrame = rotateFrame(
+        cloneFrame(startFrame),
+        startFrame.forward,
+        twistAngle
+    );
+
+    const nextPoint = currentPoint.clone().add(
+        startFrame.forward.clone().multiplyScalar(distance)
+    );
+
+    return {
+        segment: {
+            actionName: 'twist',
+            startPoint: currentPoint.clone(),
+            endPoint: nextPoint.clone(),
+            startFrame,
+            endFrame,
+            frame: cloneFrame(endFrame),
+            twistAngle
+        },
+        nextPoint,
+        nextFrame: cloneFrame(endFrame),
     };
+}
+
+function updateFrame(frame, actionName) {
+    const nextFrame = cloneFrame(frame);
 
     if (actionName === 'forward') {
         return nextFrame;

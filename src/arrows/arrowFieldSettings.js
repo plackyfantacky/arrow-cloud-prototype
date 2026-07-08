@@ -5,5 +5,6 @@ export const arrowFieldSettings = {
     headWidth: 0.9,
     cornerRadius: 0.35,
     cornerSteps: 14,
+    twistSteps: 64,
     cornerOverlap: 0.04,
 };
