@@ -116,5 +116,8 @@ export function createDebugControls({
             progressInput.value = String(state.currentTime);
             timeValue.textContent = `${state.currentTime.toFixed(2)}s`;
         },
+        destroy() {
+            container.remove();
+        }
     };
 }

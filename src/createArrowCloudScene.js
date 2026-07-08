@@ -48,11 +48,16 @@ export function createArrowCloudScene(mountElement) {
     
     mountElement.appendChild(renderer.domElement);
     
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.target.set(0, 0, 0);
-    controls.update();
+    const controls = animationSettings.debugMode
+        ? new OrbitControls(camera, renderer.domElement)
+        : null;
+
+    if (controls) {
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.target.set(0, 0, 0);
+        controls.update();
+    }
     
     const arrowMaterial = new THREE.MeshStandardMaterial({
         color: 0xff9d2a,
@@ -148,9 +153,15 @@ export function createArrowCloudScene(mountElement) {
     }
     
     const timer = new THREE.Timer();
+    let animationFrameId = null;
+    let isDestroyed = false;
     
     function animate() {
-        requestAnimationFrame(animate);
+        if (isDestroyed) {
+            return;
+        }
+
+        animationFrameId = requestAnimationFrame(animate);
     
         timer.update();
     
@@ -203,7 +214,9 @@ export function createArrowCloudScene(mountElement) {
             setPathComponentReveal(componentMesh, revealProgress);
         });
     
-        controls.update();
+        if (controls) {
+            controls.update();
+        }
     
         renderer.render(scene, camera);
     
@@ -219,11 +232,58 @@ export function createArrowCloudScene(mountElement) {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     }
     
+    function destroy() {
+        if (isDestroyed) {
+            return;
+        }
+
+        isDestroyed = true;
+
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+
+        window.removeEventListener('resize', handleResize);
+
+        if (controls) {
+            controls.dispose();
+        }
+
+        scene.traverse((object) => {
+            if (object.geometry) {
+                object.geometry.dispose();
+            }
+
+            if (Array.isArray(object.material)) {
+                object.material.forEach((material) => {
+                    material.dispose();
+                });
+
+                return;
+            }
+
+            if (object.material) {
+                object.material.dispose();
+            }
+        });
+
+        if (debugControls?.destroy) {
+            debugControls.destroy();
+        }
+
+        renderer.dispose();
+
+        if (renderer.domElement.parentElement) {
+            renderer.domElement.parentElement.removeChild(renderer.domElement);
+        }
+    }
+
     window.addEventListener('resize', handleResize);
     
     animate();
 
     return {
-        resize: handleResize
+        resize: handleResize,
+        destroy
     };
 }

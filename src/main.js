@@ -1,4 +1,4 @@
-import { createArrowCloudScene } from "./createArrowCloudScene";
+import { createArrowCloudScene } from "./createArrowCloudScene.js";
 
 const mountElement = document.querySelector('[data-arrow-cloud]') || document.body;
 
