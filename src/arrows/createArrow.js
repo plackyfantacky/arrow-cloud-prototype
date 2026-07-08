@@ -1,5 +1,16 @@
 import * as THREE from 'three';
-import { applyFrameToObject, getTwistAngleAtProgress } from "./helpers";
+
+import { 
+    applyFrameToObject, 
+    getTwistAngleAtProgress,
+    createSmoothExtrusionMaterial
+} from "./helpers";
+
+import {
+    getCubicBezierCurveState,
+    getQuadraticBezierPoint,
+    getQuadraticBezierTangent,
+} from "./bezier";
 
 const rectangularExtrusionFaceCount = 4;
 const rectangularExtrusionVerticesPerFace = 2;
@@ -19,6 +30,9 @@ export function createArrow(pieces, material, settings) {
             break;
             case piece.type === 'twist':
                 pieceGroup = createTwistPiece(piece, material, settings);
+            break;
+            case piece.type === 'curve':
+                pieceGroup = createCurvePiece(piece, material, settings);
             break;
             default:
                 pieceGroup = createStraightPiece(
@@ -127,35 +141,6 @@ function createCornerGeometry(piece, settings) {
     );
 }
 
-function getQuadraticBezierPoint(startPoint, controlPoint, endPoint, progress) {
-    const inverseProgress = 1 - progress;
-
-    return startPoint.clone()
-        .multiplyScalar(inverseProgress * inverseProgress)
-        .add(
-            controlPoint.clone().multiplyScalar(
-                2 * inverseProgress * progress
-            )
-        )
-        .add(
-            endPoint.clone().multiplyScalar(progress * progress)
-        );
-}
-
-function getQuadraticBezierTangent(startPoint, controlPoint, endPoint, progress) {
-    const inverseProgress = 1 - progress;
-
-    return controlPoint.clone()
-        .sub(startPoint)
-        .multiplyScalar(2 * inverseProgress)
-        .add(
-            endPoint.clone()
-                .sub(controlPoint)
-                .multiplyScalar(2 * progress)
-        )
-        .normalize()
-}
-
 function getInterpolatedFrame(piece, progress) {
     const forward = getQuadraticBezierTangent(
         piece.startPoint,
@@ -214,7 +199,7 @@ function createTwistPiece(piece, material, settings) {
 
     return createDrawRangeRevealPiece(
         piece,
-        twistMaterial,
+        createSmoothExtrusionMaterial(material),
         createTwistGeometry(piece, settings),
         settings.twistSteps || settings.cornerSteps || 16,
         getTwistRevealState
@@ -302,6 +287,63 @@ function getTwistRevealState(piece, progress) {
         position: getTwistPosition(piece, clampedProgress),
         frame: getTwistFrame(piece, clampedProgress),
     };
+}
+
+function getCurveSourceSegment(piece) {
+    return piece.sourceSegment || piece;
+}
+
+function getCurveSourceProgress(piece, progress) {
+    const clampedProgress = THREE.MathUtils.clamp(progress, 0, 1);
+
+    if (
+        typeof piece.sourceStartProgress === 'number' &&
+        typeof piece.sourceEndProgress === 'number'
+    ) {
+        return THREE.MathUtils.lerp(
+            piece.sourceStartProgress,
+            piece.sourceEndProgress,
+            clampedProgress
+        );
+    }
+
+    return clampedProgress;
+}
+
+function getCurveState(piece, progress) {
+    const sourceSegment = getCurveSourceSegment(piece);
+    const sourceProgress = getCurveSourceProgress(piece, progress);
+
+    return getCubicBezierCurveState(
+        sourceSegment,
+        sourceProgress
+    );
+}
+
+function getCurveRevealState(piece, progress){
+    return getCurveState(piece, progress);
+}
+
+function createCurvePiece(piece, material, settings) {
+    return createDrawRangeRevealPiece(
+        piece,
+        createSmoothExtrusionMaterial(material),
+        createCurveGeometry(piece, settings),
+        settings.curveSteps || settings.cornerSteps || 32,
+        getCurveRevealState
+    );
+}
+
+function createCurveGeometry(piece, settings) {
+    const divisions = settings.curveSteps || settings.cornerSteps || 32;
+
+    return createRectangularExtrusionGeometry(
+        settings,
+        divisions,
+        (progress) => {
+            return getCurveState(piece, progress)
+        }
+    );
 }
 
 //arrowheads

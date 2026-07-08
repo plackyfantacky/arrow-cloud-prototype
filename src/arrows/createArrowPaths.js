@@ -16,14 +16,14 @@ export function createArrowPathSegments(arrowPath) {
     frame.side = frame.forward.clone().cross(frame.normal).normalize();
 
     arrowPath.moves.forEach((move) => {
-        const [actionName, distance, angleDegrees = 0] = move;
+        const [actionName, actionValue, options = {}] = move;
        
         if (actionName === 'twist') {
             const twistSegment = createTwistSegment(
                 currentPoint,
                 frame,
-                distance,
-                angleDegrees
+                actionValue,
+                typeof options === 'number' ? options : 0
             );
 
             segments.push(twistSegment.segment);
@@ -33,11 +33,27 @@ export function createArrowPathSegments(arrowPath) {
 
             return;
         }
+
+        if (actionName === 'curveTo') {
+            const curveSegment = createCurveToSegment(
+                currentPoint,
+                frame,
+                actionValue,
+                options
+            );
+
+            segments.push(curveSegment.segment);
+
+            currentPoint = curveSegment.nextPoint;
+            frame = curveSegment.nextFrame;
+
+            return;
+        }
         
         frame = updateFrame(frame, actionName);
 
         const nextPoint = currentPoint.clone().add(
-            frame.forward.clone().multiplyScalar(distance)
+            frame.forward.clone().multiplyScalar(actionValue)
         );
 
         segments.push({
@@ -53,7 +69,7 @@ export function createArrowPathSegments(arrowPath) {
     return segments;
 }
 
-function createTwistSegment(currentPoint, frame, distance, angleDegrees) {
+function createTwistSegment(currentPoint, frame, distance, angleDegrees = 0) {
     const startFrame = cloneFrame(frame);
     const twistAngle = THREE.MathUtils.degToRad(angleDegrees);
 
@@ -78,6 +94,60 @@ function createTwistSegment(currentPoint, frame, distance, angleDegrees) {
             twistAngle
         },
         nextPoint,
+        nextFrame: cloneFrame(endFrame),
+    };
+}
+
+function createCurveToSegment(currentPoint, frame, targetCoordinates, options = {}) {
+    const startFrame = cloneFrame(frame);
+
+    const endPoint = currentPoint.clone().add(
+        getLocalOffsetVector(startFrame, targetCoordinates)
+    );
+
+    let endFrame = getCurveEndFrame(
+        startFrame,
+        options.endAngle || 0,
+        options.angleAxis || 'side'
+    );
+
+    if (typeof options.endRoll === 'number') {
+        endFrame = rotateFrame(
+            endFrame,
+            endFrame.forward,
+            THREE.MathUtils.degToRad(options.endRoll)
+        );
+    }
+
+    const curveDistance = currentPoint.distanceTo(endPoint);
+    const handleScale = options.handleScale ?? 0.35;
+
+    const startHandleDistance = options.startHandleDistance
+        ?? curveDistance * handleScale;
+
+    const endHandleDistance = options.endHandleDistance
+        ?? curveDistance * handleScale;
+
+    const controlPointStart = currentPoint.clone().add(
+        startFrame.forward.clone().multiplyScalar(startHandleDistance)
+    );
+
+    const controlPointEnd = endPoint.clone().sub(
+        endFrame.forward.clone().multiplyScalar(endHandleDistance)
+    );
+
+    return {
+        segment: {
+            actionName: 'curveTo',
+            startPoint: currentPoint.clone(),
+            endPoint: endPoint.clone(),
+            startFrame,
+            endFrame,
+            controlPointStart,
+            controlPointEnd,
+            frame: cloneFrame(endFrame),
+        },
+        nextPoint: endPoint.clone(),
         nextFrame: cloneFrame(endFrame),
     };
 }
@@ -114,4 +184,25 @@ function rotateFrame(frame, axis, angle) {
     frame.side.applyAxisAngle(axis, angle).normalize();
 
     return frame;
+}
+
+function getLocalOffsetVector(frame, coordinates) {
+    return frame.forward.clone().multiplyScalar(coordinates.x || 0)
+        .add(frame.normal.clone().multiplyScalar(coordinates.y || 0))
+        .add(frame.side.clone().multiplyScalar(coordinates.z || 0));
+}
+
+function getCurveEndFrame(startFrame, endAngleDegrees, angleAxisName) {
+    const endFrame = cloneFrame(startFrame);
+    const angle = THREE.MathUtils.degToRad(endAngleDegrees);
+
+    if (angleAxisName === 'normal') {
+        return rotateFrame(endFrame, endFrame.normal, angle);
+    }
+
+    if (angleAxisName === 'side') {
+        return rotateFrame(endFrame, endFrame.side, angle);
+    }
+
+    throw new Error(`Unknown curveTo angle axis: ${angleAxisName}`);
 }

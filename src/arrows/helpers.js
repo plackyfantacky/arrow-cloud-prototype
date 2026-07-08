@@ -32,3 +32,12 @@ export function getTwistProgress(progress) {
 export function getTwistAngleAtProgress(twistAngle, progress) {
     return twistAngle * getTwistProgress(progress);
 }
+
+export function createSmoothExtrusionMaterial(material) {
+    const extrusionMaterial = material.clone();
+
+    extrusionMaterial.flatShading = false;
+    extrusionMaterial.needsUpdate = true;
+
+    return extrusionMaterial;
+}
