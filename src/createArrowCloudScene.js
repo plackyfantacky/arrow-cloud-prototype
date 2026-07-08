@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-import { animationSettings, arrowPaths, cameraTrack } from "./arrows/arrowData.js";
+import { 
+    animationSettings as defaultAnimationSettings, 
+    arrowPaths as defaultArrowPaths, 
+    cameraTrack as defaultCameraTrack 
+} from "./arrows/arrowData.js";
+
 import { arrowFieldSettings } from "./arrows/arrowFieldSettings.js";
 import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
 import { createArrow, setArrowReveal, updateArrowReveal } from "./arrows/createArrow.js";
@@ -14,10 +19,18 @@ import { positionArrowPathForViewport } from "./positionArrowPathForViewport.js"
 import { getStageSize } from "./stage.js";
 import { getResponsiveCameraDistance, getCameraTrackState } from "./camera.js";
 
-export function createArrowCloudScene(mountElement) {
+export function createArrowCloudScene(mountElement, options = {}) {
     if (!mountElement) {
         throw new Error('createArrowCloudScene requires a mount element.');
     }
+
+    const animationSettings = {
+        ...defaultAnimationSettings,
+        ...options.animationSettings
+    }
+
+    const arrowPaths = options.arrowPaths || defaultArrowPaths;
+    const cameraTrack = options.cameraTrack || defaultCameraTrack;
 
     const stageSize = getStageSize(mountElement);
     
