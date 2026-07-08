@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { applyFrameToObject, getTwistAngleAtProgress } from "./helpers";
 
-const rectangularRingVertexCount = 4;
-const rectangularRingIndicesPerStep = 24;
+const rectangularExtrusionFaceCount = 4;
+const rectangularExtrusionVerticesPerFace = 2;
+const rectangularExtrusionVerticesPerRing = rectangularExtrusionFaceCount * rectangularExtrusionVerticesPerFace;
+const rectangularExtrusionIndicesPerStep = 24;
 
 export function createArrow(pieces, material, settings) {
     const group = new THREE.Group();
@@ -517,22 +519,9 @@ export function updateArrowReveal(arrow, currentTime) {
     }
 }
 
-//shared helpers
+//geometry helpers
 
-function addRectangularRingVertices(vertices, position, frame, halfWidth, halfDepth) {
-    const ringVertices = createRectangularRingVertices(
-        position,
-        frame,
-        halfWidth,
-        halfDepth
-    );
-
-    ringVertices.forEach((vertex) => {
-        vertices.push(vertex.x, vertex.y, vertex.z);
-    });
-}
-
-function createRectangularRingVertices(position, frame, halfWidth, halfDepth) {
+function createRectangularRingCorners(position, frame, halfWidth, halfDepth) {
     return [
         position.clone()
             .add(frame.normal.clone().multiplyScalar(halfDepth))
@@ -553,27 +542,50 @@ function createRectangularRingVertices(position, frame, halfWidth, halfDepth) {
 }
 
 function addRectangularRingConnectionIndices(indices, stepIndex) {
-    const currentIndex = stepIndex * rectangularRingVertexCount;
-    const nextIndex = (stepIndex + 1) * rectangularRingVertexCount;
+    const currentRingStart = stepIndex * rectangularExtrusionVerticesPerRing;
+    const nextRingStart = (stepIndex + 1) * rectangularExtrusionVerticesPerRing;
 
-    indices.push(
-        currentIndex, nextIndex + 1, currentIndex + 1,
-        currentIndex, nextIndex, nextIndex + 1,
+    for (let faceIndex = 0; faceIndex < rectangularExtrusionFaceCount; faceIndex++) {
+        const currentFirst = currentRingStart + faceIndex * rectangularExtrusionVerticesPerFace;
+        const currentSecond = currentFirst + 1;
 
-        currentIndex + 1, nextIndex + 2, currentIndex + 2,
-        currentIndex + 1, nextIndex + 1, nextIndex + 2,
+        const nextFirst = nextRingStart + faceIndex * rectangularExtrusionVerticesPerFace;
+        const nextSecond = nextFirst + 1;
 
-        currentIndex + 2, nextIndex + 3, currentIndex + 3,
-        currentIndex + 2, nextIndex + 2, nextIndex + 3,
+        indices.push(
+            currentFirst, nextSecond, currentSecond,
+            currentFirst, nextFirst, nextSecond
+        );
+    }
+}
 
-        currentIndex + 3, nextIndex, currentIndex,
-        currentIndex + 3, nextIndex + 3, nextIndex
+function addRectangularRingVertices(vertices, position, frame, halfWidth, halfDepth) {
+    const corners = createRectangularRingCorners(
+        position,
+        frame,
+        halfWidth,
+        halfDepth
     );
+
+    const faceCornerPairs = [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, 0]
+    ];
+
+    faceCornerPairs.forEach(([firstCornerIndex, secondCornerIndex]) => {
+        const firstCorner = corners[firstCornerIndex];
+        const secondCorner = corners[secondCornerIndex];
+
+        vertices.push(firstCorner.x, firstCorner.y, firstCorner.z);
+        vertices.push(secondCorner.x, secondCorner.y, secondCorner.z);
+    })
 }
 
 function createDrawRangeRevealPiece(piece, material, geometry, revealSteps, getRevealState) {
     const mesh = new THREE.Mesh(geometry, material);
-    const indicesPerStep = rectangularRingIndicesPerStep;
+    const indicesPerStep = rectangularExtrusionIndicesPerStep;
 
     mesh.visible = false;
 
