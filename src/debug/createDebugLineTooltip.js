@@ -1,20 +1,8 @@
 import * as THREE from "three";
 
-function getDebugInfoSource(object) {
-    let currentObject = object;
+import { getDebugInfoSource } from "./createDebugControls.js";
 
-    while (currentObject) {
-        if (currentObject.userData?.debugInfo) {
-            return currentObject;
-        }
-
-        currentObject = currentObject.parent;
-    }
-
-    return null;
-}
-
-export function createDebugLineTooltip({ camera, renderer, objects }) {
+export function createDebugLineTooltip({ camera, renderer, getObjects }) {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
 
@@ -65,7 +53,7 @@ export function createDebugLineTooltip({ camera, renderer, objects }) {
 
         raycaster.setFromCamera(pointer, camera);
 
-        const intersections = raycaster.intersectObjects(objects, true);
+        const intersections = raycaster.intersectObjects(getObjects(), true);
 
         const debugInfoSource = intersections
             .map((intersection) => getDebugInfoSource(intersection.object))
