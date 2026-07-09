@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import { setupPathComponentMesh } from "./setupPathComponentMesh";
 
 export function createWireframePathComponent(component) {

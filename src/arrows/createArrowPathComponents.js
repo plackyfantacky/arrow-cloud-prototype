@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 function getPlacementDistance(placement, segmentLength) {
     if (typeof placement.distance === 'number') {

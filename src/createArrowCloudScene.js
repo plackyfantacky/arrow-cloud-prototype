@@ -1,5 +1,9 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
+
+import { getStageSize } from "./stage.js";
+import { getResponsiveCameraDistance, getCameraTrackState } from "./camera.js";
+import { positionArrowPathForViewport } from "./positionArrowPathForViewport.js";
 
 import { 
     animationSettings as defaultAnimationSettings, 
@@ -8,16 +12,17 @@ import {
 } from "./arrows/arrowData.js";
 
 import { arrowFieldSettings } from "./arrows/arrowFieldSettings.js";
-import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
-import { createArrow, setArrowReveal, updateArrowReveal } from "./arrows/createArrow.js";
+import { createArrow } from "./arrows/createArrow.js";
 import { createArrowRenderPieces } from "./arrows/createArrowRenderPieces.js";
-import { createDebugControls } from "./debug/createDebugControls.js";
-import { createArrowNameLabel } from './debug/createArrowNameLabel.js';
-import { createArrowPathComponents, setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
+import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
 import { createPathComponentMesh } from "./arrows/pathComponents/index.js";
-import { positionArrowPathForViewport } from "./positionArrowPathForViewport.js";
-import { getStageSize } from "./stage.js";
-import { getResponsiveCameraDistance, getCameraTrackState } from "./camera.js";
+import { createArrowPathComponents, setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
+import { setArrowReveal, updateArrowReveal } from "./arrows/reveal.js";
+
+import { createDebugControls } from "./debug/createDebugControls.js";
+import { createArrowNameLabel } from "./debug/createArrowNameLabel.js";
+import { createDebugLineTooltip } from "./debug/createDebugLineTooltip.js";
+import { createDebugAxesGauge } from "./debug/createDebugAxesGauge.js";
 
 export function createArrowCloudScene(mountElement, options = {}) {
     if (!mountElement) {
@@ -81,6 +86,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
     });
     
     const pathComponentMeshes = [];
+    let debugLineTooltip = null;
     
     const arrows = arrowPaths.map((arrowPath) => {
         const positionedArrowPath = positionArrowPathForViewport(
@@ -93,6 +99,15 @@ export function createArrowCloudScene(mountElement, options = {}) {
         const pieces = createArrowRenderPieces(segments, arrowFieldSettings);
         const arrow = createArrow(pieces, arrowMaterial, arrowFieldSettings);
         const components = createArrowPathComponents(positionedArrowPath, segments);
+
+        arrow.userData.revealPieces.forEach((revealPiece) => {
+            revealPiece.userData.debugInfo = {
+                arrowName: positionedArrowPath.name,
+                segmentIndex: revealPiece.userData.segmentIndex,
+                actionName: revealPiece.userData.actionName,
+                segmentLength: revealPiece.userData.segmentLength
+            };
+        });
     
         arrow.userData.name = positionedArrowPath.name;
         
@@ -117,13 +132,21 @@ export function createArrowCloudScene(mountElement, options = {}) {
     
         if (animationSettings.debugMode) {
             const label = createArrowNameLabel(positionedArrowPath.name, segments[0]);
-            scene.add(label);        
+            scene.add(label);
         }
     
         setArrowReveal(arrow, 0);
     
         return arrow;
     });
+
+    if (animationSettings.debugMode) {
+        debugLineTooltip = createDebugLineTooltip({
+            camera,
+            renderer,
+            objects: arrows,
+        });
+    }
     
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
     scene.add(ambientLight);
@@ -135,6 +158,14 @@ export function createArrowCloudScene(mountElement, options = {}) {
     if (animationSettings.debugMode) {
         const gridHelper = new THREE.GridHelper(14, 14);
         scene.add(gridHelper);
+
+        const axesGauge = createDebugAxesGauge({
+            size: 2,
+            labelOffset: 0.35,
+        });
+
+        axesGauge.position.set(0.1, 0.1, 0.1);
+        scene.add(axesGauge);
     }
     
     const cameraTarget = new THREE.Vector3();
@@ -230,6 +261,10 @@ export function createArrowCloudScene(mountElement, options = {}) {
         if (controls) {
             controls.update();
         }
+
+        if (debugLineTooltip) {
+            debugLineTooltip.update();
+        }
     
         renderer.render(scene, camera);
     
@@ -282,6 +317,10 @@ export function createArrowCloudScene(mountElement, options = {}) {
 
         if (debugControls?.destroy) {
             debugControls.destroy();
+        }
+
+        if (debugLineTooltip) {
+            debugLineTooltip.destroy();
         }
 
         renderer.dispose();

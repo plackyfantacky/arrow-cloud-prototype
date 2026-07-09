@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export function createArrowNameLabel(text, segment) {
     const canvas = document.createElement('canvas');

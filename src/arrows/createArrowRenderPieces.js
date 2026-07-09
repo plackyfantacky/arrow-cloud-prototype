@@ -1,11 +1,16 @@
-import * as THREE from 'three';
-import { cloneFrame, getTwistAngleAtProgress } from "./helpers.js";
-import { 
-    getCubicBezierCurvePoint, 
-    getCubicBezierCurveFrame 
-} from "./bezier.js";
+import * as THREE from "three";
+import { cloneFrame,  } from "./frame.js";
 
-const curveLengthSampleCount = 48;
+import { getTwistAngleAtProgress } from './twist.js';
+
+import { 
+    getSegmentLength,
+    getSegmentFrameAtDistance,
+    getSegmentPointAtDistance,
+    getSegmentProgressAtDistance,
+    getSegmentFrameAtProgress,
+
+ } from './segmentState.js';
 
 export function createArrowRenderPieces(segments, settings = {}) {
     const cornerRadius = settings.cornerRadius || 0;
@@ -38,6 +43,7 @@ export function createArrowRenderPieces(segments, settings = {}) {
 
         pieces.push(createSegmentRenderPiece(
             segment,
+            segmentIndex,
             safeStartTrim,
             safeEndTrim
         ));
@@ -45,6 +51,7 @@ export function createArrowRenderPieces(segments, settings = {}) {
         if (nextSegment && shouldTrimEnd && safeEndTrim > 0) {
             pieces.push(createCornerRenderPiece(
                 segment,
+                segmentIndex,
                 nextSegment,
                 safeEndTrim
             ));
@@ -54,7 +61,7 @@ export function createArrowRenderPieces(segments, settings = {}) {
     return pieces;
 }
 
-function createCornerRenderPiece(segment, nextSegment, radius) {
+function createCornerRenderPiece(segment, segmentIndex, nextSegment, radius) {
     const jointPoint = segment.endPoint.clone();
 
     const segmentLength = getSegmentLength(segment);
@@ -68,6 +75,9 @@ function createCornerRenderPiece(segment, nextSegment, radius) {
 
     return {
         type: 'corner',
+        segmentIndex,
+        actionName: segment.actionName,
+        segmentLength,
         jointPoint,
         startPoint,
         endPoint,
@@ -80,7 +90,7 @@ function createCornerRenderPiece(segment, nextSegment, radius) {
     };
 }
 
-function createSegmentRenderPiece(segment, startTrim, endTrim) {
+function createSegmentRenderPiece(segment, segmentIndex, startTrim, endTrim) {
     const segmentLength = getSegmentLength(segment);
     const startDistance = startTrim;
     const endDistance = segmentLength - endTrim;
@@ -94,6 +104,9 @@ function createSegmentRenderPiece(segment, startTrim, endTrim) {
 
         return {
             type: 'curve',
+            segmentIndex,
+            actionName: segment.actionName,
+            segmentLength,
             startPoint,
             endPoint,
             startFrame: getSegmentFrameAtProgress(segment, startProgress),
@@ -118,6 +131,9 @@ function createSegmentRenderPiece(segment, startTrim, endTrim) {
 
         return {
             type: 'twist',
+            segmentIndex,
+            actionName: segment.actionName,
+            segmentLength,
             startPoint,
             endPoint,
             startFrame: getSegmentFrameAtProgress(segment, startProgress),
@@ -137,6 +153,9 @@ function createSegmentRenderPiece(segment, startTrim, endTrim) {
 
     return {
         type: 'straight',
+        segmentIndex,
+        actionName: segment.actionName,
+        segmentLength,
         startPoint,
         endPoint,
         frame: getSegmentFrameAtDistance(segment, startDistance),
@@ -163,95 +182,6 @@ function getSafeTrim(cornerRadius, firstSegment, secondSegment) {
 
 //helpers
 
-function getSegmentLength(segment) {
-    if (segment.actionName === 'curveTo') {
-        const samples = getCurveLengthSamples(segment);    
-
-        return samples[samples.length - 1].length;
-    }
-    
-    return segment.startPoint.distanceTo(segment.endPoint);
-}
-
-function getSegmentProgressAtDistance(segment, distance) {
-    const segmentLength = getSegmentLength(segment);
-
-    if (segmentLength <= 0) {
-        return 0;
-    }
-
-    const clampedDistance = THREE.MathUtils.clamp(
-        distance, 0, segmentLength
-    );
-
-    if (segment.actionName === 'curveTo') {
-        return getCurveProgressAtDistance(segment, clampedDistance);
-    }
-
-    return THREE.MathUtils.clamp(
-        clampedDistance / segmentLength,
-        0, 1
-    );
-}
-
-function getSegmentPointAtDistance(segment, distance) {
-    const progress = getSegmentProgressAtDistance(segment, distance);
-
-    return getSegmentPointAtProgress(segment, progress);   
-}
-
-function getSegmentPointAtProgress(segment, progress) {
-    const clampedProgress = THREE.MathUtils.clamp(progress, 0, 1);
-
-    if (segment.actionName === 'curveTo') {
-        return getCubicBezierCurvePoint(segment, clampedProgress);
-    }
-
-    return segment.startPoint.clone().lerp(
-        segment.endPoint,
-        clampedProgress
-    );
-}
-
-function getSegmentFrameAtDistance(segment, distance) {
-    const progress = getSegmentProgressAtDistance(segment, distance);
-
-    return getSegmentFrameAtProgress(segment, progress);
-}
-
-
-function getSegmentFrameAtProgress(segment, progress) {
-    if (segment.actionName === 'curveTo') {
-        return getCubicBezierCurveFrame(segment, progress);
-    }
-
-    if (segment.actionName === 'twist') {
-        const clampedProgress = THREE.MathUtils.clamp(progress, 0, 1);
-        
-        const angle = getTwistAngleAtProgress(
-            segment.twistAngle || 0,
-            clampedProgress
-        );
-    
-        const forward = segment.startFrame.forward.clone().normalize();
-    
-        const normal = segment.startFrame.normal.clone()
-            .applyAxisAngle(forward, angle)
-            .normalize();
-    
-        const side = segment.startFrame.side.clone()
-            .applyAxisAngle(forward, angle)
-            .normalize();
-    
-        return {
-            forward,
-            normal,
-            side,
-        };
-    }
-
-    return cloneFrame(segment.frame);
-}
 
 function shouldCreateCorner(segment, nextSegment) {
     if (!nextSegment) {
@@ -272,64 +202,3 @@ function shouldCreateCorner(segment, nextSegment) {
     ) > 0.000001;
 }
 
-function getCurveLengthSamples(segment) {
-    if (segment.curveLengthSamples) {
-        return segment.curveLengthSamples;
-    }
-
-    const samples = [];
-    let previousPoint = getCubicBezierCurvePoint(segment, 0);
-    let totalLength = 0;
-
-    samples.push({
-        progress: 0,
-        point: previousPoint.clone(),
-        length: 0
-    });
-
-    for (let stepIndex = 1; stepIndex <= curveLengthSampleCount; stepIndex++) {
-        const progress = stepIndex / curveLengthSampleCount;
-        const point = getCubicBezierCurvePoint(segment, progress);
-
-        totalLength += previousPoint.distanceTo(point);
-
-        samples.push({
-            progress,
-            point: point.clone(),
-            length: totalLength
-        });
-
-        previousPoint = point;
-    }
-
-    segment.curveLengthSamples = samples;
-
-    return samples;
-}
-
-function getCurveProgressAtDistance(segment, distance) {
-    const samples = getCurveLengthSamples(segment);
-
-    for (let sampleIndex = 1; sampleIndex < samples.length; sampleIndex++) {
-        const previousSample = samples[sampleIndex - 1];
-        const currentSample = samples[sampleIndex];
-
-        if (distance <= currentSample.length) {
-            const sampleDistance = currentSample.length - previousSample.length;
-
-            if (sampleDistance <= 0) {
-                return currentSample.progress;
-            }
-
-            const sampleProgress = (distance - previousSample.length) / sampleDistance;
-
-            return THREE.MathUtils.lerp(
-                previousSample.progress,
-                currentSample.progress,
-                sampleProgress
-            );
-        }
-    }
-
-    return 1;
-}

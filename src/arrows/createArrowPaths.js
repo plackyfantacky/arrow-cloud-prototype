@@ -1,8 +1,12 @@
-import * as THREE from 'three';
-import { cloneFrame } from "./helpers.js";
-import { getDirectionVector } from "./directions.js";
+import * as THREE from "three";
 
-const quarterTurn = Math.PI / 2;
+import { 
+    cloneFrame,
+    rotateFrame,
+    updateFrame
+} from "./frame.js";
+
+import { getDirectionVector } from "./directions.js";
 
 export function createArrowPathSegments(arrowPath) {
     const segments = [];
@@ -150,40 +154,6 @@ function createCurveToSegment(currentPoint, frame, targetCoordinates, options = 
         nextPoint: endPoint.clone(),
         nextFrame: cloneFrame(endFrame),
     };
-}
-
-function updateFrame(frame, actionName) {
-    const nextFrame = cloneFrame(frame);
-
-    if (actionName === 'forward') {
-        return nextFrame;
-    }
-
-    if (actionName === 'turnLeft') {
-        return rotateFrame(nextFrame, nextFrame.normal, quarterTurn);
-    }
-
-    if (actionName === 'turnRight') {
-        return rotateFrame(nextFrame, nextFrame.normal, -quarterTurn);
-    }
-
-    if (actionName === 'bendUp') {
-        return rotateFrame(nextFrame, nextFrame.side, quarterTurn);
-    }
-
-    if (actionName === 'bendDown') {
-        return rotateFrame(nextFrame, nextFrame.side, -quarterTurn);
-    }
-
-    throw new Error(`Unknown arrow action: ${actionName}`);
-}
-
-function rotateFrame(frame, axis, angle) {
-    frame.forward.applyAxisAngle(axis, angle).normalize();
-    frame.normal.applyAxisAngle(axis, angle).normalize();
-    frame.side.applyAxisAngle(axis, angle).normalize();
-
-    return frame;
 }
 
 function getLocalOffsetVector(frame, coordinates) {
