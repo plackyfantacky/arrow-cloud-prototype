@@ -104,9 +104,9 @@ export function createDebugPathNudgeControls({ onNudge, onCopy, onActionChange }
 
     container.append(
         selectedLabel,
+        targetSelect,
         actionLabel,
         actionSelect,
-        targetSelect,
         buttonRow,
         copyButton
     );

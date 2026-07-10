@@ -57,3 +57,31 @@ export function getCameraTrackState(cameraTrack, currentTime) {
         }
     }
 };
+
+export function updateCameraTrack(mountElement, cameraTrack, camera, currentTime = 0,) {
+    let time = currentTime ?? 0;
+
+    const cameraTrackState = getCameraTrackState(cameraTrack, time);
+
+    if (!cameraTrackState) {
+        return;
+    }
+
+    const responsiveDistance = getResponsiveCameraDistance(mountElement);
+    const desktopDistance = 12.2;
+    const distanceOffset = responsiveDistance - desktopDistance;
+
+    camera.position.set(
+        cameraTrackState.position.x,
+        cameraTrackState.position.y,
+        cameraTrackState.position.z + distanceOffset
+    );
+
+    cameraTarget.set(
+        cameraTrackState.target.x,
+        cameraTrackState.target.y,
+        cameraTrackState.target.z
+    );
+
+    camera.lookAt(cameraTarget);
+}

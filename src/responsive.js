@@ -1,6 +1,21 @@
 import * as THREE from "three";
+import { getStageSize } from "./stage";
 
 const defaultEntryMargin = 1.5;
+
+export function handleResize(mountElement, cameras, renderer) {
+    const stageSize = getStageSize(mountElement);
+
+    if (Array.isArray(cameras)) {
+        cameras.forEach((camera) => {
+            camera.aspect = stageSize.width / stageSize.height;
+            camera.updateProjectionMatrix();
+        });
+    }
+
+    renderer.setSize(stageSize.width, stageSize.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+}
 
 export function positionArrowPathForViewport(arrowPath, camera, container) {
     if (!arrowPath.entry?.side) {

@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { getStageSize } from "./stage.js";
-import { getResponsiveCameraDistance, getCameraTrackState } from "./camera.js";
-import { positionArrowPathForViewport } from "./positionArrowPathForViewport.js";
+import { updateCameraTrack } from "./camera.js";
+import { handleResize as responsiveResize, positionArrowPathForViewport } from "./responsive.js";
 
 import {
     animationSettings as defaultAnimationSettings,
@@ -25,6 +25,7 @@ import { createDebugLineTooltip } from "./debug/createDebugLineTooltip.js";
 import { createDebugAxesGauge } from "./debug/createDebugAxesGauge.js";
 import { createDebugSegmentSelector } from "./debug/createDebugSegmentSelector.js";
 import { createDebugPathNudgeControls } from "./debug/createDebugPathNudgeControls.js";
+import { createDebugPathEditor } from "./debug/createDebugPathEditor.js";
 
 export function createArrowCloudScene(mountElement, options = {}) {
     if (!mountElement) {
@@ -96,9 +97,8 @@ export function createArrowCloudScene(mountElement, options = {}) {
     let debugLineTooltip = null;
     let debugSegmentSelector = null;
     let debugPathNudgeControls = null;
-    let selectedDebugInfo = null;
 
-    let workingArrowPaths = arrowPaths.map(cloneArrowPath);
+    const pathEditor = createDebugPathEditor(arrowPaths);
 
     function rebuildArrowPaths() {
         const renderState = renderArrowPaths({
@@ -108,7 +108,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
             arrowMaterial,
             animationSettings,
             previousRenderedArrowItems: renderedArrowItems,
-            arrowPaths: workingArrowPaths
+            arrowPaths: pathEditor.getArrowPaths()
         });
 
         renderedArrowItems = renderState.renderedArrowItems;
@@ -116,26 +116,15 @@ export function createArrowCloudScene(mountElement, options = {}) {
         pathComponentMeshes = renderState.pathComponentMeshes;
     }
 
-    function findArrowPathIndexByName(arrowName) {
-        return workingArrowPaths.findIndex((arrowPath) => {
-            return arrowPath.name === arrowName;
-        });
-    }
 
     function copyCurrentPath() {
-        if (!selectedDebugInfo) {
+        const arrowPath = pathEditor.getSelectedArrowPath();
+
+        if (!arrowPath) {
             console.warn('No debug segment selected.');
             return;
         }
-
-        const arrowPathIndex = findArrowPathIndexByName(selectedDebugInfo.arrowName);
-
-        if (arrowPathIndex < 0) {
-            console.warn(`Could not find arrow path: ${selectedDebugInfo.arrowName}`);
-            return;
-        }
-
-        const arrowPath = workingArrowPaths[arrowPathIndex];
+        
         const output = JSON.stringify(arrowPath, null, 4);
 
         navigator.clipboard.writeText(output)
@@ -150,67 +139,28 @@ export function createArrowCloudScene(mountElement, options = {}) {
             });
     }
 
-    function nudgeArrowPathOrigin(arrowPath, targetValue, amount) {
-        const axisName = targetValue.replace('origin:', '');
-        const axisIndexMap = {
-            x: 0,
-            y: 1,
-            z: 2
-        };
-
-        const axisIndex = axisIndexMap[axisName];
-
-        if (axisIndex === undefined) {
-            return;
-        }
-
-        arrowPath.origin[axisIndex] = Number(
-            (arrowPath.origin[axisIndex] + amount).toFixed(3)
-        );
-    }
-
-    function nudgeArrowPathMove(arrowPath, targetValue, amount) {
-        const targetOffset = Number(targetValue.replace('move:', ''));
-
-        if (Number.isNaN(targetOffset)) {
-            return;
-        }
-
-        const sourceMoveIndex = getSourceMoveIndex(
-            arrowPath,
-            selectedDebugInfo.segmentIndex
-        );
-
-        const targetMoveIndex = sourceMoveIndex + targetOffset;
-
-        if (targetMoveIndex < 0 || targetMoveIndex >= arrowPath.moves.length) {
-            return;
-        }
-
-        const move = arrowPath.moves[targetMoveIndex];
-        const [actionName, actionValue, options] = move;
-
-        if (typeof actionValue !== 'number') {
-            return;
-        }
-
-        const nextActionValue = Math.max(
-            0,
-            Number((actionValue + amount).toFixed(3))
-        );
-
-        arrowPath.moves[targetMoveIndex] = options
-            ? [actionName, nextActionValue, options]
-            : [actionName, nextActionValue];
-    }
-
     rebuildArrowPaths();
 
     if (animationSettings.debugMode) {
         debugPathNudgeControls = createDebugPathNudgeControls({
-            onNudge: nudgeSelectedPathValue,
+            onNudge(amount, targetValue) {
+                const didChangePath = pathEditor.nudgeSelectedPathValue(
+                    amount,
+                    targetValue
+                );
+
+                if (didChangePath) {
+                    rebuildArrowPaths();
+                }
+            },
             onCopy: copyCurrentPath,
-            onActionChange: changeSelectedMoveAction
+            onActionChange(actionName) {
+                const didChangePath = pathEditor.changeSelectedMoveAction(actionName);
+
+                if (didChangePath) {
+                    rebuildArrowPaths();
+                }
+            }
         });
 
         debugLineTooltip = createDebugLineTooltip({
@@ -228,7 +178,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
                 return arrows;
             },
             onSelect(debugInfo) {
-                selectedDebugInfo = debugInfo;
+                pathEditor.setSelectedDebugInfo(debugInfo);
                 debugPathNudgeControls.setSelectedDebugInfo(debugInfo);
             }
         });
@@ -256,31 +206,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
 
     const cameraTarget = new THREE.Vector3();
 
-    function updateCameraTrack(currentTime) {
-        const cameraTrackState = getCameraTrackState(cameraTrack, currentTime);
 
-        if (!cameraTrackState) {
-            return;
-        }
-
-        const responsiveDistance = getResponsiveCameraDistance(mountElement);
-        const desktopDistance = 12.2;
-        const distanceOffset = responsiveDistance - desktopDistance;
-
-        camera.position.set(
-            cameraTrackState.position.x,
-            cameraTrackState.position.y,
-            cameraTrackState.position.z + distanceOffset
-        );
-
-        cameraTarget.set(
-            cameraTrackState.target.x,
-            cameraTrackState.target.y,
-            cameraTrackState.target.z
-        );
-
-        camera.lookAt(cameraTarget);
-    }
 
     const timer = new THREE.Timer();
     let animationFrameId = null;
@@ -357,73 +283,10 @@ export function createArrowCloudScene(mountElement, options = {}) {
     }
 
     function handleResize() {
-        const stageSize = getStageSize(mountElement);
-
-        camera.aspect = stageSize.width / stageSize.height;
-        camera.updateProjectionMatrix();
-
-        pathLayoutCamera.aspect = stageSize.width / stageSize.height;
-        pathLayoutCamera.updateProjectionMatrix();
-
-        renderer.setSize(stageSize.width, stageSize.height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    }
-
-    function nudgeSelectedPathValue(amount, targetValue = 'move:0') {
-        if (!selectedDebugInfo) {
-            return;
-        }
-
-        const arrowPathIndex = findArrowPathIndexByName(selectedDebugInfo.arrowName);
-
-        if (arrowPathIndex < 0) {
-            return;
-        }
-
-        const arrowPath = workingArrowPaths[arrowPathIndex];
-
-        if (targetValue.startsWith('origin:')) {
-            nudgeArrowPathOrigin(arrowPath, targetValue, amount);
-            rebuildArrowPaths();
-            return;
-        }
-
-        nudgeArrowPathMove(arrowPath, targetValue, amount);
-        rebuildArrowPaths();
-    }
-
-    function changeSelectedMoveAction(actionName, targetOffset = 0) {
-        if (!selectedDebugInfo) {
-            return;
-        }
-
-        const arrowPathIndex = findArrowPathIndexByName(selectedDebugInfo.arrowName);
-
-        if (arrowPathIndex < 0) {
-            return;
-        }
-
-        const arrowPath = workingArrowPaths[arrowPathIndex];
-
-        const sourceMoveIndex = getSourceMoveIndex(
-            arrowPath,
-            selectedDebugInfo.segmentIndex
-        );
-
-        const targetMoveIndex = sourceMoveIndex + targetOffset;
-
-        if (targetMoveIndex < 0 || targetMoveIndex >= arrowPath.moves.length) {
-            return;
-        }
-
-        const move = arrowPath.moves[targetMoveIndex];
-        const [, actionValue, options] = move;
-
-        arrowPath.moves[targetMoveIndex] = options
-            ? [actionName, actionValue, options]
-            : [actionName, actionValue];
-
-        rebuildArrowPaths();
+        return responsiveResize(
+            mountElement,
+            [camera, pathLayoutCamera],
+            renderer        );
     }
 
     function destroy() {
@@ -494,40 +357,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
     };
 }
 
-
 // debug helpers
-
-function cloneArrowPath(arrowPath) {
-    return {
-        ...arrowPath,
-        origin: [...arrowPath.origin],
-        moves: arrowPath.moves.map((move) => {
-            const [actionName, actionValue, options] = move;
-
-            return options
-                ? [actionName, actionValue, { ...options }]
-                : [actionName, actionValue];
-        }),
-        timing: arrowPath.timing ? { ...arrowPath.timing } : undefined,
-        head: arrowPath.head ? { ...arrowPath.head } : undefined,
-        entry: arrowPath.entry ? { ...arrowPath.entry } : undefined,
-    };
-}
-
-function getSourceMoveIndex(arrowPath, segmentIndex) {
-    const hasGeneratedEntrySegment = Boolean(
-        arrowPath.entry?.side
-        && ['left', 'right'].includes(arrowPath.entry.side)
-        && arrowPath.entry.straightUntil !== undefined
-        && arrowPath.entry.straightUntil !== null
-    );
-
-    if (hasGeneratedEntrySegment) {
-        return segmentIndex - 1;
-    }
-
-    return segmentIndex;
-}
 
 function disposeRenderableObject(object) {
     object.traverse((childObject) => {
