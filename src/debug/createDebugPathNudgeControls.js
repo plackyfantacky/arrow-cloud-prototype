@@ -1,7 +1,7 @@
-export function createDebugPathNudgeControls({ onNudge, onCopy }) {
+export function createDebugPathNudgeControls({ onNudge, onCopy, onActionChange }) {
     const state = {
         selectedDebugInfo: null,
-        targetOffset: 0
+        targetValue: 'move:0'
     };
 
     const container = document.createElement('div');
@@ -24,18 +24,35 @@ export function createDebugPathNudgeControls({ onNudge, onCopy }) {
 
     const targetSelect = document.createElement('select');
 
-    const moves = [
-        { label: 'Previous move', value: '-1' },
-        { label: 'Selected move', value: '0' },
-        { label: 'Next move', value: '1' }
+    const actionLabel = document.createElement('label');
+    actionLabel.textContent = 'Action';
+
+    const actionSelect = document.createElement('select');
+    actionSelect.disabled = true;
+
+    const targets = [
+        { label: 'Origin X', value: 'origin:x' },
+        { label: 'Origin Y', value: 'origin:y' },
+        { label: 'Origin Z', value: 'origin:z' },
+        { label: 'Previous move', value: 'move:-1' },
+        { label: 'Selected move', value: 'move:0' },
+        { label: 'Next move', value: 'move:1' }
     ];
 
-    moves.forEach((optionConfig) => {
+    const actionOptions = [
+        { label: 'Forward', value: 'forward' },
+        { label: 'Turn left', value: 'turnLeft' },
+        { label: 'Turn right', value: 'turnRight' },
+        { label: 'Bend up', value: 'bendUp' },
+        { label: 'Bend down', value: 'bendDown' },
+    ];
+
+    targets.forEach((optionConfig) => {
         const option = document.createElement('option');
         option.value = optionConfig.value;
         option.textContent = optionConfig.label;
 
-        if (optionConfig.value === '0') {
+        if (optionConfig.value === 'move:0') {
             option.selected = true;
         }
 
@@ -43,7 +60,20 @@ export function createDebugPathNudgeControls({ onNudge, onCopy }) {
     });
 
     targetSelect.addEventListener('change', () => {
-        state.targetOffset = Number(targetSelect.value);
+        state.targetValue = targetSelect.value;
+    });
+
+    actionOptions.forEach((optionConfig) => {
+        const option = document.createElement('option');
+
+        option.value = optionConfig.value;
+        option.textContent = optionConfig.label;
+
+        actionSelect.appendChild(option);
+    });
+
+    actionSelect.addEventListener('change', () => {
+        onActionChange(actionSelect.value);
     });
 
     const buttonRow = document.createElement('div');
@@ -60,7 +90,7 @@ export function createDebugPathNudgeControls({ onNudge, onCopy }) {
         button.textContent = amount > 0 ? `+${amount}` : String(amount);
 
         button.addEventListener('click', () => {
-            onNudge(amount, state.targetOffset);
+            onNudge(amount, state.targetValue);
         });
 
         buttonRow.appendChild(button);
@@ -69,11 +99,13 @@ export function createDebugPathNudgeControls({ onNudge, onCopy }) {
     const copyButton = document.createElement('button');
 
     copyButton.type = 'button';
-    copyButton.textContent = 'Copy moves';
+    copyButton.textContent = 'Copy path';
     copyButton.addEventListener('click', onCopy);
 
     container.append(
         selectedLabel,
+        actionLabel,
+        actionSelect,
         targetSelect,
         buttonRow,
         copyButton
@@ -90,6 +122,9 @@ export function createDebugPathNudgeControls({ onNudge, onCopy }) {
                 `segmentIndex: ${selectedDebugInfo.segmentIndex}`,
                 `actionName: ${selectedDebugInfo.actionName}`,
             ].join(' | ');
+
+            actionSelect.disabled = false;
+            actionSelect.value = selectedDebugInfo.actionName;
         },
 
         destroy() {

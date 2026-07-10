@@ -55,6 +55,9 @@ export function createArrowCloudScene(mountElement, options = {}) {
     camera.position.set(0, 5, 12);
     camera.lookAt(0, 0, 0);
 
+    const pathLayoutCamera = camera.clone();
+    pathLayoutCamera.updateProjectionMatrix();
+
     const renderer = new THREE.WebGLRenderer({
         antialias: true
     });
@@ -100,7 +103,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
     function rebuildArrowPaths() {
         const renderState = renderArrowPaths({
             scene,
-            camera,
+            pathLayoutCamera,
             mountElement,
             arrowMaterial,
             animationSettings,
@@ -119,7 +122,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
         });
     }
 
-    function copyCurrentMoves() {
+    function copyCurrentPath() {
         if (!selectedDebugInfo) {
             console.warn('No debug segment selected.');
             return;
@@ -133,26 +136,81 @@ export function createArrowCloudScene(mountElement, options = {}) {
         }
 
         const arrowPath = workingArrowPaths[arrowPathIndex];
-        const output = JSON.stringify(arrowPath.moves, null, 4);
+        const output = JSON.stringify(arrowPath, null, 4);
 
         navigator.clipboard.writeText(output)
             .then(() => {
-                console.log('Copied arrow moves:');
+                console.log('Copied arrow path:');
                 console.log(output);
             })
             .catch((error) => {
-                console.warn('Could not copy arrow moves to the clipboard.');
+                console.warn('Could not copy arrow path to the clipboard.');
                 console.log(output);
                 console.error(error);
             });
+    }
+
+    function nudgeArrowPathOrigin(arrowPath, targetValue, amount) {
+        const axisName = targetValue.replace('origin:', '');
+        const axisIndexMap = {
+            x: 0,
+            y: 1,
+            z: 2
+        };
+
+        const axisIndex = axisIndexMap[axisName];
+
+        if (axisIndex === undefined) {
+            return;
+        }
+
+        arrowPath.origin[axisIndex] = Number(
+            (arrowPath.origin[axisIndex] + amount).toFixed(3)
+        );
+    }
+
+    function nudgeArrowPathMove(arrowPath, targetValue, amount) {
+        const targetOffset = Number(targetValue.replace('move:', ''));
+
+        if (Number.isNaN(targetOffset)) {
+            return;
+        }
+
+        const sourceMoveIndex = getSourceMoveIndex(
+            arrowPath,
+            selectedDebugInfo.segmentIndex
+        );
+
+        const targetMoveIndex = sourceMoveIndex + targetOffset;
+
+        if (targetMoveIndex < 0 || targetMoveIndex >= arrowPath.moves.length) {
+            return;
+        }
+
+        const move = arrowPath.moves[targetMoveIndex];
+        const [actionName, actionValue, options] = move;
+
+        if (typeof actionValue !== 'number') {
+            return;
+        }
+
+        const nextActionValue = Math.max(
+            0,
+            Number((actionValue + amount).toFixed(3))
+        );
+
+        arrowPath.moves[targetMoveIndex] = options
+            ? [actionName, nextActionValue, options]
+            : [actionName, nextActionValue];
     }
 
     rebuildArrowPaths();
 
     if (animationSettings.debugMode) {
         debugPathNudgeControls = createDebugPathNudgeControls({
-            onNudge: nudgeSelectedMove,
-            onCopy: copyCurrentMoves,
+            onNudge: nudgeSelectedPathValue,
+            onCopy: copyCurrentPath,
+            onActionChange: changeSelectedMoveAction
         });
 
         debugLineTooltip = createDebugLineTooltip({
@@ -168,10 +226,6 @@ export function createArrowCloudScene(mountElement, options = {}) {
             renderer,
             getObjects() {
                 return arrows;
-            },
-            onSelect(debugInfo) {
-                selectedDebugInfo = debugInfo;
-                debugPathNudgeControls.setSelectedDebugInfo(debugInfo);
             },
             onSelect(debugInfo) {
                 selectedDebugInfo = debugInfo;
@@ -308,11 +362,37 @@ export function createArrowCloudScene(mountElement, options = {}) {
         camera.aspect = stageSize.width / stageSize.height;
         camera.updateProjectionMatrix();
 
+        pathLayoutCamera.aspect = stageSize.width / stageSize.height;
+        pathLayoutCamera.updateProjectionMatrix();
+
         renderer.setSize(stageSize.width, stageSize.height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     }
 
-    function nudgeSelectedMove(amount, targetOffset = 0) {
+    function nudgeSelectedPathValue(amount, targetValue = 'move:0') {
+        if (!selectedDebugInfo) {
+            return;
+        }
+
+        const arrowPathIndex = findArrowPathIndexByName(selectedDebugInfo.arrowName);
+
+        if (arrowPathIndex < 0) {
+            return;
+        }
+
+        const arrowPath = workingArrowPaths[arrowPathIndex];
+
+        if (targetValue.startsWith('origin:')) {
+            nudgeArrowPathOrigin(arrowPath, targetValue, amount);
+            rebuildArrowPaths();
+            return;
+        }
+
+        nudgeArrowPathMove(arrowPath, targetValue, amount);
+        rebuildArrowPaths();
+    }
+
+    function changeSelectedMoveAction(actionName, targetOffset = 0) {
         if (!selectedDebugInfo) {
             return;
         }
@@ -337,17 +417,11 @@ export function createArrowCloudScene(mountElement, options = {}) {
         }
 
         const move = arrowPath.moves[targetMoveIndex];
-        const [actionName, actionValue, options] = move;
-
-        if (typeof actionValue !== 'number') {
-            return;
-        }
-
-        const nextActionValue = Math.max(0, Number((actionValue + amount).toFixed(3)));
+        const [, actionValue, options] = move;
 
         arrowPath.moves[targetMoveIndex] = options
-            ? [actionName, nextActionValue, options]
-            : [actionName, nextActionValue];
+            ? [actionName, actionValue, options]
+            : [actionName, actionValue];
 
         rebuildArrowPaths();
     }
@@ -496,10 +570,10 @@ function clearRenderedArrowItems(scene, renderedArrowItems) {
     });
 }
 
-function createRenderedArrowPath({ scene, camera, mountElement, arrowMaterial, animationSettings, arrowPath }) {
+function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowMaterial, animationSettings, arrowPath }) {
     const positionedArrowPath = positionArrowPathForViewport(
         arrowPath,
-        camera,
+        pathLayoutCamera,
         mountElement
     );
 
@@ -539,8 +613,13 @@ function createRenderedArrowPath({ scene, camera, mountElement, arrowMaterial, a
 
     scene.add(arrow);
 
+    let label;
+
     if (animationSettings.debugMode) {
-        const label = createArrowNameLabel(positionedArrowPath.name, segments[0]);
+
+        const labelText = createArrowDebugLabelText(arrowPath);
+        label = createArrowNameLabel(labelText, segments[0]);
+
         scene.add(label);
 
         return {
@@ -560,13 +639,13 @@ function createRenderedArrowPath({ scene, camera, mountElement, arrowMaterial, a
 
 }
 
-function renderArrowPaths({ scene, camera, mountElement, arrowMaterial, animationSettings, previousRenderedArrowItems, arrowPaths }) {
+function renderArrowPaths({ scene, pathLayoutCamera, mountElement, arrowMaterial, animationSettings, previousRenderedArrowItems, arrowPaths }) {
     clearRenderedArrowItems(scene, previousRenderedArrowItems);
 
     const renderedArrowItems = arrowPaths.map((arrowPath) => {
         return createRenderedArrowPath({
             scene,
-            camera,
+            pathLayoutCamera,
             mountElement,
             arrowMaterial,
             animationSettings,
@@ -585,3 +664,15 @@ function renderArrowPaths({ scene, camera, mountElement, arrowMaterial, animatio
     };
 }
 
+function formatVectorValues(values) {
+    return values.map((value) => {
+        return Number(value).toFixed(3);
+    }).join(', ');
+}
+
+function createArrowDebugLabelText(arrowPath) {
+    return [
+        arrowPath.name,
+        `(${formatVectorValues(arrowPath.origin)})`
+    ].join('    ');
+}

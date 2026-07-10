@@ -9,7 +9,7 @@ export function createArrowNameLabel(text, segment) {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    context.font = '150px system-ui, sans-serif';
+    context.font = '64px system-ui, sans-serif';
     context.textAlign = 'left';
     context.textBaseline = 'middle';
 
