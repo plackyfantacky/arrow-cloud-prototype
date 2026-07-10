@@ -3,8 +3,9 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "build": "esbuild src/main.js --bundle --outfile=dist/main.js --sourcemap",
-        "watch": "esbuild src/main.js --bundle --outfile=dist/main.js --sourcemap --watch",
+        "build": "esbuild src/main.js --bundle --outfile=dist/main.js --minify",
+        "build:labs": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap",
+        "watch": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap --watch",
         "serve": "browser-sync start --server . --files 'index.html, src/**/*.js, dist/**/*.js'",
         "dev": "npm-run-all --parallel watch serve"
     },
