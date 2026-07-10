@@ -28,7 +28,7 @@ import { createDebugPathNudgeControls } from "./debug/createDebugPathNudgeContro
 import { createDebugPathEditor } from "./debug/createDebugPathEditor.js";
 import { createDebugSegmentHighlight } from "./debug/createDebugSegmentHighlight.js";
 
-export function createArrowCloudScene(mountElement, options = {}) {
+export function createArrowCloudLabsScene(mountElement, options = {}) {
     if (!mountElement) {
         throw new Error('createArrowCloudScene requires a mount element.');
     }
