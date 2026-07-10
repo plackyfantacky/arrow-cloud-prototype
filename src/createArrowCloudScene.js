@@ -26,6 +26,7 @@ import { createDebugAxesGauge } from "./debug/createDebugAxesGauge.js";
 import { createDebugSegmentSelector } from "./debug/createDebugSegmentSelector.js";
 import { createDebugPathNudgeControls } from "./debug/createDebugPathNudgeControls.js";
 import { createDebugPathEditor } from "./debug/createDebugPathEditor.js";
+import { createDebugSegmentHighlight } from "./debug/createDebugSegmentHighlight.js";
 
 export function createArrowCloudScene(mountElement, options = {}) {
     if (!mountElement) {
@@ -97,6 +98,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
     let debugLineTooltip = null;
     let debugSegmentSelector = null;
     let debugPathNudgeControls = null;
+    let debugSegmentHighlight = null;
 
     const pathEditor = createDebugPathEditor(arrowPaths);
 
@@ -114,6 +116,12 @@ export function createArrowCloudScene(mountElement, options = {}) {
         renderedArrowItems = renderState.renderedArrowItems;
         arrows = renderState.arrows;
         pathComponentMeshes = renderState.pathComponentMeshes;
+
+        if (debugSegmentHighlight) {
+            debugSegmentHighlight.setSelectedDebugInfo(
+                pathEditor.getSelectedDebugInfo()
+            );
+        }
     }
 
 
@@ -160,6 +168,33 @@ export function createArrowCloudScene(mountElement, options = {}) {
                 if (didChangePath) {
                     rebuildArrowPaths();
                 }
+            },
+            onInsertMove(position, actionName) {
+                const didChangePath = pathEditor.insertMoveNearSelectedMove(
+                    position,
+                    actionName
+                );
+
+                if (didChangePath) {
+                    rebuildArrowPaths();
+                }
+            },
+            onDuplicateMove() {
+                const didChangePath = pathEditor.duplicateSelectedMove();
+
+                if (didChangePath) {
+                    rebuildArrowPaths();
+                }
+            },
+            onRemoveMove() {
+                const didChangePath = pathEditor.removeSelectedMove();
+
+                if (didChangePath) {
+                    rebuildArrowPaths();
+                }
+            },
+            onTargetChange(targetValue) {
+                debugSegmentHighlight.setTargetValue(targetValue);
             }
         });
 
@@ -180,6 +215,13 @@ export function createArrowCloudScene(mountElement, options = {}) {
             onSelect(debugInfo) {
                 pathEditor.setSelectedDebugInfo(debugInfo);
                 debugPathNudgeControls.setSelectedDebugInfo(debugInfo);
+                debugSegmentHighlight.setSelectedDebugInfo(debugInfo);
+            }
+        });
+
+        debugSegmentHighlight = createDebugSegmentHighlight({
+            getObjects() {
+                return arrows;
             }
         });
     }
@@ -233,7 +275,12 @@ export function createArrowCloudScene(mountElement, options = {}) {
         const shouldUseCameraTrack = !animationSettings.debugMode;
 
         if (shouldUseCameraTrack) {
-            updateCameraTrack(currentTime);
+            updateCameraTrack(
+                mountElement,
+                cameraTrack,
+                camera,
+                currentTime
+            );
         }
 
         if (debugControls) {
@@ -338,6 +385,10 @@ export function createArrowCloudScene(mountElement, options = {}) {
 
         if (debugPathNudgeControls) {
             debugPathNudgeControls.destroy();
+        }
+
+        if (debugSegmentHighlight) {
+            debugSegmentHighlight.destroy();
         }
 
         renderer.dispose();

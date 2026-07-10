@@ -59,9 +59,8 @@ export function getCameraTrackState(cameraTrack, currentTime) {
 };
 
 export function updateCameraTrack(mountElement, cameraTrack, camera, currentTime = 0,) {
-    let time = currentTime ?? 0;
-
-    const cameraTrackState = getCameraTrackState(cameraTrack, time);
+    const cameraTarget = new THREE.Vector3();
+    const cameraTrackState = getCameraTrackState(cameraTrack, currentTime);
 
     if (!cameraTrackState) {
         return;

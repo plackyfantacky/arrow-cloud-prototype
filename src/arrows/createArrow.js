@@ -54,6 +54,7 @@ export function createArrow(pieces, material, settings) {
         pieceGroup.userData.segmentIndex = piece.segmentIndex;
         pieceGroup.userData.actionName = piece.actionName;
         pieceGroup.userData.segmentLength = piece.segmentLength;
+        pieceGroup.userData.pieceType = piece.type;
 
         group.add(pieceGroup);
         group.userData.revealPieces.push(pieceGroup);

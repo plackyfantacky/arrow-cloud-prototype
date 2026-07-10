@@ -1,4 +1,12 @@
-export function createDebugPathNudgeControls({ onNudge, onCopy, onActionChange }) {
+export function createDebugPathNudgeControls({
+    onNudge,
+    onCopy,
+    onActionChange,
+    onInsertMove,
+    onDuplicateMove,
+    onRemoveMove,
+    onTargetChange
+}) {
     const state = {
         selectedDebugInfo: null,
         targetValue: 'move:0'
@@ -61,6 +69,10 @@ export function createDebugPathNudgeControls({ onNudge, onCopy, onActionChange }
 
     targetSelect.addEventListener('change', () => {
         state.targetValue = targetSelect.value;
+
+        if (onTargetChange) {
+            onTargetChange(state.targetValue);
+        }
     });
 
     actionOptions.forEach((optionConfig) => {
@@ -96,6 +108,43 @@ export function createDebugPathNudgeControls({ onNudge, onCopy, onActionChange }
         buttonRow.appendChild(button);
     });
 
+    const segmentButtonRow = document.createElement('div');
+
+    segmentButtonRow.style.display = 'flex';
+    segmentButtonRow.style.gap = '0.35rem';
+    segmentButtonRow.style.flexWrap = 'wrap';
+
+    const insertBeforeButton = document.createElement('button');
+    insertBeforeButton.type = 'button';
+    insertBeforeButton.textContent = 'Insert before';
+    insertBeforeButton.addEventListener('click', () => {
+        onInsertMove('before', actionSelect.value);
+    });
+
+    const insertAfterButton = document.createElement('button');
+    insertAfterButton.type = 'button';
+    insertAfterButton.textContent = 'Insert after';
+    insertAfterButton.addEventListener('click', () => {
+        onInsertMove('after', actionSelect.value);
+    });
+
+    const duplicateButton = document.createElement('button');
+    duplicateButton.type = 'button';
+    duplicateButton.textContent = 'Duplicate';
+    duplicateButton.addEventListener('click', onDuplicateMove);
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.textContent = 'Remove';
+    removeButton.addEventListener('click', onRemoveMove);
+
+    segmentButtonRow.append(
+        insertBeforeButton,
+        insertAfterButton,
+        duplicateButton,
+        removeButton
+    );
+
     const copyButton = document.createElement('button');
 
     copyButton.type = 'button';
@@ -108,6 +157,7 @@ export function createDebugPathNudgeControls({ onNudge, onCopy, onActionChange }
         actionLabel,
         actionSelect,
         buttonRow,
+        segmentButtonRow,
         copyButton
     );
 

@@ -83,12 +83,92 @@ export function createDebugPathEditor(arrowPaths) {
         return true;
     }
 
+    function insertMoveNearSelectedMove(position, actionName = 'forward') {
+        const arrowPath = getSelectedArrowPath();
+
+        if (!arrowPath) {
+            return false;
+        }
+
+        const sourceMoveIndex = getSelectedSourceMoveIndex(arrowPath);
+
+        if (sourceMoveIndex < 0) {
+            return false;
+        }
+
+        const insertOffset = position === 'before' ? 0 : 1;
+
+        const insertIndex = sourceMoveIndex + insertOffset;
+
+        arrowPath.moves.splice(insertIndex, 0, [actionName, 1]);
+
+        return true;
+    }
+
+    function duplicateSelectedMove() {
+        const arrowPath = getSelectedArrowPath();
+
+        if (!arrowPath) {
+            return false;
+        }
+
+        const sourceMoveIndex = getSelectedSourceMoveIndex(arrowPath);
+
+        if (sourceMoveIndex < 0) {
+            return false;
+        }
+
+        const move = arrowPath.moves[sourceMoveIndex];
+
+        arrowPath.moves.splice(sourceMoveIndex + 1, 0, cloneMove(move));
+
+        return true;
+    }
+
+    function removeSelectedMove() {
+        const arrowPath = getSelectedArrowPath();
+
+        if (!arrowPath) {
+            return false;
+        }
+
+        if (arrowPath.moves.length <= 1) {
+            return false;
+        }
+
+        const sourceMoveIndex = getSelectedSourceMoveIndex(arrowPath);
+
+        if (sourceMoveIndex < 0) {
+            return false;
+        }
+
+        arrowPath.moves.splice(sourceMoveIndex, 1);
+        state.selectedDebugInfo = null;
+
+        return true;
+    }
+
+    function getSelectedSourceMoveIndex(arrowPath, selectedDebugInfo) {
+        return getSourceMoveIndex(
+            arrowPath,
+            state.selectedDebugInfo.segmentIndex
+        );
+    }
+
+    function getSelectedDebugInfo() {
+        return state.selectedDebugInfo;
+    }
+
     return {
         getArrowPaths,
         getSelectedArrowPath,
+        getSelectedDebugInfo,
         setSelectedDebugInfo,
         nudgeSelectedPathValue,
-        changeSelectedMoveAction
+        changeSelectedMoveAction,
+        insertMoveNearSelectedMove,
+        duplicateSelectedMove,
+        removeSelectedMove
     };
 }
 
@@ -187,4 +267,12 @@ export function getSourceMoveIndex(arrowPath, segmentIndex) {
     }
 
     return segmentIndex;
+}
+
+function cloneMove(move) {
+    const [actionName, actionValue, options] = move;
+
+    return options
+        ? [actionName, actionValue, { ...options }]
+        : [actionName, actionValue];
 }
