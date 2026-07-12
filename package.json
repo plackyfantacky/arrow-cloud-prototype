@@ -6,8 +6,9 @@
         "watch": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap --watch",
         "serve": "browser-sync start --server . --files 'index.html, src/**/*.js, dist/**/*.js'",
         "dev": "npm-run-all --parallel watch serve",
-        "build:prod": "esbuild src/main.js --bundle --format=esm --outfile=dist/main.js --minify --metafile=dist/main.meta.json --analyze=verbose",
+        "build:prod": "esbuild src/main.js --bundle --outfile=dist/main.js --minify --metafile=dist/main.meta.json --analyze=verbose",
         "build:labs": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap",
+        "build:runtime": "esbuild src/arrowCloudRuntime.js --bundle --format=esm --outfile=dist/arrow-cloud-runtime.js --minify",
         "build": "npm-run-all build:prod build:labs"
     },
     "keywords": [],
