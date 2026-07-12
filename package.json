@@ -9,6 +9,7 @@
         "build:prod": "esbuild src/main.js --bundle --outfile=dist/main.js --minify --metafile=dist/main.meta.json --analyze=verbose",
         "build:labs": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap",
         "build:runtime": "esbuild src/createArrowCloudRuntime.js --bundle --format=esm --outfile=dist/arrow-cloud-runtime.js --minify",
+        "build:labs-runtime": "esbuild src/createArrowCloudLabsRuntime.js --bundle --format=esm --outfile=dist/arrow-cloud-labs-runtime.js --sourcemap",
         "build": "npm-run-all build:prod build:labs"
     },
     "keywords": [],

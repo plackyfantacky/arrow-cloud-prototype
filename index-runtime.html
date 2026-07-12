@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en-AU">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Arrow Cloud Prototype: Runtime</title>
+
+        <style>
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                overflow: hidden;
+                background: #111;
+            }
+
+            .arrow-cloud__canvas {
+                width: 100%;
+                height: 100%;
+            }
+
+            canvas {
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="arrow-cloud__canvas" data-arrow-cloud></div>
+        <script type="module">
+            const mountElement = document.querySelector('[data-arrow-cloud]');
+            if (mountElement) {
+                const { createArrowCloudScene } = await import(
+                    './dist/arrow-cloud-runtime.js'
+                );
+                
+                createArrowCloudScene(mountElement);
+            }
+        </script>
+    </body>
+</html>

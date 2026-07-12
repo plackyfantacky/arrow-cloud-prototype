@@ -9,7 +9,7 @@ import {
     animationSettings as defaultAnimationSettings,
     arrowPaths as defaultArrowPaths,
     cameraTrack as defaultCameraTrack
-} from "./arrows/arrowData.js";
+} from "./arrows/arrowData-labs.js";
 
 import { arrowFieldSettings } from "./arrows/arrowFieldSettings.js";
 import { createArrow } from "./arrows/createArrow.js";
