@@ -3,11 +3,12 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "build": "esbuild src/main.js --bundle --outfile=dist/main.js --minify",
-        "build:labs": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap",
         "watch": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap --watch",
         "serve": "browser-sync start --server . --files 'index.html, src/**/*.js, dist/**/*.js'",
-        "dev": "npm-run-all --parallel watch serve"
+        "dev": "npm-run-all --parallel watch serve",
+        "build:prod": "esbuild src/main.js --bundle --outfile=dist/main.js --minify --metafile=dist/main.meta.json --analyze=verbose",
+        "build:labs": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap",
+        "build": "npm-run-all build:prod build:labs"
     },
     "keywords": [],
     "author": "",
