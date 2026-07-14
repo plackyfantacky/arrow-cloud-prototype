@@ -33,9 +33,15 @@ export function createDebugControls({
     container.style.fontSize = '13px';
     container.style.borderRadius = '0.5rem';
 
-    const playButton = document.createElement('button');
-    playButton.type = 'button';
-    playButton.textContent = state.isPlaying ? 'Pause' : 'Play';
+    const playPauseButton = document.createElement('button');
+    playPauseButton.type = 'button';
+    playPauseButton.textContent = state.isPlaying ? 'Pause' : 'Play';
+
+    function updatePlayPauseButton() {
+        playPauseButton.textContent = state.isPlaying
+            ? 'Pause'
+            : 'Play';
+    }
 
     const rewindButton = document.createElement('button');
     rewindButton.type = 'button';
@@ -79,6 +85,11 @@ export function createDebugControls({
     progressInput.step = '0.01';
     progressInput.value = String(state.currentTime);
 
+    function updateProgressInput() {
+        progressInput.value = String(state.currentTime);
+        timeValue.textContent = `${state.currentTime.toFixed(2)}s`;
+    }
+
     const timeValue = document.createElement('span');
     timeValue.textContent = `${state.currentTime.toFixed(2)}s`;
 
@@ -104,15 +115,24 @@ export function createDebugControls({
 
     speedLabel.append(speedInput, ' ', speedValue);
 
-    playButton.addEventListener('click', () => {
+    playPauseButton.addEventListener('click', () => {
+        const isStartingPlayback = !state.isPlaying;
+
+        if (
+            isStartingPlayback &&
+            state.currentTime >= state.timelineDuration
+        ) {
+            state.currentTime = 0;
+            updateProgressInput();
+        }
+
         state.isPlaying = !state.isPlaying;
-        playButton.textContent = state.isPlaying ? 'Pause' : 'Play';
+        updatePlayPauseButton();
     });
 
     rewindButton.addEventListener('click', () => {
         state.currentTime = 0;
-        progressInput.value = String(state.currentTime);
-        timeValue.textContent = `${state.currentTime.toFixed(2)}s`;
+        updateProgressInput();
     });
 
     cameraModeButton.addEventListener('click', () => {
@@ -139,7 +159,7 @@ export function createDebugControls({
     });
 
     container.append(
-        playButton,
+        playPauseButton,
         rewindButton,
         loopLabel,
         progressLabel,
@@ -152,10 +172,8 @@ export function createDebugControls({
 
     return {
         state,
-        updateProgressInput() {
-            progressInput.value = String(state.currentTime);
-            timeValue.textContent = `${state.currentTime.toFixed(2)}s`;
-        },
+        updateProgressInput,
+        updatePlayPauseButton,
         destroy() {
             container.remove();
         }

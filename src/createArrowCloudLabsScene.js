@@ -140,7 +140,11 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             return;
         }
         
-        const output = JSON.stringify(arrowPath, null, 4);
+        const output = JSON.stringify(arrowPath, null, 4)
+            .replace(
+                /\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g,
+                '["$1", $2]'
+            );
 
         navigator.clipboard.writeText(output)
             .then(() => {
@@ -323,6 +327,13 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             onResetCamera: resetCamera
         })
         : null;
+
+    if (debugControls && animationSettings?.showFinalState) {
+        debugControls.state.currentTime = debugControls.state.timelineDuration;
+        debugControls.state.isPlaying = false;
+        debugControls.updateProgressInput();
+        debugControls.updatePlayPauseButton();
+    }
 
     function animate() {
         if (isDestroyed) {
