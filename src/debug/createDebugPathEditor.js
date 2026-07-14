@@ -40,6 +40,10 @@ export function createDebugPathEditor(arrowPaths) {
             return nudgeArrowPathOrigin(arrowPath, targetValue, amount);
         }
 
+        if (targetValue === 'entry:straightUntil') {
+            return nudgeArrowPathStraightUntil(arrowPath, amount);
+        }
+
         return nudgeArrowPathMove(
             arrowPath,
             state.selectedDebugInfo,
@@ -233,6 +237,21 @@ function nudgeArrowPathMove(arrowPath, selectedDebugInfo, targetValue, amount) {
     arrowPath.moves[targetMoveIndex] = options
         ? [actionName, nextActionValue, options]
         : [actionName, nextActionValue];
+
+    return true;
+}
+
+function nudgeArrowPathStraightUntil(arrowPath, amount) {
+    if (
+        arrowPath.entry?.straightUntil === undefined
+        || arrowPath.entry.straightUntil === null
+    ) {
+        return false;
+    }
+
+    arrowPath.entry.straightUntil = Number(
+        (arrowPath.entry.straightUntil + amount).toFixed(3)
+    );
 
     return true;
 }

@@ -42,6 +42,7 @@ export function createDebugPathNudgeControls({
         { label: 'Origin X', value: 'origin:x' },
         { label: 'Origin Y', value: 'origin:y' },
         { label: 'Origin Z', value: 'origin:z' },
+        { label: 'Straight until', value: 'entry:straightUntil' },
         { label: 'Previous move', value: 'move:-1' },
         { label: 'Selected move', value: 'move:0' },
         { label: 'Next move', value: 'move:1' }
