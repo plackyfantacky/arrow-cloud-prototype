@@ -279,6 +279,8 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
                 camera,
                 debugControls?.state.currentTime ?? 0
             );
+
+            return;
         }
 
         camera.position.copy(orbitalCameraState.position);
@@ -287,18 +289,11 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     }
 
     function toggleCameraMode() {
-        if (cameraMode === CAMERA_MODES.TRACKED) {
-            updateCameraTrack(
-                mountElement,
-                cameraTrack,
-                camera,
-                0
-            );
+        const nextCameraMode = cameraMode === CAMERA_MODES.ORBITAL
+            ? CAMERA_MODES.TRACKED
+            : CAMERA_MODES.ORBITAL;
 
-            return;
-        }
-
-        controls?.reset();
+        setCameraMode(nextCameraMode);
     }
 
     function resetCamera() {
@@ -346,17 +341,6 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         const currentTime = !debugControls && animationSettings.isLooping
             ? rawCurrentTime % animationSettings.timelineDuration
             : rawCurrentTime;
-
-        const shouldUseCameraTrack = !animationSettings.debugMode;
-
-        if (shouldUseCameraTrack) {
-            updateCameraTrack(
-                mountElement,
-                cameraTrack,
-                camera,
-                currentTime
-            );
-        }
 
         if (debugControls) {
             if (debugControls.state.isPlaying) {

@@ -46,14 +46,17 @@ export function createDebugControls({
 
     const resetCameraButton = document.createElement('button');
     resetCameraButton.type = 'button';
-    resetCameraButton.textContent = 'Reset camera';
+    resetCameraButton.textContent = 'Reset camera position';
 
     function updateCameraModeButton() {
-    const cameraMode = getCameraMode();
+        const cameraMode = getCameraMode();
+        const isOrbitalCamera = cameraMode === 'orbital';
 
-    cameraModeButton.textContent = cameraMode === 'orbital'
-        ? 'Preview tracked camera'
-        : 'Return to orbital camera';
+        cameraModeButton.textContent = cameraMode === 'orbital'
+            ? 'Preview tracked camera'
+            : 'Return to orbital camera';
+
+        resetCameraButton.hidden = !isOrbitalCamera;
     }
 
     updateCameraModeButton();
@@ -78,6 +81,11 @@ export function createDebugControls({
 
     const timeValue = document.createElement('span');
     timeValue.textContent = `${state.currentTime.toFixed(2)}s`;
+
+    timeValue.style.display = 'inline-block';
+    timeValue.style.width = '3.75rem';
+    timeValue.style.fontVariantNumeric = 'tabular-nums';
+    timeValue.style.textAlign = 'right';
 
     progressLabel.append(progressInput, ' ', timeValue);
 
