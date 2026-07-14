@@ -27,6 +27,7 @@ import { createDebugSegmentSelector } from "./debug/createDebugSegmentSelector.j
 import { createDebugPathNudgeControls } from "./debug/createDebugPathNudgeControls.js";
 import { createDebugPathEditor } from "./debug/createDebugPathEditor.js";
 import { createDebugSegmentHighlight } from "./debug/createDebugSegmentHighlight.js";
+import { createDebugScenePanel } from "./debug/createDebugScenePanel.js";
 
 const CAMERA_MODES = {
     TRACKED: 'tracked',
@@ -102,6 +103,9 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     let renderedArrowItems = [];
     let arrows = [];
     let pathComponentMeshes = [];
+    let gridHelper = null;
+    let axesGauge = null;
+    let debugScenePanel = null;
     let debugLineTooltip = null;
     let debugSegmentSelector = null;
     let debugPathNudgeControls = null;
@@ -109,6 +113,83 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     let cameraMode = CAMERA_MODES.ORBITAL;
 
     const pathEditor = createDebugPathEditor(arrowPaths);
+
+    const arrowVisibilityState = new Map(
+        arrowPaths.map((arrowPath) => {
+            return [arrowPath.name, true];
+        })
+    );
+
+    const arrowOpacityState = new Map(
+        arrowPaths.map((arrowPath) => {
+            return [arrowPath.name, 1];
+        })
+    );
+
+    function setRenderedArrowItemVisibility(
+        renderedArrowItem,
+        isVisible
+    ) {
+        renderedArrowItem.arrow.visible = isVisible;
+
+        renderedArrowItem.componentMeshes.forEach((componentMesh) => {
+            componentMesh.visible = isVisible;
+        });
+
+        if (renderedArrowItem.label) {
+            renderedArrowItem.label.visible = isVisible;
+        }
+    }
+
+    function applyArrowVisibilityState() {
+        renderedArrowItems.forEach((renderedArrowItem) => {
+            const arrowName = renderedArrowItem.arrow.userData.name;
+            const isVisible = arrowVisibilityState.get(arrowName) ?? true;
+
+            setRenderedArrowItemVisibility(
+                renderedArrowItem,
+                isVisible
+            );
+        });
+    }
+
+    function applyArrowOpacityState() {
+        renderedArrowItems.forEach((renderedArrowItem) => {
+            const arrowName = renderedArrowItem.arrow.userData.name;
+            const opacity = arrowOpacityState.get(arrowName) ?? 1;
+
+            setRenderedArrowItemOpacity(
+                renderedArrowItem,
+                opacity
+            );
+        });
+    }
+
+    function setObjectOpacity(object, opacity) {
+        object.traverse((childObject) => {
+            if (!childObject.isMesh || !childObject.material) {
+                return;
+            }
+
+            const materials = Array.isArray(childObject.material)
+                ? childObject.material
+                : [childObject.material];
+
+            materials.forEach((material) => {
+                material.transparent = opacity < 1;
+                material.opacity = opacity;
+                material.needsUpdate = true;
+            });
+        });
+    }
+
+    function setRenderedArrowItemOpacity(renderedArrowItem, opacity) {
+        setObjectOpacity(renderedArrowItem.arrow, opacity);
+
+        renderedArrowItem.componentMeshes.forEach((componentMesh) => {
+            setObjectOpacity(componentMesh, opacity);
+        });
+    }
 
     function rebuildArrowPaths() {
         const renderState = renderArrowPaths({
@@ -124,6 +205,9 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         renderedArrowItems = renderState.renderedArrowItems;
         arrows = renderState.arrows;
         pathComponentMeshes = renderState.pathComponentMeshes;
+
+        applyArrowVisibilityState();
+        applyArrowOpacityState();
 
         if (debugSegmentHighlight) {
             debugSegmentHighlight.setSelectedDebugInfo(
@@ -244,17 +328,45 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     directionalLight.position.set(4, 6, 8);
     scene.add(directionalLight);
 
-    if (animationSettings.debugMode) {
-        const gridHelper = new THREE.GridHelper(14, 14);
+    if (animationSettings.debugMode) {    
+        gridHelper = new THREE.GridHelper(14, 14);
         scene.add(gridHelper);
 
-        const axesGauge = createDebugAxesGauge({
+        axesGauge = createDebugAxesGauge({
             size: 2,
             labelOffset: 0.35,
         });
 
         axesGauge.position.set(0.1, 0.1, 0.1);
         scene.add(axesGauge);
+    }
+
+    if (animationSettings.debugMode) {
+        debugScenePanel = createDebugScenePanel({
+            gridVisible: gridHelper.visible,
+            axesVisible: axesGauge.visible,
+            arrowNames: pathEditor.getArrowPaths().map((arrowPath) => {
+                return arrowPath.name;
+            }),
+
+            onGridVisibilityChange(isVisible) {
+                gridHelper.visible = isVisible;
+            },
+
+            onAxesVisibilityChange(isVisible) {
+                axesGauge.visible = isVisible;
+            },
+
+            onArrowVisibilityChange(arrowName, isVisible) {
+                arrowVisibilityState.set(arrowName, isVisible);
+                applyArrowVisibilityState();
+            },
+            
+            onArrowOpacityChange(arrowName, opacity) {
+                arrowOpacityState.set(arrowName, opacity);
+                applyArrowOpacityState();
+            }
+        });
     }
 
     const timer = new THREE.Timer();
@@ -470,6 +582,10 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             debugSegmentHighlight.destroy();
         }
 
+        if (debugScenePanel) {
+            debugScenePanel.destroy();
+        }
+
         renderer.dispose();
 
         if (renderer.domElement.parentElement) {
@@ -531,6 +647,12 @@ function clearRenderedArrowItems(scene, renderedArrowItems) {
 }
 
 function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowMaterial, animationSettings, arrowPath }) {
+
+    const renderedArrowMaterial = arrowMaterial.clone();
+
+    renderedArrowMaterial.transparent = true;
+    renderedArrowMaterial.opacity = 1;
+
     const positionedArrowPath = positionArrowPathForViewport(
         arrowPath,
         pathLayoutCamera,
@@ -539,7 +661,13 @@ function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowM
 
     const segments = createArrowPathSegments(positionedArrowPath);
     const pieces = createArrowRenderPieces(segments, arrowFieldSettings);
-    const arrow = createArrow(pieces, arrowMaterial, arrowFieldSettings);
+    
+    const arrow = createArrow(
+        pieces, 
+        renderedArrowMaterial, 
+        arrowFieldSettings
+    );
+
     const components = createArrowPathComponents(positionedArrowPath, segments);
     const componentMeshes = [];
 
