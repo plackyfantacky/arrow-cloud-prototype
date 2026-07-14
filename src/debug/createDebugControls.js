@@ -4,7 +4,11 @@ export function createDebugControls({
     speed = 1,
     isPlaying = true,
     isLooping = true
-}) {
+}, {
+    getCameraMode = () => 'orbital',
+    onToggleCameraMode = () => {},
+    onResetCamera = () => {}
+} = {}) {
     const state = {
         currentTime,
         timelineDuration,
@@ -36,6 +40,23 @@ export function createDebugControls({
     const rewindButton = document.createElement('button');
     rewindButton.type = 'button';
     rewindButton.textContent = 'Rewind';
+
+    const cameraModeButton = document.createElement('button');
+    cameraModeButton.type = 'button';
+
+    const resetCameraButton = document.createElement('button');
+    resetCameraButton.type = 'button';
+    resetCameraButton.textContent = 'Reset camera';
+
+    function updateCameraModeButton() {
+    const cameraMode = getCameraMode();
+
+    cameraModeButton.textContent = cameraMode === 'orbital'
+        ? 'Preview tracked camera'
+        : 'Return to orbital camera';
+    }
+
+    updateCameraModeButton();
 
     const loopLabel = document.createElement('label');
     const loopCheckbox = document.createElement('input');
@@ -86,6 +107,15 @@ export function createDebugControls({
         timeValue.textContent = `${state.currentTime.toFixed(2)}s`;
     });
 
+    cameraModeButton.addEventListener('click', () => {
+        onToggleCameraMode();
+        updateCameraModeButton();
+    });
+
+    resetCameraButton.addEventListener('click', () => {
+        onResetCamera();
+    });
+
     loopCheckbox.addEventListener('change', () => {
         state.isLooping = loopCheckbox.checked;
     });
@@ -105,7 +135,9 @@ export function createDebugControls({
         rewindButton,
         loopLabel,
         progressLabel,
-        speedLabel
+        speedLabel,
+        cameraModeButton,
+        resetCameraButton
     );
 
     document.body.appendChild(container);

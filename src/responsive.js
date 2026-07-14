@@ -18,7 +18,7 @@ export function handleResize(mountElement, cameras, renderer) {
 }
 
 export function positionArrowPathForViewport(arrowPath, camera, container) {
-    if (!arrowPath.entry?.side) {
+    if (arrowPath.entry?.position !== 'viewport') {
         return arrowPath;
     }
 
@@ -26,7 +26,21 @@ export function positionArrowPathForViewport(arrowPath, camera, container) {
         return arrowPath;
     }
 
-    const viewportBounds = getViewportBoundsAtZ(camera, container, arrowPath.origin[2]);
+    // if (!arrowPath.entry?.side) {
+    //     return arrowPath;
+    // }
+
+    if (!['left', 'right'].includes(arrowPath.entry.side)) {
+        return arrowPath;
+    }
+
+    const viewportBounds = getViewportBoundsAtZ(
+        camera, 
+        container, 
+        arrowPath.origin[2]
+    );
+
+
     const origin = [...arrowPath.origin];
     const margin = arrowPath.entry.margin ?? defaultEntryMargin;
 
