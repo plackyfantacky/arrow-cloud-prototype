@@ -131,11 +131,13 @@ export function updateArrowReveal(arrow, currentTime) {
     const delay = arrow.userData.timing.delay;
     const duration = arrow.userData.timing.duration;
 
-    const revealProgress = THREE.MathUtils.clamp(
+    const rawRevealProgress = THREE.MathUtils.clamp(
         (currentTime - delay) / duration,
         0, 1
     );
 
+    const revealProgress = easeOutFinalSegment(rawRevealProgress);
+    
     setArrowReveal(arrow, revealProgress);
 
     const headMesh = arrow.userData.head;
@@ -171,4 +173,20 @@ export function updateArrowReveal(arrow, currentTime) {
     if (hideProgress >= 1) {
         headMesh.visible = false;
     }
+}
+
+function easeOutFinalSegment(progress, easingStart = 0.85) {
+    if (progress <= easingStart) {
+        return progress;
+    }
+
+    const easingRange = 1 - easingStart;
+    const localProgress  = (progress - easingStart) / easingRange;
+
+    const easedLocalProgress = THREE.MathUtils.smoothstep(
+        localProgress, 
+        0, 1
+    );
+
+    return easingStart + easedLocalProgress * easingRange;
 }
