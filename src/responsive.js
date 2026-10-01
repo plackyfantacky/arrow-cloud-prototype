@@ -26,10 +26,6 @@ export function positionArrowPathForViewport(arrowPath, camera, container) {
         return arrowPath;
     }
 
-    // if (!arrowPath.entry?.side) {
-    //     return arrowPath;
-    // }
-
     if (!['left', 'right'].includes(arrowPath.entry.side)) {
         return arrowPath;
     }
