@@ -261,6 +261,11 @@ function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowM
         hideDuration: positionedArrowPath.head?.hideDuration ?? 0.25,
     };
 
+    arrow.userData.headMorphTiming = {
+        morphAt: positionedArrowPath.head?.morphAt ?? null,
+        morphDuration: positionedArrowPath.head?.morphDuration ?? 0.75,
+    };
+
     components.forEach((component) => {
         const componentMesh = createPathComponentMesh(component);
 

@@ -133,12 +133,14 @@ export function updateArrowReveal(arrow, currentTime) {
 
     const rawRevealProgress = THREE.MathUtils.clamp(
         (currentTime - delay) / duration,
-        0, 1
+        0,
+        1
     );
-
+    
     const revealProgress = easeOutFinalSegment(rawRevealProgress);
     
     setArrowReveal(arrow, revealProgress);
+    updateArrowHeadMorph(arrow, currentTime);
 
     const headMesh = arrow.userData.head;
     const headTiming = arrow.userData.headTiming;
@@ -181,12 +183,94 @@ function easeOutFinalSegment(progress, easingStart = 0.85) {
     }
 
     const easingRange = 1 - easingStart;
-    const localProgress  = (progress - easingStart) / easingRange;
+    const localProgress = (progress - easingStart) / easingRange;
 
     const easedLocalProgress = THREE.MathUtils.smoothstep(
-        localProgress, 
-        0, 1
+        localProgress,
+        0,
+        1
     );
 
     return easingStart + easedLocalProgress * easingRange;
+}
+
+function getFinalSegmentProgress(currentTime, delay, duration, easingStart = 0.95) {
+    const elapsedTime = currentTime - delay;
+
+    if (elapsedTime <= 0) {
+        return 0;
+    }
+
+    const linearPhaseDuration = duration * easingStart;
+    const finalProgressRange = 1 - easingStart;
+
+    if (elapsedTime <= linearPhaseDuration) {
+        return elapsedTime / duration;
+    }
+
+    const easingDuration = duration * finalProgressRange * 2;
+    const easingElapsedTime = elapsedTime - linearPhaseDuration;
+    const easingProgress = THREE.MathUtils.clamp(
+        easingElapsedTime / easingDuration,
+        0, 1
+    );
+
+    const easedFinalProgress = 1 - Math.pow(1 - easingProgress, 2);
+
+    return easingStart + easedFinalProgress * finalProgressRange
+}
+
+function updateArrowHeadMorph(arrow, currentTime) {
+    const headMesh = arrow.userData.head;
+    const morphTiming = arrow.userData.headMorphTiming;
+
+    if (
+        !headMesh ||
+        !headMesh.morphTargetInfluences ||
+        morphTiming?.morphAt === null
+    ) {
+        return;
+    }
+
+    const morphProgress = THREE.MathUtils.clamp(
+        (
+            currentTime -
+            morphTiming.morphAt
+        ) / morphTiming.morphDuration,
+        0,
+        1
+    );
+
+    const firstPhaseEnd = 0.3;
+
+    if (morphProgress <= firstPhaseEnd) {
+        const phaseProgress = morphProgress / firstPhaseEnd;
+        const easedProgress = THREE.MathUtils.smoothstep(
+            phaseProgress,
+            0,
+            1
+        );
+
+        headMesh.morphTargetInfluences[0] = easedProgress;
+        headMesh.morphTargetInfluences[1] = 0;
+
+        return;
+    }
+
+    const phaseProgress = (
+        morphProgress -
+        firstPhaseEnd
+    ) / (
+        1 -
+        firstPhaseEnd
+    );
+
+    const easedProgress = THREE.MathUtils.smoothstep(
+        phaseProgress,
+        0,
+        1
+    );
+
+    headMesh.morphTargetInfluences[0] = 1 - easedProgress;
+    headMesh.morphTargetInfluences[1] = easedProgress;
 }
