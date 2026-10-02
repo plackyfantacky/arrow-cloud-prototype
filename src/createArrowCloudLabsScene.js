@@ -5,13 +5,7 @@ import { getStageSize } from "./stage.js";
 import { updateCameraTrack } from "./camera.js";
 import { handleResize as responsiveResize, positionArrowPathForViewport } from "./responsive.js";
 
-import {
-    animationSettings as defaultAnimationSettings,
-    arrowPaths as defaultArrowPaths,
-    cameraTrack as defaultCameraTrack
-} from "./arrows/arrowData-labs.js";
-
-import { arrowFieldSettings } from "./arrows/arrowFieldSettings.js";
+import { arrowCloudLabsSettings } from "./arrowCloudLabsSettings.js";
 import { createArrow } from "./arrows/createArrow.js";
 import { createArrowRenderPieces } from "./arrows/createArrowRenderPieces.js";
 import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
@@ -28,10 +22,12 @@ import { createDebugPathNudgeControls } from "./debug/createDebugPathNudgeContro
 import { createDebugPathEditor } from "./debug/createDebugPathEditor.js";
 import { createDebugSegmentHighlight } from "./debug/createDebugSegmentHighlight.js";
 import { createDebugScenePanel } from "./debug/createDebugScenePanel.js";
+import { createFlyControls } from "./debug/createFlyControls.js";
 
 const CAMERA_MODES = {
     TRACKED: 'tracked',
-    ORBITAL: 'orbital'
+    ORBITAL: 'orbital',
+    FLY: 'fly'
 };
 
 export function createArrowCloudLabsScene(mountElement, options = {}) {
@@ -39,13 +35,15 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         throw new Error('createArrowCloudScene requires a mount element.');
     }
 
+    const dataset = options.dataset;
+
     const animationSettings = {
-        ...defaultAnimationSettings,
+        ...dataset.animationSettings,
         ...options.animationSettings
     };
 
-    const arrowPaths = options.arrowPaths || defaultArrowPaths;
-    const cameraTrack = options.cameraTrack || defaultCameraTrack;
+    const arrowPaths = options.arrowPaths || dataset.arrowPaths;
+    const cameraTrack = options.cameraTrack || dataset.cameraTrack;
     const stageSize = getStageSize(mountElement);
     const scene = new THREE.Scene();
     let debugControls = null;
@@ -74,22 +72,30 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
     mountElement.appendChild(renderer.domElement);
 
-    const controls = animationSettings.debugMode
+    const orbitControls = animationSettings.debugMode
         ? new OrbitControls(camera, renderer.domElement)
         : null;
 
-    if (controls) {
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.08;
-        controls.target.set(0, 0, 0);
-        controls.enabled = true;
-        controls.update();
-        controls.saveState();
+    if (orbitControls) {
+        orbitControls.enableDamping = true;
+        orbitControls.dampingFactor = 0.08;
+        orbitControls.target.set(0, 0, 0);
+        orbitControls.enabled = true;
+        orbitControls.update();
+        orbitControls.saveState();
     }
 
     const orbitalCameraState = {
         position: camera.position.clone(),
-        target: controls?.target.clone() ?? new THREE.Vector3()
+        target: orbitControls?.target.clone() ?? new THREE.Vector3()
+    };
+
+    const flyControls = animationSettings.debugMode
+        ? createFlyControls(camera, renderer.domElement)
+        : null;
+
+    if (flyControls) {
+        flyControls.enabled = false;
     }
 
     const arrowMaterial = new THREE.MeshStandardMaterial({
@@ -223,7 +229,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             console.warn('No debug segment selected.');
             return;
         }
-        
+
         const output = JSON.stringify(arrowPath, null, 4)
             .replace(
                 /\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g,
@@ -328,7 +334,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     directionalLight.position.set(4, 6, 8);
     scene.add(directionalLight);
 
-    if (animationSettings.debugMode) {    
+    if (animationSettings.debugMode) {
         gridHelper = new THREE.GridHelper(14, 14);
         scene.add(gridHelper);
 
@@ -361,7 +367,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
                 arrowVisibilityState.set(arrowName, isVisible);
                 applyArrowVisibilityState();
             },
-            
+
             onArrowOpacityChange(arrowName, opacity) {
                 arrowOpacityState.set(arrowName, opacity);
                 applyArrowOpacityState();
@@ -374,19 +380,29 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     let isDestroyed = false;
 
     function setCameraMode(nextCameraMode) {
-        if (
-            cameraMode === CAMERA_MODES.ORBITAL &&
-            nextCameraMode === CAMERA_MODES.TRACKED
-        ) {
-            orbitalCameraState.position.copy(camera.position);
-            orbitalCameraState.target.copy(controls.target);
+        if (cameraMode === nextCameraMode) {
+            return;
+        }
+
+        const previousCameraMode = cameraMode;
+
+        if (previousCameraMode === CAMERA_MODES.ORBITAL) {
+            orbitalCameraState.position.copy(
+                camera.position
+            );
+
+            orbitalCameraState.target.copy(
+                orbitControls.target
+            );
         }
 
         cameraMode = nextCameraMode;
 
-        if (controls) {
-            controls.enabled = cameraMode === CAMERA_MODES.ORBITAL;
-        }
+        orbitControls.enabled =
+            cameraMode === CAMERA_MODES.ORBITAL;
+
+        flyControls.enabled =
+            nextCameraMode === CAMERA_MODES.FLY;
 
         if (cameraMode === CAMERA_MODES.TRACKED) {
             updateCameraTrack(
@@ -399,17 +415,17 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             return;
         }
 
-        camera.position.copy(orbitalCameraState.position);
-        controls.target.copy(orbitalCameraState.target);
-        controls.update();
-    }
+        if (cameraMode === CAMERA_MODES.ORBITAL) {
+            camera.position.copy(
+                orbitalCameraState.position
+            );
 
-    function toggleCameraMode() {
-        const nextCameraMode = cameraMode === CAMERA_MODES.ORBITAL
-            ? CAMERA_MODES.TRACKED
-            : CAMERA_MODES.ORBITAL;
+            orbitControls.target.copy(
+                orbitalCameraState.target
+            );
 
-        setCameraMode(nextCameraMode);
+            orbitControls.update();
+        }
     }
 
     function resetCamera() {
@@ -424,19 +440,24 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             return;
         }
 
-        controls.reset();
+        orbitControls.reset();
 
         orbitalCameraState.position.copy(camera.position);
-        orbitalCameraState.target.copy(controls.target);
+        orbitalCameraState.target.copy(orbitControls.target);
     }
 
     debugControls = animationSettings.debugMode
         ? createDebugControls(animationSettings, {
             getCameraMode() {
-                return cameraMode
+                return cameraMode;
             },
-            onToggleCameraMode: toggleCameraMode,
-            onResetCamera: resetCamera
+
+            onCameraModeChange(nextCameraMode) {
+                setCameraMode(nextCameraMode);
+            },
+
+            onResetCamera: resetCamera,
+            onCopyCamera: copyCurrentCamera
         })
         : null;
 
@@ -492,6 +513,14 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             );
         }
 
+        if (cameraMode === CAMERA_MODES.ORBITAL) {
+            orbitControls.update();
+        }
+
+        if (cameraMode === CAMERA_MODES.FLY) {
+            flyControls.update(deltaTime);
+        }
+
         arrows.forEach((arrow) => {
             updateArrowReveal(arrow, currentTime);
         });
@@ -508,8 +537,8 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             setPathComponentReveal(componentMesh, revealProgress);
         });
 
-        if (controls && cameraMode === CAMERA_MODES.ORBITAL) {
-            controls.update();
+        if (orbitControls && cameraMode === CAMERA_MODES.ORBITAL) {
+            orbitControls.update();
         }
 
         if (debugLineTooltip) {
@@ -524,7 +553,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         return responsiveResize(
             mountElement,
             [camera, pathLayoutCamera],
-            renderer        );
+            renderer);
     }
 
     function destroy() {
@@ -540,8 +569,8 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
         window.removeEventListener('resize', handleResize);
 
-        if (controls) {
-            controls.dispose();
+        if (orbitControls) {
+            orbitControls.dispose();
         }
 
         scene.traverse((object) => {
@@ -660,12 +689,12 @@ function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowM
     );
 
     const segments = createArrowPathSegments(positionedArrowPath);
-    const pieces = createArrowRenderPieces(segments, arrowFieldSettings);
-    
+    const pieces = createArrowRenderPieces(segments, arrowCloudLabsSettings.field);
+
     const arrow = createArrow(
-        pieces, 
-        renderedArrowMaterial, 
-        arrowFieldSettings
+        pieces,
+        renderedArrowMaterial,
+        arrowCloudLabsSettings.field
     );
 
     const components = createArrowPathComponents(positionedArrowPath, segments);
@@ -768,4 +797,35 @@ function createArrowDebugLabelText(arrowPath) {
         arrowPath.name,
         `(${formatVectorValues(arrowPath.origin)})`
     ].join('    ');
+}
+
+function copyCurrentCamera() {
+    const output = `
+camera.position.set(
+    ${camera.position.x.toFixed(3)},
+    ${camera.position.y.toFixed(3)},
+    ${camera.position.z.toFixed(3)}
+);
+
+camera.quaternion.set(
+    ${camera.quaternion.x.toFixed(6)},
+    ${camera.quaternion.y.toFixed(6)},
+    ${camera.quaternion.z.toFixed(6)},
+    ${camera.quaternion.w.toFixed(6)}
+);
+    `.trim();
+
+    navigator.clipboard.writeText(output)
+        .then(() => {
+            console.log('Copied camera transform:');
+            console.log(output);
+        })
+        .catch((error) => {
+            console.warn(
+                'Could not copy camera transform.'
+            );
+
+            console.log(output);
+            console.error(error);
+        });
 }

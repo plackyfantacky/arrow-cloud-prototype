@@ -1,0 +1,103 @@
+<div class="debug-controls" data-debug-controls>
+    <style>
+        .debug-controls {
+            position: fixed;
+            left: 1rem;
+            bottom: 1rem;
+            z-index: 10;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.72);
+            color: #fff;
+            font-family: system-ui, sans-serif;
+            font-size: 13px;
+            border-radius: 0.5rem;
+
+            span[data-value="time"] {
+                display: inline-block;
+                width:2.5rem;
+            }
+        }
+    </style>
+    <button type="button" data-action="play-pause">
+        Pause
+    </button>
+
+    <button type="button" data-action="rewind">
+        Rewind
+    </button>
+
+    <label>
+        <input
+            type="checkbox"
+            data-control="loop"
+        >
+        Loop
+    </label>
+
+    <label style="display:flex; align-items: center; gap: 0.5rem">
+        Time
+
+        <input
+            type="range"
+            min="0"
+            step="0.01"
+            data-control="time"
+        >
+
+        <span data-value="time"></span>
+    </label>
+
+    <label style="display:flex; align-items: center; gap: 0.5rem">
+        Speed
+
+        <input
+            type="range"
+            min="0.1"
+            max="2"
+            step="0.1"
+            data-control="speed"
+        >
+
+        <span data-value="speed"></span>
+    </label>
+
+    <div class="debug-controls__camera">
+        <button
+            type="button"
+            data-camera-mode="orbital"
+        >
+            Orbital
+        </button>
+
+        <button
+            type="button"
+            data-camera-mode="tracked"
+        >
+            Tracked
+        </button>
+
+        <button
+            type="button"
+            data-camera-mode="fly"
+        >
+            Fly
+        </button>
+
+        <button
+            type="button"
+            data-action="reset-camera"
+        >
+            Reset camera
+        </button>
+
+        <button
+            type="button"
+            data-action="copy-camera"
+        >
+            Copy camera
+        </button>
+    </div>
+</div>

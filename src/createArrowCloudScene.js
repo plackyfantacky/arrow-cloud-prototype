@@ -4,13 +4,7 @@ import { getStageSize } from "./stage.js";
 import { updateCameraTrack } from "./camera.js";
 import { handleResize as responsiveResize, positionArrowPathForViewport } from "./responsive.js";
 
-import {
-    animationSettings as defaultAnimationSettings,
-    arrowPaths as defaultArrowPaths,
-    cameraTrack as defaultCameraTrack
-} from "./arrows/arrowData.js";
-
-import { arrowFieldSettings } from "./arrows/arrowFieldSettings.js";
+import { arrowCloudSettings } from "./arrowCloudSettings.js";
 import { createArrow } from "./arrows/createArrow.js";
 import { createArrowRenderPieces } from "./arrows/createArrowRenderPieces.js";
 import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
@@ -23,16 +17,16 @@ export function createArrowCloudScene(mountElement, options = {}) {
         throw new Error('createArrowCloudScene requires a mount element.');
     }
 
+    const dataset = options.dataset;
+
     const animationSettings = {
-        ...defaultAnimationSettings,
+        ...dataset.animationSettings,
         ...options.animationSettings
     };
 
-    const arrowPaths = options.arrowPaths || defaultArrowPaths;
-    const cameraTrack = options.cameraTrack || defaultCameraTrack;
-
+    const arrowPaths = options.arrowPaths || dataset.arrowPaths;
+    const cameraTrack = options.cameraTrack || dataset.cameraTrack;
     const stageSize = getStageSize(mountElement);
-
     const scene = new THREE.Scene();
 
     scene.background = new THREE.Color(0xFFFFFF);
@@ -244,8 +238,8 @@ function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowM
     );
 
     const segments = createArrowPathSegments(positionedArrowPath);
-    const pieces = createArrowRenderPieces(segments, arrowFieldSettings);
-    const arrow = createArrow(pieces, arrowMaterial, arrowFieldSettings);
+    const pieces = createArrowRenderPieces(segments, arrowCloudSettings.field);
+    const arrow = createArrow(pieces, arrowMaterial, arrowCloudSettings.field);
     const components = createArrowPathComponents(positionedArrowPath, segments);
     const componentMeshes = [];
 

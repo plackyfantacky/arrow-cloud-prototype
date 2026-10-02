@@ -3,11 +3,13 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "watch": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap --watch",
+        "watch": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap --loader:.html=text --watch",
+        "watch:production": "esbuild src/main.js --bundle --outfile=dist/main.js --loader:.html=text --watch",
         "serve": "browser-sync start --server . --files 'index.html, src/**/*.js, dist/**/*.js'",
         "dev": "npm-run-all --parallel watch serve",
+        "dev:prod": "npm-run-all --parallel watch:production serve",
         "build:prod": "esbuild src/main.js --bundle --outfile=dist/main.js --minify --metafile=dist/main.meta.json --analyze=verbose",
-        "build:labs": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap",
+        "build:labs": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap --loader:.html=text",
         "build:runtime": "esbuild src/createArrowCloudRuntime.js --bundle --format=esm --outfile=dist/arrow-cloud-runtime.js --minify",
         "build:labs-runtime": "esbuild src/createArrowCloudLabsRuntime.js --bundle --format=esm --outfile=dist/arrow-cloud-labs-runtime.js --sourcemap",
         "build": "npm-run-all build:prod build:labs"
