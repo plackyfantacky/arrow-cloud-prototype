@@ -2,16 +2,17 @@ import debugCameraControlsTemplate from './debugCameraControls.html';
 
 export function createDebugCameraControls({
     getCameraMode = () => 'orbital',
-    onCameraModeChange = () => {},
-    onCameraViewChange = () => {},
-    onResetCamera = () => {},
-    onCopyCamera = () => {}
+    getCameraView = () => null,
+    onCameraModeChange = () => { },
+    onCameraViewChange = () => { },
+    onResetCamera = () => { },
+    onCopyCamera = () => { }
 } = {}) {
     const template = document.createElement('template');
     template.innerHTML = debugCameraControlsTemplate;
 
     const container = template.content.firstElementChild.cloneNode(true);
-    
+
     const cameraModeButtons = [
         ...container.querySelectorAll('[data-camera-mode]')
     ];
@@ -32,6 +33,14 @@ export function createDebugCameraControls({
         });
     }
 
+    function updateCameraViewButtons() {
+        const cameraView = getCameraView();
+
+        cameraViewButtons.forEach((button) => {
+            button.disabled = button.dataset.cameraView === cameraView;
+        });
+    }
+
     cameraModeButtons.forEach((button) => {
         button.addEventListener('click', () => {
             onCameraModeChange(
@@ -49,6 +58,7 @@ export function createDebugCameraControls({
             );
 
             updateCameraModeButtons();
+            updateCameraViewButtons();
         });
     });
 
@@ -63,11 +73,13 @@ export function createDebugCameraControls({
     );
 
     updateCameraModeButtons();
+    updateCameraViewButtons();
 
     document.body.appendChild(container);
 
     return {
         updateCameraModeButtons,
+        updateCameraViewButtons,
 
         destroy() {
             container.remove();

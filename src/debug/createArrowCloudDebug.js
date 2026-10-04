@@ -37,21 +37,25 @@ export function createArrowCloudDebug({
         getCameraTrack
     });
 
+    cameraController.setViewPresetChangeHandler(() => {
+        cameraControls.updateCameraViewButtons();
+    });
+
     const cameraControls = createDebugCameraControls({
         getCameraMode() {
             return cameraController.getMode();
         },
 
+        getCameraView() {
+            return cameraController.getViewPreset();
+        },
+
         onCameraModeChange(cameraMode) {
-            cameraController.setMode(
-                cameraMode
-            );
+            cameraController.setMode(cameraMode);
         },
 
         onCameraViewChange(presetName) {
-            cameraController.setViewPreset(
-                presetName
-            );
+            cameraController.setViewPreset(presetName);
         },
 
         onResetCamera() {
@@ -61,6 +65,7 @@ export function createArrowCloudDebug({
         onCopyCamera() {
             cameraController.copy();
         }
+        
     });
 
     const pathTools = createDebugPathTools({

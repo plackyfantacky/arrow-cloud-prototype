@@ -1,4 +1,6 @@
+import * as THREE from 'three';
 import { OrbitControls } from "three/examples/jsm/Addons.js";
+
 import { createFlyControls } from './createFlyControls.js';
 import { updateCameraTrack } from "../../camera.js";
 
@@ -6,6 +8,15 @@ const CAMERA_MODES = {
     TRACKED: 'tracked',
     ORBITAL: 'orbital',
     FLY: 'fly'
+};
+
+const VIEW_PRESETS = {
+    front: [0, 0, 1],
+    back: [0, 0, -1],
+    left: [-1, 0, 0],
+    right: [1, 0, 0],
+    top: [0, 1, 0.0001],
+    bottom: [0, -1, -0.0001]
 };
 
 export function createDebugCameraController({
@@ -16,6 +27,10 @@ export function createDebugCameraController({
 }) {
 
     let cameraMode = CAMERA_MODES.ORBITAL;
+    let currentViewPreset = null;
+
+    let isApplyingViewPreset = false;
+    let onViewPresetChange = () => { };
 
     const orbitControls =
         new OrbitControls(
@@ -66,6 +81,10 @@ export function createDebugCameraController({
 
         cameraMode = nextCameraMode;
 
+        if (cameraMode !== CAMERA_MODES.ORBITAL) {
+            clearViewPreset();
+        }
+
         orbitControls.enabled =
             cameraMode === CAMERA_MODES.ORBITAL;
 
@@ -85,9 +104,68 @@ export function createDebugCameraController({
         }
     }
 
-    function setViewPreset() {
+    function setViewPreset(presetName) {
+        const preset = VIEW_PRESETS[presetName];
 
+        if (!preset) {
+            return;
+        }
+        
+        setMode(CAMERA_MODES.ORBITAL);
+
+        const target = new THREE.Vector3(0, 0, 0);
+        const distance = Math.max(camera.position.distanceTo(target), 1);
+        
+        const direction = new THREE.Vector3(...preset).normalize();
+            
+        isApplyingViewPreset = true;
+        
+        camera.up.set(0, 1, 0);
+        
+        camera.position.copy(
+            direction.multiplyScalar(distance)
+        );
+
+        orbitControls.target.copy(target);
+        camera.lookAt(target);
+        orbitControls.update();
+
+        orbitalCameraState.position.copy(camera.position);
+        orbitalCameraState.target.copy(orbitControls.target);
+
+        currentViewPreset = presetName;
+        isApplyingViewPreset = false;
+
+        onViewPresetChange();
     }
+
+    function getViewPreset() {
+        return currentViewPreset;
+    }
+
+    function setViewPresetChangeHandler(handler) {
+        onViewPresetChange = handler;
+    }
+
+    function clearViewPreset() {
+        if (!currentViewPreset) {
+            return;
+        }
+
+        currentViewPreset = null;
+        onViewPresetChange();
+    }
+
+    function handleOrbitChange() {
+        if (
+            cameraMode === CAMERA_MODES.ORBITAL &&
+            !isApplyingViewPreset
+        ) {
+            clearViewPreset();
+        }
+    }
+
+    orbitControls.addEventListener('change', handleOrbitChange);
 
     function reset() {
         if (cameraMode === CAMERA_MODES.TRACKED) {
@@ -173,6 +251,7 @@ export function createDebugCameraController({
     }
 
     function destroy() {
+        orbitControls.removeEventListener('change', handleOrbitChange);
         orbitControls.dispose();
         flyControls.dispose();
     }
@@ -180,8 +259,10 @@ export function createDebugCameraController({
 
     return {
         getMode,
+        getViewPreset,
         setMode,
         setViewPreset,
+        setViewPresetChangeHandler,
         reset,
         update,
         copy,
