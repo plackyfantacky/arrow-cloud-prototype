@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { getDebugInfoSource } from "../timeline/createDebugTimelineControls.js";
+import { getDebugInfoSource } from "./getDebugInfoSource.js";
 
 export function createDebugSegmentSelector({ camera, renderer, getObjects, onSelect }) {
     const raycaster = new THREE.Raycaster();

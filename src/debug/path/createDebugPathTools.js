@@ -19,6 +19,7 @@ export function createDebugPathTools({
     let segmentHighlight = null;
 
     function rebuild() {
+        segmentHighlight?.clear();
         onPathsChange();
     }
 
@@ -154,6 +155,12 @@ export function createDebugPathTools({
     function clearArrowNameLabels() {
         arrowNameLabels.forEach((label) => {
             scene.remove(label);
+
+            label.geometry?.dispose();
+            
+            if (label.material?.map) {
+                label.material.map.dispose();
+            }
         });
 
         arrowNameLabels = [];
@@ -172,6 +179,8 @@ export function createDebugPathTools({
                 renderedArrowItem.segments[0]
             );
 
+            renderedArrowItem.label = label;
+
             scene.add(label);
 
             return label;
@@ -189,6 +198,10 @@ export function createDebugPathTools({
                 };
             });
         });
+
+        segmentHighlight?.setSelectedDebugInfo(
+            pathEditor.getSelectedDebugInfo()
+        );
     }
 
     function update() {

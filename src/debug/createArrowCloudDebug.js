@@ -175,10 +175,10 @@ export function createArrowCloudDebug({
 
     function syncRenderedArrowItems() {
         const renderedArrowItems = getRenderedArrowItems();
-
-        arrowDisplayState.apply(renderedArrowItems);
+        
         pathTools.attachDebugInfo(renderedArrowItems);
         pathTools.syncArrowNameLabels(renderedArrowItems);
+        arrowDisplayState.apply(renderedArrowItems);
     }
 
     function destroy() {
