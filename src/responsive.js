@@ -17,6 +17,30 @@ export function handleResize(mountElement, cameras, renderer) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 }
 
+export function applyViewportOffset(camera, container, viewport = {}) {
+    const stageSize = getStageSize(container);
+
+    const offsetX = stageSize.width * (viewport.offsetX ?? 0);
+    const offsetY = stageSize.height * (viewport.offsetY ?? 0);
+
+    if (offsetX === 0 && offsetY === 0) {
+        camera.clearViewOffset();
+        camera.updateProjectionMatrix();
+        return;
+    }
+
+    camera.setViewOffset(
+        stageSize.width,
+        stageSize.height,
+        -offsetX,
+        -offsetY,
+        stageSize.width,
+        stageSize.height
+    );
+
+    camera.updateProjectionMatrix();
+}
+
 export function positionArrowPathForViewport(arrowPath, camera, container) {
     if (arrowPath.entry?.position !== 'viewport') {
         return arrowPath;
@@ -31,8 +55,8 @@ export function positionArrowPathForViewport(arrowPath, camera, container) {
     }
 
     const viewportBounds = getViewportBoundsAtZ(
-        camera, 
-        container, 
+        camera,
+        container,
         arrowPath.origin[2]
     );
 
@@ -54,7 +78,7 @@ export function positionArrowPathForViewport(arrowPath, camera, container) {
         return {
             ...arrowPath,
             origin
-        }
+        };
     }
 
     const entryDistance = Math.abs(straightUntil - origin[0]);
@@ -66,7 +90,7 @@ export function positionArrowPathForViewport(arrowPath, camera, container) {
             ['forward', entryDistance],
             ...arrowPath.moves
         ],
-    }
+    };
 }
 
 function getViewportBoundsAtZ(camera, container, worldZ) {

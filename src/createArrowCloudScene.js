@@ -2,7 +2,12 @@ import * as THREE from "three";
 
 import { getStageSize } from "./stage.js";
 import { updateCameraTrack } from "./camera.js";
-import { handleResize as responsiveResize, positionArrowPathForViewport } from "./responsive.js";
+
+import {
+    applyViewportOffset,
+    handleResize as responsiveResize,
+    positionArrowPathForViewport
+} from "./responsive.js";
 
 import { arrowCloudSettings } from "./arrowCloudSettings.js";
 import { createArrow } from "./arrows/createArrow.js";
@@ -11,6 +16,8 @@ import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
 import { createPathComponentMesh } from "./arrows/pathComponents/index.js";
 import { createArrowPathComponents, setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
 import { setArrowReveal, updateArrowReveal } from "./arrows/reveal.js";
+
+import { createArrowMotionGroup, updateArrowIdleMotion } from "./arrows/idle.js";
 
 export function createArrowCloudScene(mountElement, options = {}) {
     if (!mountElement) {
@@ -41,7 +48,20 @@ export function createArrowCloudScene(mountElement, options = {}) {
     camera.position.set(0, 5, 12);
     camera.lookAt(0, 0, 0);
 
+    applyViewportOffset(
+        camera,
+        mountElement,
+        dataset.viewport
+    );
+
     const pathLayoutCamera = camera.clone();
+
+    applyViewportOffset(
+        pathLayoutCamera,
+        mountElement,
+        dataset.viewport
+    );
+
     pathLayoutCamera.updateProjectionMatrix();
 
     const renderer = new THREE.WebGLRenderer({
@@ -99,7 +119,6 @@ export function createArrowCloudScene(mountElement, options = {}) {
         }
 
         animationFrameId = requestAnimationFrame(animate);
-
         timer.update();
 
         const rawCurrentTime = timer.getElapsed() * animationSettings.speed;
@@ -117,6 +136,32 @@ export function createArrowCloudScene(mountElement, options = {}) {
 
         arrows.forEach((arrow) => {
             updateArrowReveal(arrow, currentTime);
+        });
+
+        renderedArrowItems.forEach((renderedArrowItem) => {
+            const { arrow, motionGroup } = renderedArrowItem;
+            const idleSettings = motionGroup.userData.idle;
+
+
+            if (!idleSettings) {
+                return;
+            }
+
+            const revealEndTime =
+                arrow.userData.timing.delay +
+                arrow.userData.timing.duration;
+
+            const idleTime = Math.max(0, timer.getElapsed() - revealEndTime);
+
+            if (currentTime < revealEndTime) {
+                return;
+            }
+
+            updateArrowIdleMotion(
+                motionGroup,
+                idleSettings,
+                idleTime
+            );
         });
 
         pathComponentMeshes.forEach((componentMesh) => {
@@ -138,11 +183,24 @@ export function createArrowCloudScene(mountElement, options = {}) {
         responsiveResize(
             mountElement,
             [camera, pathLayoutCamera],
-            renderer
+            renderer);
+
+        applyViewportOffset(
+            camera,
+            mountElement,
+            dataset.viewport
+        );
+
+        applyViewportOffset(
+            pathLayoutCamera,
+            mountElement,
+            dataset.viewport
         );
 
         rebuildArrowPaths();
     }
+
+    window.addEventListener('resize', handleResize);
 
     function destroy() {
         if (isDestroyed) {
@@ -182,8 +240,6 @@ export function createArrowCloudScene(mountElement, options = {}) {
         }
     }
 
-    window.addEventListener('resize', handleResize);
-
     animate();
 
     return {
@@ -220,13 +276,8 @@ function disposeRenderableObject(object) {
 
 function clearRenderedArrowItems(scene, renderedArrowItems) {
     renderedArrowItems.forEach((renderedArrowItem) => {
-        scene.remove(renderedArrowItem.arrow);
-        disposeRenderableObject(renderedArrowItem.arrow);
-
-        renderedArrowItem.componentMeshes.forEach((componentMesh) => {
-            scene.remove(componentMesh);
-            disposeRenderableObject(componentMesh);
-        });
+        scene.remove(renderedArrowItem.motionGroup);
+        disposeRenderableObject(renderedArrowItem.motionGroup);
     });
 }
 
@@ -267,23 +318,39 @@ function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowM
         componentMeshes.push(componentMesh);
     });
 
-    scene.add(arrow);
+    const motionGroup = createArrowMotionGroup(
+        arrow,
+        positionedArrowPath
+    );
+
+    motionGroup.userData.idle = positionedArrowPath.idle ?? null;
+
+    componentMeshes.forEach((componentMesh) => {
+        componentMesh.position.sub(
+            motionGroup.userData.basePosition
+        );
+
+        motionGroup.add(componentMesh);
+    });
+
+    scene.add(motionGroup);
 
     setArrowReveal(arrow, 0);
 
     return {
         arrow,
+        motionGroup,
         componentMeshes
     };
 }
 
-function renderArrowPaths({ 
-    scene, 
-    pathLayoutCamera, 
-    mountElement, 
-    arrowMaterial, 
-    previousRenderedArrowItems, 
-    arrowPaths 
+function renderArrowPaths({
+    scene,
+    pathLayoutCamera,
+    mountElement,
+    arrowMaterial,
+    previousRenderedArrowItems,
+    arrowPaths
 }) {
 
     clearRenderedArrowItems(scene, previousRenderedArrowItems);

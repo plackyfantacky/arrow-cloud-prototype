@@ -6,6 +6,10 @@
         "isPlaying": true,
         "isLooping": false
     },
+    "viewport": {
+        "offsetX": 0.15,
+        "offsetY": 0
+    },
     "cameraTrack": [
         {
             "time": 0,
@@ -42,6 +46,20 @@
                 1.25,
                 0
             ],
+            "idle": {
+                "position": {
+                    "x": 0.02,
+                    "y": 0.05,
+                    "z": 0.03
+                },
+                "rotation": {
+                    "x": 0.005,
+                    "y": 0.01,
+                    "z": 0.004
+                },
+                "speed": 0.2,
+                "phase": 0
+            },
             "initialDirection": "+x",
             "initialNormal": "+y",
             "moves": [
@@ -93,7 +111,7 @@
             "entry": {
                 "position": "viewport",
                 "side": "left",
-                "margin": 3,
+                "margin": 4,
                 "straightUntil": -2
             },
             "head": {
@@ -155,7 +173,7 @@
             "entry": {
                 "position": "viewport",
                 "side": "left",
-                "margin": 3,
+                "margin": 4,
                 "straightUntil": -2
             },
             "head": {
@@ -213,7 +231,7 @@
             "entry": {
                 "position": "viewport",
                 "side": "left",
-                "margin": 3,
+                "margin": 4,
                 "straightUntil": -2
             },
             "head": {
