@@ -1,8 +1,6 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { getStageSize } from "./stage.js";
-import { updateCameraTrack } from "./camera.js";
 import { handleResize as responsiveResize, positionArrowPathForViewport } from "./responsive.js";
 
 import { arrowCloudLabsSettings } from "./arrowCloudLabsSettings.js";
@@ -13,22 +11,7 @@ import { createPathComponentMesh } from "./arrows/pathComponents/index.js";
 import { createArrowPathComponents, setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
 import { setArrowReveal, updateArrowReveal } from "./arrows/reveal.js";
 
-import { createDebugControls } from "./debug/createDebugControls.js";
-import { createArrowNameLabel } from "./debug/createArrowNameLabel.js";
-import { createDebugLineTooltip } from "./debug/createDebugLineTooltip.js";
-import { createDebugAxesGauge } from "./debug/createDebugAxesGauge.js";
-import { createDebugSegmentSelector } from "./debug/createDebugSegmentSelector.js";
-import { createDebugPathNudgeControls } from "./debug/createDebugPathNudgeControls.js";
-import { createDebugPathEditor } from "./debug/createDebugPathEditor.js";
-import { createDebugSegmentHighlight } from "./debug/createDebugSegmentHighlight.js";
-import { createDebugScenePanel } from "./debug/createDebugScenePanel.js";
-import { createFlyControls } from "./debug/createFlyControls.js";
-
-const CAMERA_MODES = {
-    TRACKED: 'tracked',
-    ORBITAL: 'orbital',
-    FLY: 'fly'
-};
+import { createArrowCloudDebug } from "./debug/createArrowCloudDebug.js";
 
 export function createArrowCloudLabsScene(mountElement, options = {}) {
     if (!mountElement) {
@@ -36,6 +19,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     }
 
     const dataset = options.dataset;
+    const loadDataset = options.loadDataset;
 
     const animationSettings = {
         ...dataset.animationSettings,
@@ -43,10 +27,9 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     };
 
     const arrowPaths = options.arrowPaths || dataset.arrowPaths;
-    const cameraTrack = options.cameraTrack || dataset.cameraTrack;
+    let cameraTrack = options.cameraTrack || dataset.cameraTrack;
     const stageSize = getStageSize(mountElement);
     const scene = new THREE.Scene();
-    let debugControls = null;
 
     scene.background = new THREE.Color(0xFFFFFF);
 
@@ -57,8 +40,25 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         100
     );
 
-    camera.position.set(0, 5, 12);
-    camera.lookAt(0, 0, 0);
+    const staticCamera = dataset.staticCamera;
+
+    if (staticCamera) {
+        camera.position.set(
+            staticCamera.position.x,
+            staticCamera.position.y,
+            staticCamera.position.z
+        );
+
+        camera.quaternion.set(
+            staticCamera.quaternion.x,
+            staticCamera.quaternion.y,
+            staticCamera.quaternion.z,
+            staticCamera.quaternion.w
+        );
+    } else {
+        camera.position.set(0, 5, 12);
+        camera.lookAt(0, 0, 0);
+    }
 
     const pathLayoutCamera = camera.clone();
     pathLayoutCamera.updateProjectionMatrix();
@@ -72,32 +72,6 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
     mountElement.appendChild(renderer.domElement);
 
-    const orbitControls = animationSettings.debugMode
-        ? new OrbitControls(camera, renderer.domElement)
-        : null;
-
-    if (orbitControls) {
-        orbitControls.enableDamping = true;
-        orbitControls.dampingFactor = 0.08;
-        orbitControls.target.set(0, 0, 0);
-        orbitControls.enabled = true;
-        orbitControls.update();
-        orbitControls.saveState();
-    }
-
-    const orbitalCameraState = {
-        position: camera.position.clone(),
-        target: orbitControls?.target.clone() ?? new THREE.Vector3()
-    };
-
-    const flyControls = animationSettings.debugMode
-        ? createFlyControls(camera, renderer.domElement)
-        : null;
-
-    if (flyControls) {
-        flyControls.enabled = false;
-    }
-
     const arrowMaterial = new THREE.MeshStandardMaterial({
         color: 0xff9d2a,
         roughness: 0.45,
@@ -109,93 +83,35 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     let renderedArrowItems = [];
     let arrows = [];
     let pathComponentMeshes = [];
-    let gridHelper = null;
-    let axesGauge = null;
-    let debugScenePanel = null;
-    let debugLineTooltip = null;
-    let debugSegmentSelector = null;
-    let debugPathNudgeControls = null;
-    let debugSegmentHighlight = null;
-    let cameraMode = CAMERA_MODES.ORBITAL;
 
-    const pathEditor = createDebugPathEditor(arrowPaths);
+    const debug = animationSettings.debugMode
+        ? createArrowCloudDebug({
+            camera,
+            renderer,
+            mountElement,
+            scene,
+            arrowPaths,
+            animationSettings,
 
-    const arrowVisibilityState = new Map(
-        arrowPaths.map((arrowPath) => {
-            return [arrowPath.name, true];
-        })
-    );
+            getCameraTrack() {
+                return cameraTrack;
+            },
 
-    const arrowOpacityState = new Map(
-        arrowPaths.map((arrowPath) => {
-            return [arrowPath.name, 1];
-        })
-    );
+            getRenderedArrowItems() {
+                return renderedArrowItems;
+            },
 
-    function setRenderedArrowItemVisibility(
-        renderedArrowItem,
-        isVisible
-    ) {
-        renderedArrowItem.arrow.visible = isVisible;
+            getArrows() {
+                return arrows;
+            },
 
-        renderedArrowItem.componentMeshes.forEach((componentMesh) => {
-            componentMesh.visible = isVisible;
-        });
+            rebuildArrowPaths,
 
-        if (renderedArrowItem.label) {
-            renderedArrowItem.label.visible = isVisible;
-        }
-    }
-
-    function applyArrowVisibilityState() {
-        renderedArrowItems.forEach((renderedArrowItem) => {
-            const arrowName = renderedArrowItem.arrow.userData.name;
-            const isVisible = arrowVisibilityState.get(arrowName) ?? true;
-
-            setRenderedArrowItemVisibility(
-                renderedArrowItem,
-                isVisible
-            );
-        });
-    }
-
-    function applyArrowOpacityState() {
-        renderedArrowItems.forEach((renderedArrowItem) => {
-            const arrowName = renderedArrowItem.arrow.userData.name;
-            const opacity = arrowOpacityState.get(arrowName) ?? 1;
-
-            setRenderedArrowItemOpacity(
-                renderedArrowItem,
-                opacity
-            );
-        });
-    }
-
-    function setObjectOpacity(object, opacity) {
-        object.traverse((childObject) => {
-            if (!childObject.isMesh || !childObject.material) {
-                return;
+            onDatasetChange(datasetName) {
+                return setDataset(datasetName);
             }
-
-            const materials = Array.isArray(childObject.material)
-                ? childObject.material
-                : [childObject.material];
-
-            materials.forEach((material) => {
-                material.transparent = opacity < 1;
-                material.opacity = opacity;
-                material.needsUpdate = true;
-            });
-        });
-    }
-
-    function setRenderedArrowItemOpacity(renderedArrowItem, opacity) {
-        setObjectOpacity(renderedArrowItem.arrow, opacity);
-
-        renderedArrowItem.componentMeshes.forEach((componentMesh) => {
-            setObjectOpacity(componentMesh, opacity);
-        });
-    }
+        })
+        : null;
 
     function rebuildArrowPaths() {
         const renderState = renderArrowPaths({
@@ -205,127 +121,29 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             arrowMaterial,
             animationSettings,
             previousRenderedArrowItems: renderedArrowItems,
-            arrowPaths: pathEditor.getArrowPaths()
+            arrowPaths: debug.getArrowPaths()
         });
 
         renderedArrowItems = renderState.renderedArrowItems;
         arrows = renderState.arrows;
         pathComponentMeshes = renderState.pathComponentMeshes;
 
-        applyArrowVisibilityState();
-        applyArrowOpacityState();
-
-        if (debugSegmentHighlight) {
-            debugSegmentHighlight.setSelectedDebugInfo(
-                pathEditor.getSelectedDebugInfo()
-            );
-        }
+        debug?.syncRenderedArrowItems();
     }
 
-    function copyCurrentPath() {
-        const arrowPath = pathEditor.getSelectedArrowPath();
+    async function setDataset(datasetName) {
+        const nextDataset = await loadDataset(datasetName);
 
-        if (!arrowPath) {
-            console.warn('No debug segment selected.');
-            return;
-        }
+        cameraTrack = nextDataset.cameraTrack;
 
-        const output = JSON.stringify(arrowPath, null, 4)
-            .replace(
-                /\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g,
-                '["$1", $2]'
-            );
+        debug.setArrowPaths(nextDataset.arrowPaths);
 
-        navigator.clipboard.writeText(output)
-            .then(() => {
-                console.log('Copied arrow path:');
-                console.log(output);
-            })
-            .catch((error) => {
-                console.warn('Could not copy arrow path to the clipboard.');
-                console.log(output);
-                console.error(error);
-            });
+        debug.setAnimationSettings(nextDataset.animationSettings);
+
+        rebuildArrowPaths();
     }
 
     rebuildArrowPaths();
-
-    if (animationSettings.debugMode) {
-        debugPathNudgeControls = createDebugPathNudgeControls({
-            onNudge(amount, targetValue) {
-                const didChangePath = pathEditor.nudgeSelectedPathValue(
-                    amount,
-                    targetValue
-                );
-
-                if (didChangePath) {
-                    rebuildArrowPaths();
-                }
-            },
-            onCopy: copyCurrentPath,
-            onActionChange(actionName) {
-                const didChangePath = pathEditor.changeSelectedMoveAction(actionName);
-
-                if (didChangePath) {
-                    rebuildArrowPaths();
-                }
-            },
-            onInsertMove(position, actionName) {
-                const didChangePath = pathEditor.insertMoveNearSelectedMove(
-                    position,
-                    actionName
-                );
-
-                if (didChangePath) {
-                    rebuildArrowPaths();
-                }
-            },
-            onDuplicateMove() {
-                const didChangePath = pathEditor.duplicateSelectedMove();
-
-                if (didChangePath) {
-                    rebuildArrowPaths();
-                }
-            },
-            onRemoveMove() {
-                const didChangePath = pathEditor.removeSelectedMove();
-
-                if (didChangePath) {
-                    rebuildArrowPaths();
-                }
-            },
-            onTargetChange(targetValue) {
-                debugSegmentHighlight.setTargetValue(targetValue);
-            }
-        });
-
-        debugLineTooltip = createDebugLineTooltip({
-            camera,
-            renderer,
-            getObjects() {
-                return arrows;
-            },
-        });
-
-        debugSegmentSelector = createDebugSegmentSelector({
-            camera,
-            renderer,
-            getObjects() {
-                return arrows;
-            },
-            onSelect(debugInfo) {
-                pathEditor.setSelectedDebugInfo(debugInfo);
-                debugPathNudgeControls.setSelectedDebugInfo(debugInfo);
-                debugSegmentHighlight.setSelectedDebugInfo(debugInfo);
-            }
-        });
-
-        debugSegmentHighlight = createDebugSegmentHighlight({
-            getObjects() {
-                return arrows;
-            }
-        });
-    }
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
     scene.add(ambientLight);
@@ -334,139 +152,9 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     directionalLight.position.set(4, 6, 8);
     scene.add(directionalLight);
 
-    if (animationSettings.debugMode) {
-        gridHelper = new THREE.GridHelper(14, 14);
-        scene.add(gridHelper);
-
-        axesGauge = createDebugAxesGauge({
-            size: 2,
-            labelOffset: 0.35,
-        });
-
-        axesGauge.position.set(0.1, 0.1, 0.1);
-        scene.add(axesGauge);
-    }
-
-    if (animationSettings.debugMode) {
-        debugScenePanel = createDebugScenePanel({
-            gridVisible: gridHelper.visible,
-            axesVisible: axesGauge.visible,
-            arrowNames: pathEditor.getArrowPaths().map((arrowPath) => {
-                return arrowPath.name;
-            }),
-
-            onGridVisibilityChange(isVisible) {
-                gridHelper.visible = isVisible;
-            },
-
-            onAxesVisibilityChange(isVisible) {
-                axesGauge.visible = isVisible;
-            },
-
-            onArrowVisibilityChange(arrowName, isVisible) {
-                arrowVisibilityState.set(arrowName, isVisible);
-                applyArrowVisibilityState();
-            },
-
-            onArrowOpacityChange(arrowName, opacity) {
-                arrowOpacityState.set(arrowName, opacity);
-                applyArrowOpacityState();
-            }
-        });
-    }
-
     const timer = new THREE.Timer();
     let animationFrameId = null;
     let isDestroyed = false;
-
-    function setCameraMode(nextCameraMode) {
-        if (cameraMode === nextCameraMode) {
-            return;
-        }
-
-        const previousCameraMode = cameraMode;
-
-        if (previousCameraMode === CAMERA_MODES.ORBITAL) {
-            orbitalCameraState.position.copy(
-                camera.position
-            );
-
-            orbitalCameraState.target.copy(
-                orbitControls.target
-            );
-        }
-
-        cameraMode = nextCameraMode;
-
-        orbitControls.enabled =
-            cameraMode === CAMERA_MODES.ORBITAL;
-
-        flyControls.enabled =
-            nextCameraMode === CAMERA_MODES.FLY;
-
-        if (cameraMode === CAMERA_MODES.TRACKED) {
-            updateCameraTrack(
-                mountElement,
-                cameraTrack,
-                camera,
-                debugControls?.state.currentTime ?? 0
-            );
-
-            return;
-        }
-
-        if (cameraMode === CAMERA_MODES.ORBITAL) {
-            camera.position.copy(
-                orbitalCameraState.position
-            );
-
-            orbitControls.target.copy(
-                orbitalCameraState.target
-            );
-
-            orbitControls.update();
-        }
-    }
-
-    function resetCamera() {
-        if (cameraMode === CAMERA_MODES.TRACKED) {
-            updateCameraTrack(
-                mountElement,
-                cameraTrack,
-                camera,
-                0
-            );
-
-            return;
-        }
-
-        orbitControls.reset();
-
-        orbitalCameraState.position.copy(camera.position);
-        orbitalCameraState.target.copy(orbitControls.target);
-    }
-
-    debugControls = animationSettings.debugMode
-        ? createDebugControls(animationSettings, {
-            getCameraMode() {
-                return cameraMode;
-            },
-
-            onCameraModeChange(nextCameraMode) {
-                setCameraMode(nextCameraMode);
-            },
-
-            onResetCamera: resetCamera,
-            onCopyCamera: copyCurrentCamera
-        })
-        : null;
-
-    if (debugControls && animationSettings?.showFinalState) {
-        debugControls.state.currentTime = debugControls.state.timelineDuration;
-        debugControls.state.isPlaying = false;
-        debugControls.updateProgressInput();
-        debugControls.updatePlayPauseButton();
-    }
 
     function animate() {
         if (isDestroyed) {
@@ -474,52 +162,18 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         }
 
         animationFrameId = requestAnimationFrame(animate);
-
         timer.update();
 
         const deltaTime = timer.getDelta();
-        const rawCurrentTime = debugControls
-            ? debugControls.state.currentTime
-            : timer.getElapsed() * animationSettings.speed;
 
-        const currentTime = !debugControls && animationSettings.isLooping
-            ? rawCurrentTime % animationSettings.timelineDuration
-            : rawCurrentTime;
 
-        if (debugControls) {
-            if (debugControls.state.isPlaying) {
-                debugControls.state.currentTime += deltaTime * debugControls.state.speed;
-
-                if (debugControls.state.isLooping) {
-                    debugControls.state.currentTime %= debugControls.state.timelineDuration;
-                } else {
-                    debugControls.state.currentTime = THREE.MathUtils.clamp(
-                        debugControls.state.currentTime,
-                        0,
-                        debugControls.state.timelineDuration
-                    );
-                }
-
-                debugControls.updateProgressInput();
-            }
-        }
-
-        if (cameraMode === CAMERA_MODES.TRACKED) {
-            updateCameraTrack(
-                mountElement,
-                cameraTrack,
-                camera,
-                currentTime
-            );
-        }
-
-        if (cameraMode === CAMERA_MODES.ORBITAL) {
-            orbitControls.update();
-        }
-
-        if (cameraMode === CAMERA_MODES.FLY) {
-            flyControls.update(deltaTime);
-        }
+        const rawCurrentTime = timer.getElapsed() * animationSettings.speed;
+        
+        const currentTime = debug
+            ? debug.update({ deltaTime })
+            : animationSettings.isLooping
+                ? rawCurrentTime % animationSettings.timelineDuration
+                : rawCurrentTime;
 
         arrows.forEach((arrow) => {
             updateArrowReveal(arrow, currentTime);
@@ -536,14 +190,6 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
             setPathComponentReveal(componentMesh, revealProgress);
         });
-
-        if (orbitControls && cameraMode === CAMERA_MODES.ORBITAL) {
-            orbitControls.update();
-        }
-
-        if (debugLineTooltip) {
-            debugLineTooltip.update();
-        }
 
         renderer.render(scene, camera);
 
@@ -569,10 +215,6 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
         window.removeEventListener('resize', handleResize);
 
-        if (orbitControls) {
-            orbitControls.dispose();
-        }
-
         scene.traverse((object) => {
             if (object.geometry) {
                 object.geometry.dispose();
@@ -591,29 +233,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             }
         });
 
-        if (debugControls?.destroy) {
-            debugControls.destroy();
-        }
-
-        if (debugLineTooltip) {
-            debugLineTooltip.destroy();
-        }
-
-        if (debugSegmentSelector) {
-            debugSegmentSelector.destroy();
-        }
-
-        if (debugPathNudgeControls) {
-            debugPathNudgeControls.destroy();
-        }
-
-        if (debugSegmentHighlight) {
-            debugSegmentHighlight.destroy();
-        }
-
-        if (debugScenePanel) {
-            debugScenePanel.destroy();
-        }
+        debug?.destroy();
 
         renderer.dispose();
 
@@ -632,7 +252,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     };
 }
 
-// debug helpers
+// arrow rendering helpers
 
 function disposeRenderableObject(object) {
     object.traverse((childObject) => {
@@ -667,15 +287,17 @@ function clearRenderedArrowItems(scene, renderedArrowItems) {
             scene.remove(componentMesh);
             disposeRenderableObject(componentMesh);
         });
-
-        if (renderedArrowItem.label) {
-            scene.remove(renderedArrowItem.label);
-            disposeRenderableObject(renderedArrowItem.label);
-        }
     });
 }
 
-function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowMaterial, animationSettings, arrowPath }) {
+function createRenderedArrowPath({ 
+    scene, 
+    pathLayoutCamera, 
+    mountElement, 
+    arrowMaterial, 
+    animationSettings, 
+    arrowPath 
+}) {
 
     const renderedArrowMaterial = arrowMaterial.clone();
 
@@ -699,15 +321,6 @@ function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowM
 
     const components = createArrowPathComponents(positionedArrowPath, segments);
     const componentMeshes = [];
-
-    arrow.userData.revealPieces.forEach((revealPiece) => {
-        revealPiece.userData.debugInfo = {
-            arrowName: positionedArrowPath.name,
-            segmentIndex: revealPiece.userData.segmentIndex,
-            actionName: revealPiece.userData.actionName,
-            segmentLength: revealPiece.userData.segmentLength
-        };
-    });
 
     arrow.userData.name = positionedArrowPath.name;
 
@@ -735,33 +348,28 @@ function createRenderedArrowPath({ scene, pathLayoutCamera, mountElement, arrowM
 
     scene.add(arrow);
 
-    let label;
-
-    if (animationSettings.debugMode) {
-
-        const labelText = createArrowDebugLabelText(positionedArrowPath);
-        label = createArrowNameLabel(labelText, segments[0]);
-
-        scene.add(label);
-
-        return {
-            arrow,
-            componentMeshes,
-            label,
-        };
+    if (!animationSettings.debugMode) {
+        setArrowReveal(arrow, 0);
     }
-
-    setArrowReveal(arrow, 0);
 
     return {
         arrow,
         componentMeshes,
-        label: null,
+        positionedArrowPath,
+        segments
     };
 
 }
 
-function renderArrowPaths({ scene, pathLayoutCamera, mountElement, arrowMaterial, animationSettings, previousRenderedArrowItems, arrowPaths }) {
+function renderArrowPaths({ 
+    scene, 
+    pathLayoutCamera, 
+    mountElement, 
+    arrowMaterial, 
+    animationSettings, 
+    previousRenderedArrowItems, 
+    arrowPaths 
+}) {
     clearRenderedArrowItems(scene, previousRenderedArrowItems);
 
     const renderedArrowItems = arrowPaths.map((arrowPath) => {
@@ -786,46 +394,3 @@ function renderArrowPaths({ scene, pathLayoutCamera, mountElement, arrowMaterial
     };
 }
 
-function formatVectorValues(values) {
-    return values.map((value) => {
-        return Number(value).toFixed(3);
-    }).join(', ');
-}
-
-function createArrowDebugLabelText(arrowPath) {
-    return [
-        arrowPath.name,
-        `(${formatVectorValues(arrowPath.origin)})`
-    ].join('    ');
-}
-
-function copyCurrentCamera() {
-    const output = `
-camera.position.set(
-    ${camera.position.x.toFixed(3)},
-    ${camera.position.y.toFixed(3)},
-    ${camera.position.z.toFixed(3)}
-);
-
-camera.quaternion.set(
-    ${camera.quaternion.x.toFixed(6)},
-    ${camera.quaternion.y.toFixed(6)},
-    ${camera.quaternion.z.toFixed(6)},
-    ${camera.quaternion.w.toFixed(6)}
-);
-    `.trim();
-
-    navigator.clipboard.writeText(output)
-        .then(() => {
-            console.log('Copied camera transform:');
-            console.log(output);
-        })
-        .catch((error) => {
-            console.warn(
-                'Could not copy camera transform.'
-            );
-
-            console.log(output);
-            console.error(error);
-        });
-}

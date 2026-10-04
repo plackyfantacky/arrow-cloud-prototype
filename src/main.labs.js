@@ -10,6 +10,7 @@ async function initialise() {
     createArrowCloudLabsScene(
         mountElement, {
             dataset,
+            loadDataset: loadArrowDataset,
             animationSettings: {
                 debugMode: true
             }

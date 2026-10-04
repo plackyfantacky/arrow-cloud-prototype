@@ -1,0 +1,82 @@
+<div
+    class="debug-scene-controls"
+    data-debug-scene-controls
+>
+    <style>
+        .debug-scene-controls {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 10;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.72);
+            color: #fff;
+            font-family: system-ui, sans-serif;
+            font-size: 13px;
+            border-radius: 0.5rem;
+        }
+
+        .debug-scene-controls__toggle {
+            width: 100%;
+            text-align: left;
+        }
+
+        .debug-scene-controls__content {
+            display: grid;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .debug-scene-controls__lines {
+            display: grid;
+            gap: 0.35rem;
+        }
+
+        .debug-scene-controls__line {
+            display: grid;
+            grid-template-columns:
+                auto 1fr 8rem 3rem;
+            gap: 0.5rem;
+            align-items: center;
+        }
+    </style>
+
+    <button
+        type="button"
+        class="debug-scene-controls__toggle"
+        data-action="toggle"
+        aria-expanded="true"
+    >
+        Scene ▾
+    </button>
+
+    <div
+        class="debug-scene-controls__content"
+        data-content
+    >
+        <label>
+            <input
+                type="checkbox"
+                data-control="grid"
+            >
+            Grid
+        </label>
+
+        <label>
+            <input
+                type="checkbox"
+                data-control="axes"
+            >
+            Axis marker
+        </label>
+
+        <strong>
+            Lines
+        </strong>
+
+        <div
+            class="debug-scene-controls__lines"
+            data-lines
+        ></div>
+    </div>
+</div>

@@ -1,6 +1,6 @@
-import debugControlsTemplate from './debugControls.html';
+import debugControlsTemplate from './debugTimelineControls.html';
 
-export function createDebugControls(
+export function createDebugTimelineControls(
     {
         currentTime = 0,
         timelineDuration = 8,
@@ -9,10 +9,7 @@ export function createDebugControls(
         isLooping = true
     },
     {
-        getCameraMode = () => 'orbital',
-        onCameraModeChange = () => { },
-        onResetCamera = () => { },
-        onCopyCamera = () => { }
+        onDatasetChange = () => { }
     } = {}
 ) {
     const state = {
@@ -50,28 +47,38 @@ export function createDebugControls(
     const speedValue =
         container.querySelector('[data-value="speed"]');
 
-    const resetCameraButton =
-        container.querySelector('[data-action="reset-camera"]');
+    const datasetSelect =
+        container.querySelector(
+            '[data-control="dataset"]'
+        );
 
-    const copyCameraButton =
-        container.querySelector('[data-action="copy-camera"]');
+    function setAnimationSettings({
+        timelineDuration,
+        speed,
+        isPlaying,
+        isLooping
+    }) {
+        state.timelineDuration = timelineDuration;
+        state.speed = speed;
+        state.isPlaying = isPlaying;
+        state.isLooping = isLooping;
 
-    const cameraModeButtons = [
-        ...container.querySelectorAll(
-            '[data-camera-mode]'
-        )
-    ];
+        state.currentTime = 0;
 
-    function updateCameraModeButtons() {
-        const cameraMode = getCameraMode();
+        progressInput.max =
+            String(state.timelineDuration);
 
-        cameraModeButtons.forEach((button) => {
-            button.disabled =
-                button.dataset.cameraMode === cameraMode;
-        });
+        speedInput.value =
+            String(state.speed);
 
-        resetCameraButton.hidden =
-            cameraMode !== 'orbital';
+        speedValue.textContent =
+            `${state.speed.toFixed(1)}x`;
+
+        loopCheckbox.checked =
+            state.isLooping;
+
+        updateProgressInput();
+        updatePlayPauseButton();
     }
 
     function updatePlayPauseButton() {
@@ -105,10 +112,6 @@ export function createDebugControls(
         updateProgressInput();
     });
 
-    resetCameraButton.addEventListener('click', () => {
-        onResetCamera();
-    });
-
     loopCheckbox.addEventListener('change', () => {
         state.isLooping = loopCheckbox.checked;
     });
@@ -123,19 +126,14 @@ export function createDebugControls(
         speedValue.textContent = `${state.speed.toFixed(1)}x`;
     });
 
-    copyCameraButton.addEventListener('click', () => {
-        onCopyCamera();
-    });
-
-    cameraModeButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            onCameraModeChange(
-                button.dataset.cameraMode
+    datasetSelect.addEventListener(
+        'change',
+        async () => {
+            await onDatasetChange(
+                datasetSelect.value
             );
-
-            updateCameraModeButtons();
-        });
-    });
+        }
+    );
 
     loopCheckbox.checked = state.isLooping;
 
@@ -150,7 +148,6 @@ export function createDebugControls(
 
     updatePlayPauseButton();
     updateProgressInput();
-    updateCameraModeButtons();
 
     speedValue.textContent =
         `${state.speed.toFixed(1)}x`;
@@ -161,6 +158,7 @@ export function createDebugControls(
         state,
         updateProgressInput,
         updatePlayPauseButton,
+        setAnimationSettings,
         destroy() {
             container.remove();
         }

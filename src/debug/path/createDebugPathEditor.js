@@ -8,6 +8,13 @@ export function createDebugPathEditor(arrowPaths) {
         state.selectedDebugInfo = selectedDebugInfo;
     }
 
+    function setArrowPaths(arrowPaths) {
+        state.arrowPaths =
+            arrowPaths.map(cloneArrowPath);
+
+        state.selectedDebugInfo = null;
+    }
+
     function getArrowPaths() {
         return state.arrowPaths;
     }
@@ -168,6 +175,7 @@ export function createDebugPathEditor(arrowPaths) {
         getSelectedArrowPath,
         getSelectedDebugInfo,
         setSelectedDebugInfo,
+        setArrowPaths,
         nudgeSelectedPathValue,
         changeSelectedMoveAction,
         insertMoveNearSelectedMove,

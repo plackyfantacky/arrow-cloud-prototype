@@ -1,0 +1,133 @@
+<div
+    class="debug-camera-controls"
+    data-debug-camera-controls
+>
+    <style>
+        .debug-camera-controls {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 10;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.72);
+            color: #fff;
+            font-family: system-ui, sans-serif;
+            font-size: 13px;
+            border-radius: 0.5rem;
+        }
+
+        .debug-camera-controls__toggle {
+            width: 100%;
+            text-align: left;
+        }
+
+        .debug-camera-controls__content {
+            display: grid;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .debug-camera-controls__row {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+    </style>
+
+    <button
+        type="button"
+        class="debug-camera-controls__toggle"
+        data-action="toggle"
+        aria-expanded="true"
+    >
+        Camera ▾
+    </button>
+
+    <div
+        class="debug-camera-controls__content"
+        data-content
+    >
+        <div class="debug-camera-controls__row">
+            <button
+                type="button"
+                data-camera-mode="orbital"
+            >
+                Orbital
+            </button>
+
+            <button
+                type="button"
+                data-camera-mode="tracked"
+            >
+                Tracked
+            </button>
+
+            <button
+                type="button"
+                data-camera-mode="fly"
+            >
+                Fly
+            </button>
+        </div>
+
+        <div class="debug-camera-controls__row">
+            <button
+                type="button"
+                data-camera-view="front"
+            >
+                Front
+            </button>
+
+            <button
+                type="button"
+                data-camera-view="back"
+            >
+                Back
+            </button>
+
+            <button
+                type="button"
+                data-camera-view="left"
+            >
+                Left
+            </button>
+
+            <button
+                type="button"
+                data-camera-view="right"
+            >
+                Right
+            </button>
+
+            <button
+                type="button"
+                data-camera-view="top"
+            >
+                Top
+            </button>
+
+            <button
+                type="button"
+                data-camera-view="bottom"
+            >
+                Bottom
+            </button>
+        </div>
+
+        <div class="debug-camera-controls__row">
+            <button
+                type="button"
+                data-action="reset-camera"
+            >
+                Reset
+            </button>
+
+            <button
+                type="button"
+                data-action="copy-camera"
+            >
+                Copy camera
+            </button>
+        </div>
+    </div>
+</div>

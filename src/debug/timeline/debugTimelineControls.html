@@ -21,6 +21,15 @@
             }
         }
     </style>
+    <label>
+        Dataset
+
+        <select data-control="dataset">
+            <option value="labs">Labs</option>
+            <option value="flatpack">Flatpack</option>
+            <option value="demo">Demo</option>
+        </select>
+    </label>
     <button type="button" data-action="play-pause">
         Pause
     </button>
@@ -63,41 +72,5 @@
 
         <span data-value="speed"></span>
     </label>
-
-    <div class="debug-controls__camera">
-        <button
-            type="button"
-            data-camera-mode="orbital"
-        >
-            Orbital
-        </button>
-
-        <button
-            type="button"
-            data-camera-mode="tracked"
-        >
-            Tracked
-        </button>
-
-        <button
-            type="button"
-            data-camera-mode="fly"
-        >
-            Fly
-        </button>
-
-        <button
-            type="button"
-            data-action="reset-camera"
-        >
-            Reset camera
-        </button>
-
-        <button
-            type="button"
-            data-action="copy-camera"
-        >
-            Copy camera
-        </button>
     </div>
 </div>

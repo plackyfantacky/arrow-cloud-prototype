@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { getDebugInfoSource } from "./createDebugControls.js";
+import { getDebugInfoSource } from "../timeline/createDebugTimelineControls.js";
 
 export function createDebugLineTooltip({ camera, renderer, getObjects }) {
     const raycaster = new THREE.Raycaster();

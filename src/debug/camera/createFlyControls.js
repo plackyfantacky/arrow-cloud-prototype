@@ -144,12 +144,16 @@ export function createFlyControls(camera, domElement) {
             return;
         }
 
-        domElement.re///;.questPointerLock();
+        domElement.requestPointerLock();
     }
 
     function handlePointerLockChange() {
         isPointerLocked =
             document.pointerLockElement === domElement;
+
+        if (!isPointerLocked) {
+            pressedKeys.clear();
+        }
     }
 
     function handleMouseMove(event) {
