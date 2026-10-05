@@ -22,6 +22,8 @@ export function createArrowCloudDebug({
     scene,
     arrowPaths,
     animationSettings,
+    initialCameraView,
+    initialCameraDistance,
     getCameraTrack,
     getRenderedArrowItems,
     getArrows,
@@ -65,8 +67,15 @@ export function createArrowCloudDebug({
         onCopyCamera() {
             cameraController.copy();
         }
-        
+
     });
+
+    if (initialCameraView) {
+        cameraController.setViewPreset(
+            initialCameraView,
+            initialCameraDistance
+        );
+    }
 
     const pathTools = createDebugPathTools({
         camera,
@@ -85,7 +94,7 @@ export function createArrowCloudDebug({
 
     const arrowDisplayState = createDebugArrowDisplayState(pathTools.getArrowPaths());
 
-    const gridHelper = new THREE.GridHelper(14, 14);
+    const gridHelper = new THREE.GridHelper(200, 200);
     scene.add(gridHelper);
 
     const axesGauge = createDebugAxesGauge({
@@ -161,6 +170,9 @@ export function createArrowCloudDebug({
         cameraController.update(deltaTime, currentTime);
         pathTools.update();
 
+        gridHelper.position.x = Math.round(camera.position.x);
+        gridHelper.position.z = Math.round(camera.position.z);
+
         return currentTime;
     }
 
@@ -180,7 +192,7 @@ export function createArrowCloudDebug({
 
     function syncRenderedArrowItems() {
         const renderedArrowItems = getRenderedArrowItems();
-        
+
         pathTools.attachDebugInfo(renderedArrowItems);
         pathTools.syncArrowNameLabels(renderedArrowItems);
         arrowDisplayState.apply(renderedArrowItems);

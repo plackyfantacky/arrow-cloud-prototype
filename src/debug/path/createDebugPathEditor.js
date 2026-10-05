@@ -108,10 +108,17 @@ export function createDebugPathEditor(arrowPaths) {
         }
 
         const insertOffset = position === 'before' ? 0 : 1;
-
         const insertIndex = sourceMoveIndex + insertOffset;
 
         arrowPath.moves.splice(insertIndex, 0, [actionName, 1]);
+
+        if (position === 'after') {
+            state.selectedDebugInfo = {
+                ...state.selectedDebugInfo,
+                segmentIndex: state.selectedDebugInfo.segmentIndex + 1,
+                actionName
+            };
+        }
 
         return true;
     }
@@ -170,6 +177,18 @@ export function createDebugPathEditor(arrowPaths) {
         return state.selectedDebugInfo;
     }
 
+    function isSelectedMoveLast() {
+        const arrowPath = getSelectedArrowPath();
+
+        if (!arrowPath) {
+            return false;
+        }
+
+        const sourceMoveIndex = getSelectedSourceMoveIndex(arrowPath);
+
+        return sourceMoveIndex === arrowPath.moves.length - 1;
+    }
+
     return {
         getArrowPaths,
         getSelectedArrowPath,
@@ -180,7 +199,8 @@ export function createDebugPathEditor(arrowPaths) {
         changeSelectedMoveAction,
         insertMoveNearSelectedMove,
         duplicateSelectedMove,
-        removeSelectedMove
+        removeSelectedMove,
+        isSelectedMoveLast
     };
 }
 

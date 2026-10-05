@@ -116,7 +116,9 @@ export function createDebugPathTools({
 
         onSelect(debugInfo) {
             pathEditor.setSelectedDebugInfo(debugInfo);
-            pathControls.setSelectedDebugInfo(debugInfo);
+
+            pathControls.setSelectedDebugInfo(debugInfo, pathEditor.isSelectedMoveLast());
+
             segmentHighlight.setSelectedDebugInfo(debugInfo);
         }
     });

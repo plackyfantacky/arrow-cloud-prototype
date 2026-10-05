@@ -104,7 +104,7 @@ export function createDebugCameraController({
         }
     }
 
-    function setViewPreset(presetName) {
+    function setViewPreset(presetName, distanceOverride = null) {
         const preset = VIEW_PRESETS[presetName];
 
         if (!preset) {
@@ -114,7 +114,10 @@ export function createDebugCameraController({
         setMode(CAMERA_MODES.ORBITAL);
 
         const target = new THREE.Vector3(0, 0, 0);
-        const distance = Math.max(camera.position.distanceTo(target), 1);
+        
+        const currentDistance = camera.position.distanceTo(target);
+
+        const distance = Math.max(distanceOverride ?? currentDistance, 1);
         
         const direction = new THREE.Vector3(...preset).normalize();
             

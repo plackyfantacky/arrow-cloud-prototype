@@ -5,7 +5,7 @@
     "scripts": {
         "watch": "esbuild src/main.labs.js --bundle --outfile=dist/main.labs.js --sourcemap --loader:.html=text --watch",
         "watch:production": "esbuild src/main.js --bundle --outfile=dist/main.js --loader:.html=text --watch",
-        "serve": "browser-sync start --server . --files 'index.html, src/**/*.js, dist/**/*.js'",
+        "serve": "browser-sync start --server . --files 'index.html, src/**/*.js, src/**/*.json, dist/**/*.js'",
         "dev": "npm-run-all --parallel watch serve",
         "dev:prod": "npm-run-all --parallel watch:production serve",
         "build:prod": "esbuild src/main.js --bundle --outfile=dist/main.js --minify --metafile=dist/main.meta.json --analyze=verbose",

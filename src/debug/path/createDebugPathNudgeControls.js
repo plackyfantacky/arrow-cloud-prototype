@@ -95,7 +95,7 @@ export function createDebugPathNudgeControls({
     buttonRow.style.gap = '0.35rem';
     buttonRow.style.flexWrap = 'wrap';
 
-    const nudgeAmounts = [-0.25, -0.1, -0.05, 0.05, 0.1, 0.25];
+    const nudgeAmounts = [-1, -0.5, -0.25, -0.1, 0.1, 0.25, 0.5, 1];
 
     nudgeAmounts.forEach((amount) => {
         const button = document.createElement('button');
@@ -165,7 +165,7 @@ export function createDebugPathNudgeControls({
     document.body.appendChild(container);
 
     return {
-        setSelectedDebugInfo(selectedDebugInfo) {
+        setSelectedDebugInfo(selectedDebugInfo, isLastMove = false) {
             state.selectedDebugInfo = selectedDebugInfo;
 
             selectedLabel.textContent = [
@@ -176,6 +176,10 @@ export function createDebugPathNudgeControls({
 
             actionSelect.disabled = false;
             actionSelect.value = selectedDebugInfo.actionName;
+
+            insertAfterButton.textContent = isLastMove
+                ? 'Add Segment'
+                : 'Insert After';
         },
 
         destroy() {
