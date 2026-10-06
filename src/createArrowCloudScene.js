@@ -32,7 +32,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
     };
 
     const arrowPaths = options.arrowPaths || dataset.arrowPaths;
-    const cameraTrack = options.cameraTrack || dataset.cameraTrack;
+    const cameraTrack = options.cameraTrack || dataset.cameraTrack || null;
     const stageSize = getStageSize(mountElement);
     const scene = new THREE.Scene();
 
@@ -45,8 +45,25 @@ export function createArrowCloudScene(mountElement, options = {}) {
         100
     );
 
-    camera.position.set(0, 5, 12);
-    camera.lookAt(0, 0, 0);
+    const staticCamera = dataset.staticCamera;
+
+    if (staticCamera) {
+        camera.position.set(
+            staticCamera.position.x,
+            staticCamera.position.y,
+            staticCamera.position.z
+        );
+
+        camera.quaternion.set(
+            staticCamera.quaternion.x,
+            staticCamera.quaternion.y,
+            staticCamera.quaternion.z,
+            staticCamera.quaternion.w
+        );
+    } else {
+        camera.position.set(0, 5, 12);
+        camera.lookAt(0, 0, 0);
+    }
 
     applyViewportOffset(
         camera,
@@ -127,12 +144,14 @@ export function createArrowCloudScene(mountElement, options = {}) {
             ? rawCurrentTime % animationSettings.timelineDuration
             : rawCurrentTime;
 
-        updateCameraTrack(
-            mountElement,
-            cameraTrack,
-            camera,
-            currentTime
-        );
+        if (cameraTrack) {
+            updateCameraTrack(
+                mountElement,
+                cameraTrack,
+                camera,
+                currentTime
+            );
+        }
 
         arrows.forEach((arrow) => {
             updateArrowReveal(arrow, currentTime);

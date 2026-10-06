@@ -15,10 +15,11 @@ import { createArrowPathSegments } from "./arrows/createArrowPaths.js";
 import { createPathComponentMesh } from "./arrows/pathComponents/index.js";
 import { createArrowPathComponents, setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
 import { setArrowReveal, updateArrowReveal } from "./arrows/reveal.js";
-
 import { createArrowMotionGroup, updateArrowIdleMotion } from "./arrows/idle.js";
 
-import { createArrowCloudDebug } from "./debug/createArrowCloudDebug.js";
+import { createEnvironment } from "./environment/createEnvironment.js";
+
+import { createArrowCloudEditor } from "./editor/createArrowCloudEditor.js";
 
 export function createArrowCloudLabsScene(mountElement, options = {}) {
     if (!mountElement) {
@@ -36,9 +37,10 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     const arrowPaths = options.arrowPaths || dataset.arrowPaths;
     let cameraTrack = options.cameraTrack || dataset.cameraTrack;
     const stageSize = getStageSize(mountElement);
+    
     const scene = new THREE.Scene();
+    const environment = createEnvironment(scene, dataset.environment);
 
-    scene.background = new THREE.Color(0xFFFFFF);
 
     const camera = new THREE.PerspectiveCamera(
         45,
@@ -105,7 +107,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     let pathComponentMeshes = [];
 
     const debug = animationSettings.debugMode
-        ? createArrowCloudDebug({
+        ? createArrowCloudEditor({
             camera,
             renderer,
             mountElement,

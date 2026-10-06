@@ -1,5 +1,8 @@
 import * as THREE from "three";
 
+//TODO: at some point later rename/refactor this 'debug' system into an 'editor' or 'authoring' system.
+import "./styles.css";
+
 //camera
 import { createDebugCameraController } from './camera/createDebugCameraController.js';
 import { createDebugCameraControls } from './camera/createDebugCameraControls.js';
@@ -15,7 +18,7 @@ import { createDebugPathTools } from './path/createDebugPathTools.js';
 //timeline
 import { createDebugTimelineControls } from "./timeline/createDebugTimelineControls.js";
 
-export function createArrowCloudDebug({
+export function createArrowCloudEditor({
     camera,
     renderer,
     mountElement,
@@ -31,6 +34,10 @@ export function createArrowCloudDebug({
     onDatasetChange
 }) {
 
+    const sidebar = document.createElement('aside');
+    sidebar.className = 'editor-sidebar';
+    document.body.append(sidebar);
+
     //main actions
     const cameraController = createDebugCameraController({
         camera,
@@ -44,6 +51,7 @@ export function createArrowCloudDebug({
     });
 
     const cameraControls = createDebugCameraControls({
+        container: sidebar,
         getCameraMode() {
             return cameraController.getMode();
         },
@@ -67,7 +75,6 @@ export function createArrowCloudDebug({
         onCopyCamera() {
             cameraController.copy();
         }
-
     });
 
     if (initialCameraView) {
@@ -106,6 +113,7 @@ export function createArrowCloudDebug({
     scene.add(axesGauge);
 
     const sceneControls = createDebugSceneControls({
+        container: sidebar,
         gridVisible: gridHelper.visible,
         axesVisible: axesGauge.visible,
 

@@ -1,0 +1,30 @@
+<div class="debug-scene-controls" data-debug-scene-controls>
+    <button type="button" class="debug-scene-controls__toggle" data-action="toggle" aria-expanded="true">Scene ▾</button>
+
+    <div class="debug-scene-controls__content" data-content>
+        <label>
+            <input type="checkbox" data-control="grid" />
+            Grid
+        </label>
+
+        <label>
+            <input type="checkbox" data-control="axes" />
+            Axis marker
+        </label>
+
+        <strong>
+            Lines
+        </strong>
+
+        <div class="debug-scene-controls__lines" data-lines></div>
+
+        <template data-line-template>
+            <div class="debug-scene-controls__line">
+                <input type="checkbox" data-control="visibility" checked />
+                <span data-line-name></span>
+                <input type="range" min="0" max="1" step="0.05" value="1" data-control="opacity" />
+                <span data-opacity-value="">100%</span>
+            </div>
+        </template>
+    </div>
+</div>

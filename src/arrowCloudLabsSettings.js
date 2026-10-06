@@ -12,7 +12,7 @@ export const arrowCloudLabsSettings = {
         headLength: 0.8,
         headWidth: 0.9,
         headMorphSegments: 36,
-        headDiscRadius: 0.45,
+        headDiscRadius: 0.35,
         headDiscThickness: 0.2,
         headDiscCentreX: 0,
     

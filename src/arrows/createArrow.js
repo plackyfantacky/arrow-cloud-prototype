@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import { applyFrameToObject } from "./frame.js";
-import { createArrowHead } from "./arrowHead.js";
+import { createArrowHead, createArrowOriginDisc } from "./arrowHead.js";
 import { createRectangularExtrusionGeometry } from "./geometry.js";
 import { getTwistFrame } from "./twist.js";
 import { createDrawRangeRevealPiece } from "./reveal.js";
@@ -59,7 +59,7 @@ export function createArrow(pieces, material, settings) {
         group.add(pieceGroup);
         group.userData.revealPieces.push(pieceGroup);
     });
-    
+
     const finalPiece = pieces[pieces.length - 1];
     const finalFrame = finalPiece.frame || finalPiece.endFrame || finalPiece.startFrame;
 
@@ -70,11 +70,23 @@ export function createArrow(pieces, material, settings) {
         settings
     );
 
+    const firstPiece = pieces[0];
+    const firstFrame = firstPiece.frame || firstPiece.startFrame || firstPiece.endFrame;
+
+    const tail = createArrowOriginDisc(
+        firstPiece.startPoint,
+        firstFrame,
+        material,
+        settings
+    );
+
     head.visible = false;
 
     group.add(head);
-
     group.userData.head = head;
+
+    group.add(tail);
+    group.userData.tail = tail;
     
     return group;
 }

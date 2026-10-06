@@ -7,7 +7,7 @@ export const arrowCloudSettings = {
     },
     field: {
         bodyWidth: 0.4,
-        bodyDepth: 0.1,
+        bodyDepth: 0.25,
     
         headLength: 0.8,
         headWidth: 0.9,

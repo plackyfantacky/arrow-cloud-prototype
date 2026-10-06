@@ -32,11 +32,7 @@ export function createDebugCameraController({
     let isApplyingViewPreset = false;
     let onViewPresetChange = () => { };
 
-    const orbitControls =
-        new OrbitControls(
-            camera,
-            renderer.domElement
-        );
+    const orbitControls = new OrbitControls(camera, renderer.domElement);
 
     orbitControls.enableDamping = true;
     orbitControls.dampingFactor = 0.08;
@@ -50,11 +46,7 @@ export function createDebugCameraController({
         target: orbitControls.target.clone()
     };
 
-    const flyControls =
-        createFlyControls(
-            camera,
-            renderer.domElement
-        );
+    const flyControls = createFlyControls(camera, renderer.domElement);
 
     flyControls.enabled = false;
 
@@ -70,13 +62,8 @@ export function createDebugCameraController({
         const previousCameraMode = cameraMode;
 
         if (previousCameraMode === CAMERA_MODES.ORBITAL) {
-            orbitalCameraState.position.copy(
-                camera.position
-            );
-
-            orbitalCameraState.target.copy(
-                orbitControls.target
-            );
+            orbitalCameraState.position.copy(camera.position);
+            orbitalCameraState.target.copy(orbitControls.target);
         }
 
         cameraMode = nextCameraMode;
@@ -85,20 +72,12 @@ export function createDebugCameraController({
             clearViewPreset();
         }
 
-        orbitControls.enabled =
-            cameraMode === CAMERA_MODES.ORBITAL;
-
-        flyControls.enabled =
-            cameraMode === CAMERA_MODES.FLY;
+        orbitControls.enabled = cameraMode === CAMERA_MODES.ORBITAL;
+        flyControls.enabled = cameraMode === CAMERA_MODES.FLY;
 
         if (cameraMode === CAMERA_MODES.ORBITAL) {
-            camera.position.copy(
-                orbitalCameraState.position
-            );
-
-            orbitControls.target.copy(
-                orbitalCameraState.target
-            );
+            camera.position.copy(orbitalCameraState.position);
+            orbitControls.target.copy(orbitalCameraState.target);
 
             orbitControls.update();
         }
@@ -116,18 +95,14 @@ export function createDebugCameraController({
         const target = new THREE.Vector3(0, 0, 0);
         
         const currentDistance = camera.position.distanceTo(target);
-
         const distance = Math.max(distanceOverride ?? currentDistance, 1);
-        
         const direction = new THREE.Vector3(...preset).normalize();
             
         isApplyingViewPreset = true;
         
         camera.up.set(0, 1, 0);
         
-        camera.position.copy(
-            direction.multiplyScalar(distance)
-        );
+        camera.position.copy(direction.multiplyScalar(distance));
 
         orbitControls.target.copy(target);
         camera.lookAt(target);
@@ -160,10 +135,7 @@ export function createDebugCameraController({
     }
 
     function handleOrbitChange() {
-        if (
-            cameraMode === CAMERA_MODES.ORBITAL &&
-            !isApplyingViewPreset
-        ) {
+        if (cameraMode === CAMERA_MODES.ORBITAL && !isApplyingViewPreset) {
             clearViewPreset();
         }
     }
@@ -172,13 +144,7 @@ export function createDebugCameraController({
 
     function reset() {
         if (cameraMode === CAMERA_MODES.TRACKED) {
-            updateCameraTrack(
-                mountElement,
-                getCameraTrack(),
-                camera,
-                0
-            );
-
+            updateCameraTrack(mountElement, getCameraTrack(), camera, 0);
             return;
         }
 
@@ -203,50 +169,29 @@ export function createDebugCameraController({
             }
         };
 
-        const json = JSON.stringify(
-            output,
-            null,
-            4
-        );
+        const json = JSON.stringify(output, null, 4);
 
         navigator.clipboard.writeText(json)
             .then(() => {
-                console.log(
-                    'Copied static camera:'
-                );
-
+                console.log('Copied static camera:');
                 console.log(json);
             })
             .catch((error) => {
-                console.warn(
-                    'Could not copy static camera.'
-                );
-
+                console.warn('Could not copy static camera.');
                 console.log(json);
                 console.error(error);
             });
     }
 
-    function update(
-        deltaTime,
-        currentTime
-    ) {
+    function update(deltaTime, currentTime) {
         if (cameraMode === CAMERA_MODES.TRACKED) {
-            updateCameraTrack(
-                mountElement,
-                getCameraTrack(),
-                camera,
-                currentTime
-            );
+            updateCameraTrack(mountElement, getCameraTrack(), camera, currentTime);
 
             return;
         }
 
         if (cameraMode === CAMERA_MODES.FLY) {
-            flyControls.update(
-                deltaTime
-            );
-
+            flyControls.update(deltaTime);
             return;
         }
 
@@ -258,7 +203,6 @@ export function createDebugCameraController({
         orbitControls.dispose();
         flyControls.dispose();
     }
-
 
     return {
         getMode,

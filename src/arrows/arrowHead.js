@@ -247,6 +247,23 @@ function createDiscPointFactory(
     };
 }
 
+export function createArrowOriginDisc(position, frame, material, settings) {
+    const geometry = createMorphShapeGeometry(
+        settings.headMorphSegments ?? 36,
+        createDiscPointFactory(settings)
+    );
+
+    const mesh = new THREE.Mesh(
+        geometry,
+        material
+    );
+
+    mesh.position.copy(position);
+    applyFrameToObject(mesh, frame);
+
+    return mesh;
+}
+
 function getTrianglePerimeterPoint(progress, length, width) {
     const halfWidth = width * 0.5;
 

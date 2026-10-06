@@ -6,6 +6,20 @@
         "isPlaying": true,
         "isLooping": false
     },
+     "environment": {
+        "type": "box",
+        "colour": "#F1ECE4",
+        "size": {
+            "x": 40,
+            "y": 24,
+            "z": 40
+        },
+        "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        }
+    },
     "staticCamera": {
         "position": {
             "x": 3.713,
@@ -470,9 +484,9 @@
         },
         {
             "name": "arrow-17",
-            "origin": [-5, 0, -8],
-            "initialDirection": "-x",
-            "initialNormal": "+y",
+            "origin": [-5, 2, -8],
+            "initialDirection": "+x",
+            "initialNormal": "+z",
             "moves": [
                 ["forward", 1],
                 ["turnRight", 1],

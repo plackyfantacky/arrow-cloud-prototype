@@ -6,24 +6,33 @@ export function createDebugCameraControls({
     onCameraModeChange = () => { },
     onCameraViewChange = () => { },
     onResetCamera = () => { },
-    onCopyCamera = () => { }
+    onCopyCamera = () => { },
+    container = document.body
 } = {}) {
     const template = document.createElement('template');
     template.innerHTML = debugCameraControlsTemplate;
 
-    const container = template.content.firstElementChild.cloneNode(true);
+    const controlsContainer = template.content.firstElementChild.cloneNode(true);
 
-    const cameraModeButtons = [
-        ...container.querySelectorAll('[data-camera-mode]')
-    ];
+    const toggleButton = controlsContainer.querySelector('[data-action="toggle"]');
+    const content = controlsContainer.querySelector('[data-content]');
 
-    const cameraViewButtons = [
-        ...container.querySelectorAll('[data-camera-view]')
-    ];
+    toggleButton.addEventListener('click', () => {
+    const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true';
 
-    const resetCameraButton = container.querySelector('[data-action="reset-camera"]');
+    toggleButton.setAttribute('aria-expanded', String(!isExpanded));
 
-    const copyCameraButton = container.querySelector('[data-action="copy-camera"]');
+    content.hidden = isExpanded;
+
+    toggleButton.textContent = isExpanded
+        ? 'Camera ▸'
+        : 'Camera ▾';
+    });
+
+    const cameraModeButtons = [...controlsContainer.querySelectorAll('[data-camera-mode]')];
+    const cameraViewButtons = [...controlsContainer.querySelectorAll('[data-camera-view]')];
+    const resetCameraButton = controlsContainer.querySelector('[data-action="reset-camera"]');
+    const copyCameraButton = controlsContainer.querySelector('[data-action="copy-camera"]');
 
     function updateCameraModeButtons() {
         const cameraMode = getCameraMode();
@@ -43,9 +52,7 @@ export function createDebugCameraControls({
 
     cameraModeButtons.forEach((button) => {
         button.addEventListener('click', () => {
-            onCameraModeChange(
-                button.dataset.cameraMode
-            );
+            onCameraModeChange(button.dataset.cameraMode);
 
             updateCameraModeButtons();
         });
@@ -53,36 +60,27 @@ export function createDebugCameraControls({
 
     cameraViewButtons.forEach((button) => {
         button.addEventListener('click', () => {
-            onCameraViewChange(
-                button.dataset.cameraView
-            );
+            onCameraViewChange(button.dataset.cameraView);
 
             updateCameraModeButtons();
             updateCameraViewButtons();
         });
     });
 
-    resetCameraButton.addEventListener(
-        'click',
-        onResetCamera
-    );
-
-    copyCameraButton.addEventListener(
-        'click',
-        onCopyCamera
-    );
+    resetCameraButton.addEventListener('click', onResetCamera);
+    copyCameraButton.addEventListener('click', onCopyCamera);
 
     updateCameraModeButtons();
     updateCameraViewButtons();
 
-    document.body.appendChild(container);
+    container.appendChild(controlsContainer);
 
     return {
         updateCameraModeButtons,
         updateCameraViewButtons,
 
         destroy() {
-            container.remove();
+            controlsContainer.remove();
         }
     };
 }
