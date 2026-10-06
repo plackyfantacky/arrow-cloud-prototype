@@ -67,7 +67,6 @@ export function createCameraController({
     cameraTargetMarker.setPosition(orbitControls.target);
     cameraUpMarker.setPosition(orbitControls.target);
 
-
     const targetRaycaster = new THREE.Raycaster();
     const targetDirections = {
         positiveX: new THREE.Vector3(1, 0, 0),
@@ -290,6 +289,10 @@ export function createCameraController({
         cameraTargetMarker.setVisible(isVisible);
     }
 
+    function setUpMarkerVisible(isVisible) {
+        cameraUpMarker.setVisible(isVisible);
+    }
+
     function reset() {
         cameraMode = CAMERA_MODES.ORBITAL;
         flyControls.enabled = false;
@@ -394,6 +397,7 @@ export function createCameraController({
         setViewPreset,
         setViewPresetChangeHandler,
         setTargetMarkerVisible,
+        setUpMarkerVisible,
         reset,
         update,
         copy,

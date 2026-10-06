@@ -8,6 +8,7 @@ export function createCameraControls({
     onResetCamera = () => { },
     onCopyCamera = () => { },
     onCameraTargetVisibilityChange = () => { },
+    onCameraUpVisibilityChange = () => { },
     container = document.body
 } = {}) {
     const template = document.createElement('template');
@@ -35,6 +36,7 @@ export function createCameraControls({
     const resetCameraButton = controlsContainer.querySelector('[data-action="reset-camera"]');
     const copyCameraButton = controlsContainer.querySelector('[data-action="copy-camera"]');
     const cameraTargetVisibilityInput = controlsContainer.querySelector('[data-camera-target-visible]');
+    const cameraUpVisibilityInput = controlsContainer.querySelector('[data-camera-up-visible]');
 
     function updateCameraModeButtons() {
         const cameraMode = getCameraMode();
@@ -74,8 +76,11 @@ export function createCameraControls({
 
     cameraTargetVisibilityInput.addEventListener('change', () => {
         onCameraTargetVisibilityChange(cameraTargetVisibilityInput.checked);
-    }
-);
+    });
+
+    cameraUpVisibilityInput.addEventListener('change', () => {
+        onCameraUpVisibilityChange(cameraUpVisibilityInput.checked);
+    });
 
     updateCameraModeButtons();
     updateCameraViewButtons();

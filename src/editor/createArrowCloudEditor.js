@@ -79,7 +79,11 @@ export function createArrowCloudEditor({
 
         onCameraTargetVisibilityChange(isVisible) {
             cameraController.setTargetMarkerVisible(isVisible);
-        }
+        },
+
+        onCameraUpVisibilityChange: (isVisible) => {
+            cameraController.setUpMarkerVisible(isVisible);
+        },
 
     });
 
