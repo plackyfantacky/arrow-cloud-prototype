@@ -50,6 +50,11 @@ export function createCameraController({
     orbitControls.update();
     orbitControls.saveState();
 
+    const initialCameraPosition = camera.position.clone();
+    const initialCameraQuaternion = camera.quaternion.clone();
+    const initialCameraUp = camera.up.clone();
+    const initialOrbitTarget = orbitControls.target.clone();
+
     const flyControls = createFlyControls(camera, renderer.domElement);
 
     flyControls.enabled = false;
@@ -94,6 +99,8 @@ export function createCameraController({
         orbitControls = createOrbitControls();
 
         orbitControls.target.copy(target);
+        cameraPivot.copy(target);
+
         orbitControls.update();
     }
 
@@ -244,9 +251,7 @@ export function createCameraController({
 
         setMode(CAMERA_MODES.ORBITAL);
 
-        const target = new THREE.Vector3(0, 0, 0);
-
-        cameraPivot.copy(target);
+        const target = orbitControls.target.clone();
 
         const currentDistance = camera.position.distanceTo(target);
         const distance = Math.max(distanceOverride ?? currentDistance, 1);
@@ -256,10 +261,16 @@ export function createCameraController({
 
         camera.up.set(0, 1, 0);
 
-        camera.position.copy(direction.multiplyScalar(distance));
-        camera.lookAt(cameraPivot);
+        camera.position
+            .copy(target)
+            .addScaledVector(
+                direction,
+                distance
+            );
 
-        rebuildOrbitControls(cameraPivot);
+        camera.lookAt(target);
+
+        rebuildOrbitControls(target);
 
         currentViewPreset = presetName;
         isApplyingViewPreset = false;
@@ -280,15 +291,19 @@ export function createCameraController({
     }
 
     function reset() {
-        if (cameraMode === CAMERA_MODES.TRACKED) {
-            updateCameraTrack(mountElement, getCameraTrack(), camera, 0);
-            return;
-        }
+        cameraMode = CAMERA_MODES.ORBITAL;
+        flyControls.enabled = false;
 
-        orbitControls.reset();
+        camera.position.copy(initialCameraPosition);
+        camera.quaternion.copy(initialCameraQuaternion);
+        camera.up.copy(initialCameraUp);
 
-        orbitalCameraState.position.copy(camera.position);
-        orbitalCameraState.target.copy(orbitControls.target);
+        rebuildOrbitControls(initialOrbitTarget);
+        orbitControls.enabled = true;
+        orbitDistance = camera.position.distanceTo(initialOrbitTarget);
+        cameraTargetDistance = orbitDistance;
+
+        clearViewPreset();
     }
 
     function copy() {
