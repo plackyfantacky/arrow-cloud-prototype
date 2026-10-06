@@ -26,4 +26,6 @@ export function createBoxEnvironment(scene, settings) {
     );
 
     scene.add(environment);
+
+    return environment;
 }

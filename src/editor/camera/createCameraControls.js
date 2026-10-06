@@ -1,16 +1,17 @@
-import debugCameraControlsTemplate from './debugCameraControls.html';
+import cameraControlsTemplate from './cameraControls.html';
 
-export function createDebugCameraControls({
+export function createCameraControls({
     getCameraMode = () => 'orbital',
     getCameraView = () => null,
     onCameraModeChange = () => { },
     onCameraViewChange = () => { },
     onResetCamera = () => { },
     onCopyCamera = () => { },
+    onCameraTargetVisibilityChange = () => { },
     container = document.body
 } = {}) {
     const template = document.createElement('template');
-    template.innerHTML = debugCameraControlsTemplate;
+    template.innerHTML = cameraControlsTemplate;
 
     const controlsContainer = template.content.firstElementChild.cloneNode(true);
 
@@ -33,6 +34,7 @@ export function createDebugCameraControls({
     const cameraViewButtons = [...controlsContainer.querySelectorAll('[data-camera-view]')];
     const resetCameraButton = controlsContainer.querySelector('[data-action="reset-camera"]');
     const copyCameraButton = controlsContainer.querySelector('[data-action="copy-camera"]');
+    const cameraTargetVisibilityInput = controlsContainer.querySelector('[data-camera-target-visible]');
 
     function updateCameraModeButtons() {
         const cameraMode = getCameraMode();
@@ -69,6 +71,11 @@ export function createDebugCameraControls({
 
     resetCameraButton.addEventListener('click', onResetCamera);
     copyCameraButton.addEventListener('click', onCopyCamera);
+
+    cameraTargetVisibilityInput.addEventListener('change', () => {
+        onCameraTargetVisibilityChange(cameraTargetVisibilityInput.checked);
+    }
+);
 
     updateCameraModeButtons();
     updateCameraViewButtons();

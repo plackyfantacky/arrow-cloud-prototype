@@ -1,14 +1,14 @@
-<div class="debug-camera-controls" data-debug-camera-controls>
-    <button type="button" class="debug-camera-controls__toggle" data-action="toggle" aria-expanded="true">Camera ▾</button>
+<div class="camera-controls" data-camera-controls>
+    <button type="button" class="camera-controls__toggle" data-action="toggle" aria-expanded="true">Camera ▾</button>
 
-    <div class="debug-camera-controls__content" data-content>
-        <div class="debug-camera-controls__row">
+    <div class="camera-controls__content" data-content>
+        <div class="camera-controls__row">
             <button type="button" data-camera-mode="orbital">Orbital</button>
             <button type="button" data-camera-mode="tracked">Tracked</button>
             <button type="button" data-camera-mode="fly">Fly</button>
         </div>
 
-        <div class="debug-camera-controls__row">
+        <div class="camera-controls__row">
             <button type="button" data-camera-view="front">Front</button>
             <button type="button" data-camera-view="back">Back</button>
             <button type="button" data-camera-view="left">Left</button>
@@ -17,9 +17,15 @@
             <button type="button" data-camera-view="bottom">Bottom</button>
         </div>
 
-        <div class="debug-camera-controls__row">
+        <div class="camera-controls__row">
             <button type="button" data-action="reset-camera">Reset</button>
             <button type="button" data-action="copy-camera">Copy camera</button>
+        </div>
+        <div class="camera-controls__row">
+            <label>
+                <input type="checkbox" data-camera-target-visible checked />
+                Camera target
+            </label>
         </div>
     </div>
 </div>

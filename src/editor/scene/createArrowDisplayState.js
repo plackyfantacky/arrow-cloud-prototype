@@ -1,4 +1,4 @@
-export function createDebugArrowDisplayState(arrowPaths = []) {
+export function createArrowDisplayState(arrowPaths = []) {
     const visibilityState = new Map();
     const opacityState = new Map();
 

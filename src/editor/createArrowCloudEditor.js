@@ -4,13 +4,13 @@ import * as THREE from "three";
 import "./styles.css";
 
 //camera
-import { createDebugCameraController } from './camera/createDebugCameraController.js';
-import { createDebugCameraControls } from './camera/createDebugCameraControls.js';
+import { createCameraController } from './camera/createCameraController.js';
+import { createCameraControls } from './camera/createCameraControls.js';
 
 //scene
-import { createDebugAxesGauge } from './scene/createDebugAxesGauge.js';
-import { createDebugSceneControls } from './scene/createDebugSceneControls.js';
-import { createDebugArrowDisplayState } from './scene/createDebugArrowDisplayState.js';
+import { createAxesGauge } from './scene/createAxesGauge.js';
+import { createSceneControls } from './scene/createSceneControls.js';
+import { createArrowDisplayState } from './scene/createArrowDisplayState.js';
 
 //paths
 import { createDebugPathTools } from './path/createDebugPathTools.js';
@@ -39,10 +39,11 @@ export function createArrowCloudEditor({
     document.body.append(sidebar);
 
     //main actions
-    const cameraController = createDebugCameraController({
+    const cameraController = createCameraController({
         camera,
         renderer,
         mountElement,
+        scene,
         getCameraTrack
     });
 
@@ -50,7 +51,7 @@ export function createArrowCloudEditor({
         cameraControls.updateCameraViewButtons();
     });
 
-    const cameraControls = createDebugCameraControls({
+    const cameraControls = createCameraControls({
         container: sidebar,
         getCameraMode() {
             return cameraController.getMode();
@@ -74,7 +75,12 @@ export function createArrowCloudEditor({
 
         onCopyCamera() {
             cameraController.copy();
+        },
+
+        onCameraTargetVisibilityChange(isVisible) {
+            cameraController.setTargetMarkerVisible(isVisible);
         }
+
     });
 
     if (initialCameraView) {
@@ -99,20 +105,22 @@ export function createArrowCloudEditor({
         }
     });
 
-    const arrowDisplayState = createDebugArrowDisplayState(pathTools.getArrowPaths());
+    const arrowDisplayState = createArrowDisplayState(pathTools.getArrowPaths());
 
     const gridHelper = new THREE.GridHelper(200, 200);
+    gridHelper.userData.editorHelper = true;
     scene.add(gridHelper);
 
-    const axesGauge = createDebugAxesGauge({
+    const axesGauge = createAxesGauge({
         size: 2,
         labelOffset: 0.35,
     });
 
     axesGauge.position.set(0.1, 0.1, 0.1);
+    axesGauge.userData.editorHelper = true;
     scene.add(axesGauge);
 
-    const sceneControls = createDebugSceneControls({
+    const sceneControls = createSceneControls({
         container: sidebar,
         gridVisible: gridHelper.visible,
         axesVisible: axesGauge.visible,

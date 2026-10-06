@@ -485,7 +485,7 @@
         {
             "name": "arrow-17",
             "origin": [-5, 2, -8],
-            "initialDirection": "+x",
+            "initialDirection": "-x",
             "initialNormal": "+z",
             "moves": [
                 ["forward", 1],

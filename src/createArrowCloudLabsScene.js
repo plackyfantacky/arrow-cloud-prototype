@@ -40,7 +40,10 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     
     const scene = new THREE.Scene();
     const environment = createEnvironment(scene, dataset.environment);
-
+    
+    if (environment) {
+        environment.userData.cameraTargetCollision = false;
+    }
 
     const camera = new THREE.PerspectiveCamera(
         45,

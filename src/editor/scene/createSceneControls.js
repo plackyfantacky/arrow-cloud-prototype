@@ -1,6 +1,6 @@
-import debugSceneControlsTemplate from './debugSceneControls.html';
+import sceneControlsTemplate from './sceneControls.html';
 
-export function createDebugSceneControls({
+export function createSceneControls({
     gridVisible = true,
     axesVisible = true,
     arrowNames = [],
@@ -12,7 +12,7 @@ export function createDebugSceneControls({
 }) {
     const template = document.createElement('template');
 
-    template.innerHTML = debugSceneControlsTemplate;
+    template.innerHTML = sceneControlsTemplate;
 
     const controlsContainer = template.content.firstElementChild.cloneNode(true);
 

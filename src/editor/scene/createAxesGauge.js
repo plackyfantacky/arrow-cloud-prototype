@@ -39,7 +39,7 @@ function createAxisLabel(text, position) {
     return sprite;
 }
 
-export function createDebugAxesGauge({
+export function createAxesGauge({
     size = 2,
     labelOffset = 0.35,
 } = {}) {

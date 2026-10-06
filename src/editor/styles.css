@@ -25,7 +25,7 @@ aside {
     left: 1rem;
 }
 
-.debug-camera-controls {
+.camera-controls {
     z-index: 10;
     padding: 0.75rem;
     background: rgba(0, 0, 0, 0.72);
@@ -35,12 +35,12 @@ aside {
     border-radius: 0.5rem;
 }
 
-.debug-camera-controls__toggle {
+.camera-controls__toggle {
     width: 100%;
     text-align: left;
 }
 
-.debug-camera-controls__content {
+.camera-controls__content {
     display: grid;
     gap: 0.5rem;
     margin-top: 0.5rem;
@@ -50,7 +50,7 @@ aside {
     }
 }
 
-.debug-camera-controls__row {
+.camera-controls__row {
     display: flex;
     gap: 0.35rem;
     flex-wrap: wrap;
