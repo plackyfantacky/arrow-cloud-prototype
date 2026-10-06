@@ -8,7 +8,7 @@
     },
      "environment": {
         "type": "box",
-        "colour": "#F1ECE4",
+        "colour": "#1248ad",
         "size": {
             "x": 40,
             "y": 24,
@@ -16,21 +16,26 @@
         },
         "position": {
             "x": 0,
-            "y": 0,
+            "y": 8,
             "z": 0
         }
     },
     "staticCamera": {
         "position": {
-            "x": 3.713,
-            "y": 3.899,
-            "z": 4.064
+            "x": 4.807,
+            "y": 8.25,
+            "z": -8.802
         },
         "quaternion": {
-            "x": -0.220425,
-            "y": 0.211985,
-            "z": 0.048549,
-            "w": 0.950851
+            "x": -0.502414,
+            "y": 0.246103,
+            "z": -0.265569,
+            "w": 0.785167
+        },
+        "target": {
+            "x": -4.192,
+            "y": -0.817,
+            "z": -13.954
         }
     },
     "arrowPaths": [
@@ -484,12 +489,13 @@
         },
         {
             "name": "arrow-17",
-            "origin": [-5, 2, -8],
+            "origin": [-5, -1, -8],
             "initialDirection": "-x",
             "initialNormal": "+z",
             "moves": [
                 ["forward", 1],
                 ["turnRight", 1],
+                ["bendDown", 1],
                 ["turnRight", 4],
                 ["turnRight", 1],
                 ["turnRight", 2],

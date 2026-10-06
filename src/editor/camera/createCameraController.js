@@ -26,6 +26,7 @@ export function createCameraController({
     renderer,
     mountElement,
     scene,
+    initialCameraTarget,
     getCameraTrack
 }) {
 
@@ -37,15 +38,21 @@ export function createCameraController({
 
     let orbitControls = createOrbitControls();
 
-    const cameraPivot = new THREE.Vector3(0, 0, 0);
+    const cameraPivot = new THREE.Vector3(
+        initialCameraTarget?.x ?? 0,
+        initialCameraTarget?.y ?? 0,
+        initialCameraTarget?.z ?? 0
+    );
+
     const cameraDirection = new THREE.Vector3();
     const cameraUp = new THREE.Vector3();
 
     let orbitDistance = camera.position.distanceTo(orbitControls.target);
+    
+    orbitControls.target.copy(cameraPivot);
 
     orbitControls.enableDamping = true;
     orbitControls.dampingFactor = 0.08;
-    orbitControls.target.copy(cameraPivot);
     orbitControls.enabled = true;
     orbitControls.update();
     orbitControls.saveState();
@@ -321,7 +328,12 @@ export function createCameraController({
                 y: Number(camera.quaternion.y.toFixed(6)),
                 z: Number(camera.quaternion.z.toFixed(6)),
                 w: Number(camera.quaternion.w.toFixed(6))
-            }
+            },
+            target: {
+                x: Number(orbitControls.target.x.toFixed(3)),
+                y: Number(orbitControls.target.y.toFixed(3)),
+                z: Number(orbitControls.target.z.toFixed(3))
+            },
         };
 
         const json = JSON.stringify(output, null, 4);

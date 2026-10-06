@@ -119,6 +119,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             animationSettings,
             initialCameraView: options.cameraView,
             initialCameraDistance: options.cameraDistance,
+            initialCameraTarget: staticCamera?.target,
 
             getCameraTrack() {
                 return cameraTrack;

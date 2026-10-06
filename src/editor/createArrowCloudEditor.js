@@ -27,6 +27,7 @@ export function createArrowCloudEditor({
     animationSettings,
     initialCameraView,
     initialCameraDistance,
+    initialCameraTarget,
     getCameraTrack,
     getRenderedArrowItems,
     getArrows,
@@ -44,6 +45,7 @@ export function createArrowCloudEditor({
         renderer,
         mountElement,
         scene,
+        initialCameraTarget,
         getCameraTrack
     });
 
