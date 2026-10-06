@@ -36,8 +36,6 @@ export function createCameraController({
     let isApplyingViewPreset = false;
     let onViewPresetChange = () => { };
 
-    let orbitControls = createOrbitControls();
-
     const cameraPivot = new THREE.Vector3(
         initialCameraTarget?.x ?? 0,
         initialCameraTarget?.y ?? 0,
@@ -47,21 +45,30 @@ export function createCameraController({
     const cameraDirection = new THREE.Vector3();
     const cameraUp = new THREE.Vector3();
 
-    let orbitDistance = camera.position.distanceTo(orbitControls.target);
+    cameraUp
+        .set(0, 1, 0)
+        .applyQuaternion(camera.quaternion)
+        .normalize();
+
+    camera.up.copy(cameraUp);
+
+    let orbitControls = createOrbitControls();
     
     orbitControls.target.copy(cameraPivot);
-
+    
     orbitControls.enableDamping = true;
     orbitControls.dampingFactor = 0.08;
     orbitControls.enabled = true;
     orbitControls.update();
     orbitControls.saveState();
-
+    
     const initialCameraPosition = camera.position.clone();
     const initialCameraQuaternion = camera.quaternion.clone();
     const initialCameraUp = camera.up.clone();
     const initialOrbitTarget = orbitControls.target.clone();
-
+    
+    let orbitDistance = camera.position.distanceTo(orbitControls.target);
+    
     const flyControls = createFlyControls(camera, renderer.domElement);
 
     flyControls.enabled = false;
@@ -92,6 +99,8 @@ export function createCameraController({
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
         controls.enabled = cameraMode === CAMERA_MODES.ORBITAL;
+
+        controls.target.copy(cameraPivot);
 
         controls.addEventListener('change', handleOrbitChange);
 
