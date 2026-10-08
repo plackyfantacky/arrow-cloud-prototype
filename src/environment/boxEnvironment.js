@@ -17,6 +17,8 @@ export function createBoxEnvironment(scene, settings) {
         material
     );
 
+    environment.receiveShadow = true;
+
     const position = settings.position ?? {};
 
     environment.position.set(

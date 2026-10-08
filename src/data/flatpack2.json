@@ -1,0 +1,95 @@
+{
+    "name": "flatpack",
+    "animationSettings": {
+        "timelineDuration": 5,
+        "speed": 1,
+        "isPlaying": true,
+        "isLooping": false
+    },
+    "viewport": {
+        "offsetX": 0.28,
+        "offsetY": 0.02
+    },
+     "environment": {
+        "type": "box",
+        "colour": "#bbbbbb",
+        "size": {
+            "x": 120,
+            "y": 50,
+            "z": 120
+        },
+        "position": {
+            "x": 0,
+            "y": 24,
+            "z": 0
+        }
+    },
+    "lighting": {
+        "shadows": true,
+        "lights": [
+            {
+                "type": "hemisphere",
+                "skyColour": "#ffe0b5",
+                "groundColour": "#9b7653",
+                "intensity": 1
+            },
+            {
+                "type": "directional",
+                "colour": "#ffffff",
+                "intensity": 1.5,
+                "position": {
+                    "x": 10,
+                    "y": 16,
+                    "z": 8
+                },
+                "target": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "castShadow": true,
+                "shadow": {
+                    "mapSize": 2048,
+                    "radius": 10,
+                    "bias": -0.0002,
+                    "normalBias": 0.02,
+                    "camera": {
+                        "near": 1,
+                        "far": 80,
+                        "left": -30,
+                        "right": 30,
+                        "top": 30,
+                        "bottom": -30
+                    }
+                }
+            }
+        ]
+    },
+    "arrowPaths": [
+        {
+            "name": "arrow-1",
+            "origin": [0, 0, 0],
+            "initialDirection": "+x",
+            "initialNormal": "+y",
+            "moves": [
+                ["forward", 3],
+                ["turnRight", 1],
+                ["turnRight", 8],
+                ["turnRight", 2],
+                ["turnLeft", 4],
+                ["turnRight", 5],
+                ["turnLeft", 2],
+                ["turnLeft", 2],
+                ["turnRight", 1],
+                ["turnLeft", 1],
+                ["turnLeft", 1],
+                ["turnRight", 1],
+                ["turnRight", 5]
+            ],
+            "timing": {
+                "delay": 0,
+                "duration": 4
+            }
+        }
+    ]
+}
