@@ -13,10 +13,10 @@ import { createSceneControls } from './scene/createSceneControls.js';
 import { createArrowDisplayState } from './scene/createArrowDisplayState.js';
 
 //paths
-import { createDebugPathTools } from './path/createDebugPathTools.js';
+import { createPathTools } from './path/createPathTools.js';
 
 //timeline
-import { createDebugTimelineControls } from "./timeline/createDebugTimelineControls.js";
+import { createTimelineControls } from "./timeline/createTimelineControls.js";
 
 export function createArrowCloudEditor({
     camera,
@@ -96,7 +96,7 @@ export function createArrowCloudEditor({
         );
     }
 
-    const pathTools = createDebugPathTools({
+    const pathTools = createPathTools({
         camera,
         renderer,
         scene,
@@ -154,7 +154,7 @@ export function createArrowCloudEditor({
         }
     });
 
-    const timelineControls = createDebugTimelineControls(animationSettings, {
+    const timelineControls = createTimelineControls(animationSettings, {
         onDatasetChange
     });
 
@@ -215,7 +215,7 @@ export function createArrowCloudEditor({
     function syncRenderedArrowItems() {
         const renderedArrowItems = getRenderedArrowItems();
 
-        pathTools.attachDebugInfo(renderedArrowItems);
+        pathTools.attachPathInfo(renderedArrowItems);
         pathTools.syncArrowNameLabels(renderedArrowItems);
         arrowDisplayState.apply(renderedArrowItems);
     }

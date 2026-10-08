@@ -3,9 +3,9 @@ import * as THREE from "three";
 const selectedColour = new THREE.Color(0x00ffff);
 const affectedColour = new THREE.Color(0xff3333);
 
-export function createDebugSegmentHighlight({ getObjects }) {
+export function createPathSegmentHighlight({ getObjects }) {
     const state = {
-        selectedDebugInfo: null,
+        selectedPathInfo: null,
         targetValue: 'move:0'
     };
 
@@ -13,14 +13,14 @@ export function createDebugSegmentHighlight({ getObjects }) {
 
     function clear() {
         highlightedMeshes.forEach((mesh) => {
-            if (!mesh.userData.debugHighlightOriginalMaterial) {
+            if (!mesh.userData.pathHighlightOriginalMaterial) {
                 return;
             }
 
             mesh.material.dispose();
-            mesh.material = mesh.userData.debugHighlightOriginalMaterial;
+            mesh.material = mesh.userData.pathHighlightOriginalMaterial;
 
-            delete mesh.userData.debugHighlightOriginalMaterial;
+            delete mesh.userData.pathHighlightOriginalMaterial;
 
         });
 
@@ -30,19 +30,19 @@ export function createDebugSegmentHighlight({ getObjects }) {
     function refresh() {
         clear();
 
-        if (!state.selectedDebugInfo) {
+        if (!state.selectedPathInfo) {
             return;
         }
 
         const affectedCornerPiece = findAffectedCornerPiece(
             getObjects(),
-            state.selectedDebugInfo,
+            state.selectedPathInfo,
             state.targetValue
         );
 
         const selectedPiece = findRevealPiece(
             getObjects(),
-            state.selectedDebugInfo
+            state.selectedPathInfo
         );
 
         if (affectedCornerPiece && affectedCornerPiece !== selectedPiece) {
@@ -54,8 +54,8 @@ export function createDebugSegmentHighlight({ getObjects }) {
         }
     }
 
-    function setSelectedDebugInfo(selectedDebugInfo) {
-        state.selectedDebugInfo = selectedDebugInfo;
+    function setSelectedPathInfo(selectedPathInfo) {
+        state.selectedPathInfo = selectedPathInfo;
         refresh();
     }
 
@@ -70,11 +70,11 @@ export function createDebugSegmentHighlight({ getObjects }) {
                 return;
             }
 
-            if (object.userData.debugHighlightOriginalMaterial) {
+            if (object.userData.pathHighlightOriginalMaterial) {
                 return;
             }
 
-            object.userData.debugHighlightOriginalMaterial = object.material;
+            object.userData.pathHighlightOriginalMaterial = object.material;
             object.material = createHighlightMaterial(object.material, colour);
 
             highlightedMeshes.push(object);
@@ -86,23 +86,23 @@ export function createDebugSegmentHighlight({ getObjects }) {
     }
 
     return {
-        setSelectedDebugInfo,
+        setSelectedPathInfo,
         setTargetValue,
         clear,
         destroy
     };
 }
 
-function findRevealPiece(arrows, selectedDebugInfo) {
+function findRevealPiece(arrows, selectedPathInfo) {
     for (const arrow of arrows) {
         const revealPieces = arrow.userData.revealPieces || [];
 
         const revealPiece = revealPieces.find((piece) => {
-            const debugInfo = piece.userData.debugInfo;
+            const pathInfo = piece.userData.pathInfo;
 
-            return debugInfo
-                && debugInfo.arrowName === selectedDebugInfo.arrowName
-                && debugInfo.segmentIndex === selectedDebugInfo.segmentIndex;
+            return pathInfo
+                && pathInfo.arrowName === selectedPathInfo.arrowName
+                && pathInfo.segmentIndex === selectedPathInfo.segmentIndex;
         });
 
         if (revealPiece) {
@@ -113,7 +113,7 @@ function findRevealPiece(arrows, selectedDebugInfo) {
     return null;
 }
 
-function findAffectedCornerPiece(arrows, selectedDebugInfo, targetValue) {
+function findAffectedCornerPiece(arrows, selectedPathInfo, targetValue) {
     if (!targetValue.startsWith('move:')) {
         return null;
     }
@@ -125,7 +125,7 @@ function findAffectedCornerPiece(arrows, selectedDebugInfo, targetValue) {
     }
 
     const affectedCornerSegmentIndex = getAffectedCornerSegmentIndex(
-        selectedDebugInfo.segmentIndex,
+        selectedPathInfo.segmentIndex,
         targetOffset
     );
 
@@ -137,12 +137,12 @@ function findAffectedCornerPiece(arrows, selectedDebugInfo, targetValue) {
         const revealPieces = arrow.userData.revealPieces || [];
 
         const affectedCornerPiece = revealPieces.find((piece) => {
-            const debugInfo = piece.userData.debugInfo;
+            const pathInfo = piece.userData.pathInfo;
 
-            return debugInfo
+            return pathInfo
                 && piece.userData.pieceType === 'corner'
-                && debugInfo.arrowName === selectedDebugInfo.arrowName
-                && debugInfo.segmentIndex === affectedCornerSegmentIndex;
+                && pathInfo.arrowName === selectedPathInfo.arrowName
+                && pathInfo.segmentIndex === affectedCornerSegmentIndex;
         });
 
         if (affectedCornerPiece) {

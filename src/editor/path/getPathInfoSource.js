@@ -1,8 +1,8 @@
-export function getDebugInfoSource(object) {
+export function getPathInfoSource(object) {
     let currentObject = object;
 
     while (currentObject) {
-        if (currentObject.userData?.debugInfo) {
+        if (currentObject.userData?.pathInfo) {
             return currentObject;
         }
 

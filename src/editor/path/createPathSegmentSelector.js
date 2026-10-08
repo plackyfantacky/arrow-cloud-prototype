@@ -1,8 +1,14 @@
 import * as THREE from "three";
 
-import { getDebugInfoSource } from "./getDebugInfoSource.js";
+import { getPathInfoSource } from "./getPathInfoSource.js";
 
-export function createDebugSegmentSelector({ camera, renderer, getObjects, onSelect }) {
+export function createPathSegmentSelector({
+    camera,
+    renderer,
+    getObjects,
+    onSelect,
+    onDeselect
+}) {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
 
@@ -15,15 +21,16 @@ export function createDebugSegmentSelector({ camera, renderer, getObjects, onSel
         raycaster.setFromCamera(pointer, camera);
 
         const intersections = raycaster.intersectObjects(getObjects(), true);
-        const debugInfoSource = intersections
-            .map((intersection) => getDebugInfoSource(intersection.object))
+        const pathInfoSource = intersections
+            .map((intersection) => getPathInfoSource(intersection.object))
             .find((sourceObject) => sourceObject?.visible);
         
-        if (!debugInfoSource) {
+        if (!pathInfoSource) {
+            onDeselect?.();
             return;
         }
 
-        onSelect(debugInfoSource.userData.debugInfo);
+        onSelect(pathInfoSource.userData.pathInfo);
     }
 
     renderer.domElement.addEventListener('pointerdown', handlePointerDown);

@@ -1,4 +1,4 @@
-export function createDebugPathNudgeControls({
+export function createPathNudgeControls({
     onNudge,
     onCopy,
     onActionChange,
@@ -8,7 +8,7 @@ export function createDebugPathNudgeControls({
     onTargetChange
 }) {
     const state = {
-        selectedDebugInfo: null,
+        selectedPathInfo: null,
         targetValue: 'move:0'
     };
 
@@ -162,25 +162,37 @@ export function createDebugPathNudgeControls({
         copyButton
     );
 
+    function clearSelection() {
+        state.selectedPathInfo = null;
+
+        selectedLabel.textContent = 'No segment selected';
+
+        actionSelect.disabled = true;
+
+        insertAfterButton.textContent = 'Insert After';
+    }
+
     document.body.appendChild(container);
 
     return {
-        setSelectedDebugInfo(selectedDebugInfo, isLastMove = false) {
-            state.selectedDebugInfo = selectedDebugInfo;
+        setSelectedPathInfo(selectedPathInfo, isLastMove = false) {
+            state.selectedPathInfo = selectedPathInfo;
 
             selectedLabel.textContent = [
-                `arrowName: ${selectedDebugInfo.arrowName}`,
-                `segmentIndex: ${selectedDebugInfo.segmentIndex}`,
-                `actionName: ${selectedDebugInfo.actionName}`,
+                `arrowName: ${selectedPathInfo.arrowName}`,
+                `segmentIndex: ${selectedPathInfo.segmentIndex}`,
+                `actionName: ${selectedPathInfo.actionName}`,
             ].join(' | ');
 
             actionSelect.disabled = false;
-            actionSelect.value = selectedDebugInfo.actionName;
+            actionSelect.value = selectedPathInfo.actionName;
 
             insertAfterButton.textContent = isLastMove
                 ? 'Add Segment'
                 : 'Insert After';
         },
+
+        clearSelection,
 
         destroy() {
             container.remove();

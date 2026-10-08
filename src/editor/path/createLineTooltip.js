@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
-import { getDebugInfoSource } from "./getDebugInfoSource.js";
+import { getPathInfoSource } from "./getPathInfoSource.js";
 
-export function createDebugLineTooltip({ camera, renderer, getObjects }) {
+export function createLineTooltip({ camera, renderer, getObjects }) {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
 
@@ -55,22 +55,22 @@ export function createDebugLineTooltip({ camera, renderer, getObjects }) {
 
         const intersections = raycaster.intersectObjects(getObjects(), true);
 
-        const debugInfoSource = intersections
-            .map((intersection) => getDebugInfoSource(intersection.object))
+        const pathInfoSource = intersections
+            .map((intersection) => getPathInfoSource(intersection.object))
             .find((sourceObject) => sourceObject?.visible);
 
-        if (!debugInfoSource) {
+        if (!pathInfoSource) {
             tooltip.style.display = 'none';
             return;
         }
 
-        const debugInfo = debugInfoSource.userData.debugInfo;
+        const pathInfo = pathInfoSource.userData.pathInfo;
 
         tooltip.textContent = [
-            `arrowName: ${debugInfo.arrowName}`,
-            `segmentIndex: ${debugInfo.segmentIndex}`,
-            `actionName: ${debugInfo.actionName}`,
-            `segmentLength: ${debugInfo.segmentLength.toFixed(2)}`
+            `arrowName: ${pathInfo.arrowName}`,
+            `segmentIndex: ${pathInfo.segmentIndex}`,
+            `actionName: ${pathInfo.actionName}`,
+            `segmentLength: ${pathInfo.segmentLength.toFixed(2)}`
         ].join('\n');
 
         tooltip.style.left = `${pointerClientX}px`;

@@ -18,6 +18,8 @@ import { setArrowReveal, updateArrowReveal } from "./arrows/reveal.js";
 import { createArrowMotionGroup, updateArrowIdleMotion } from "./arrows/idle.js";
 
 import { createEnvironment } from "./environment/createEnvironment.js";
+import { createLights } from './lighting/createLights.js';
+import { createShadowsController } from "./lighting/createShadowsController.js";
 
 import { createArrowCloudEditor } from "./editor/createArrowCloudEditor.js";
 
@@ -28,6 +30,10 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
     const dataset = options.dataset;
     const loadDataset = options.loadDataset;
+
+    const timer = new THREE.Timer();
+    let animationFrameId = null;
+    let isDestroyed = false;
 
     const animationSettings = {
         ...dataset.animationSettings,
@@ -95,6 +101,13 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     renderer.setSize(stageSize.width, stageSize.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+    createShadowsController(renderer, dataset);
+
+    createLights(
+        scene,
+        dataset.lighting
+    );
+
     mountElement.appendChild(renderer.domElement);
 
     const arrowMaterial = new THREE.MeshStandardMaterial({
@@ -120,6 +133,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             initialCameraView: options.cameraView,
             initialCameraDistance: options.cameraDistance,
             initialCameraTarget: staticCamera?.target,
+            hasInitialCameraState: Boolean(staticCamera),
 
             getCameraTrack() {
                 return cameraTrack;
@@ -172,17 +186,6 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     }
 
     rebuildArrowPaths();
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    directionalLight.position.set(4, 6, 8);
-    scene.add(directionalLight);
-
-    const timer = new THREE.Timer();
-    let animationFrameId = null;
-    let isDestroyed = false;
 
     function animate() {
         if (isDestroyed) {

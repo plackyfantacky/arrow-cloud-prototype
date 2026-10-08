@@ -1,18 +1,18 @@
-export function createDebugPathEditor(arrowPaths) {
+export function createPathEditor(arrowPaths) {
     const state = {
         arrowPaths: arrowPaths.map(cloneArrowPath),
-        selectedDebugInfo: null
+        selectedPathInfo: null
     };
 
-    function setSelectedDebugInfo(selectedDebugInfo) {
-        state.selectedDebugInfo = selectedDebugInfo;
+    function setSelectedPathInfo(selectedPathInfo) {
+        state.selectedPathInfo = selectedPathInfo;
     }
 
     function setArrowPaths(arrowPaths) {
         state.arrowPaths =
             arrowPaths.map(cloneArrowPath);
 
-        state.selectedDebugInfo = null;
+        state.selectedPathInfo = null;
     }
 
     function getArrowPaths() {
@@ -20,13 +20,13 @@ export function createDebugPathEditor(arrowPaths) {
     }
 
     function getSelectedArrowPath() {
-        if (!state.selectedDebugInfo) {
+        if (!state.selectedPathInfo) {
             return null;
         }
 
         const arrowPathIndex = findArrowPathIndexByName(
             state.arrowPaths,
-            state.selectedDebugInfo.arrowName
+            state.selectedPathInfo.arrowName
         );
 
         if (arrowPathIndex < 0) {
@@ -53,7 +53,7 @@ export function createDebugPathEditor(arrowPaths) {
 
         return nudgeArrowPathMove(
             arrowPath,
-            state.selectedDebugInfo,
+            state.selectedPathInfo,
             targetValue,
             amount
         );
@@ -68,7 +68,7 @@ export function createDebugPathEditor(arrowPaths) {
 
         const sourceMoveIndex = getSourceMoveIndex(
             arrowPath,
-            state.selectedDebugInfo.segmentIndex
+            state.selectedPathInfo.segmentIndex
         );
 
         const targetMoveIndex = sourceMoveIndex + targetOffset;
@@ -85,8 +85,8 @@ export function createDebugPathEditor(arrowPaths) {
             : [actionName, actionValue];
 
         if (targetOffset === 0) {
-            state.selectedDebugInfo = {
-                ...state.selectedDebugInfo,
+            state.selectedPathInfo = {
+                ...state.selectedPathInfo,
                 actionName
             };
         }
@@ -113,9 +113,9 @@ export function createDebugPathEditor(arrowPaths) {
         arrowPath.moves.splice(insertIndex, 0, [actionName, 1]);
 
         if (position === 'after') {
-            state.selectedDebugInfo = {
-                ...state.selectedDebugInfo,
-                segmentIndex: state.selectedDebugInfo.segmentIndex + 1,
+            state.selectedPathInfo = {
+                ...state.selectedPathInfo,
+                segmentIndex: state.selectedPathInfo.segmentIndex + 1,
                 actionName
             };
         }
@@ -161,20 +161,20 @@ export function createDebugPathEditor(arrowPaths) {
         }
 
         arrowPath.moves.splice(sourceMoveIndex, 1);
-        state.selectedDebugInfo = null;
+        state.selectedPathInfo = null;
 
         return true;
     }
 
-    function getSelectedSourceMoveIndex(arrowPath, selectedDebugInfo) {
+    function getSelectedSourceMoveIndex(arrowPath, selectedPathInfo) {
         return getSourceMoveIndex(
             arrowPath,
-            state.selectedDebugInfo.segmentIndex
+            state.selectedPathInfo.segmentIndex
         );
     }
 
-    function getSelectedDebugInfo() {
-        return state.selectedDebugInfo;
+    function getSelectedPathInfo() {
+        return state.selectedPathInfo;
     }
 
     function isSelectedMoveLast() {
@@ -192,8 +192,8 @@ export function createDebugPathEditor(arrowPaths) {
     return {
         getArrowPaths,
         getSelectedArrowPath,
-        getSelectedDebugInfo,
-        setSelectedDebugInfo,
+        getSelectedPathInfo,
+        setSelectedPathInfo,
         setArrowPaths,
         nudgeSelectedPathValue,
         changeSelectedMoveAction,
@@ -232,7 +232,7 @@ function nudgeArrowPathOrigin(arrowPath, targetValue, amount) {
     return true;
 }
 
-function nudgeArrowPathMove(arrowPath, selectedDebugInfo, targetValue, amount) {
+function nudgeArrowPathMove(arrowPath, selectedPathInfo, targetValue, amount) {
     const targetOffset = Number(targetValue.replace('move:', ''));
 
     if (Number.isNaN(targetOffset)) {
@@ -241,7 +241,7 @@ function nudgeArrowPathMove(arrowPath, selectedDebugInfo, targetValue, amount) {
 
     const sourceMoveIndex = getSourceMoveIndex(
         arrowPath,
-        selectedDebugInfo.segmentIndex
+        selectedPathInfo.segmentIndex
     );
 
     const targetMoveIndex = sourceMoveIndex + targetOffset;

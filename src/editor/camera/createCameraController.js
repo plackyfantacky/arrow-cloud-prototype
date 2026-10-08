@@ -27,6 +27,7 @@ export function createCameraController({
     mountElement,
     scene,
     initialCameraTarget,
+    hasInitialCameraState,
     getCameraTrack
 }) {
 
@@ -45,12 +46,17 @@ export function createCameraController({
     const cameraDirection = new THREE.Vector3();
     const cameraUp = new THREE.Vector3();
 
-    cameraUp
-        .set(0, 1, 0)
-        .applyQuaternion(camera.quaternion)
-        .normalize();
+    if (hasInitialCameraState) {
+        cameraUp
+            .set(0, 1, 0)
+            .applyQuaternion(camera.quaternion)
+            .normalize();
+    
+        camera.up.copy(cameraUp);
+    } else {
+        camera.up.set(0, 1, 0);
+    }
 
-    camera.up.copy(cameraUp);
 
     let orbitControls = createOrbitControls();
     

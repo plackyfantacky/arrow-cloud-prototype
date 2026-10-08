@@ -87,6 +87,12 @@ export function createArrow(pieces, material, settings) {
 
     group.add(tail);
     group.userData.tail = tail;
+
+    group.traverse((object) => {
+        if (object.isMesh) {
+            object.castShadow = true;
+        }
+    });
     
     return group;
 }

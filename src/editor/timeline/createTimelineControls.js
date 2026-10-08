@@ -1,6 +1,6 @@
-import debugControlsTemplate from './debugTimelineControls.html';
+import controlsTemplate from './timelineControls.html';
 
-export function createDebugTimelineControls(
+export function createTimelineControls(
     {
         currentTime = 0,
         timelineDuration = 8,
@@ -22,35 +22,17 @@ export function createDebugTimelineControls(
 
     const template = document.createElement('template');
 
-    template.innerHTML = debugControlsTemplate;
+    template.innerHTML = controlsTemplate;
 
     const container = template.content.firstElementChild.cloneNode(true);
-
-    const playPauseButton =
-        container.querySelector('[data-action="play-pause"]');
-
-    const rewindButton =
-        container.querySelector('[data-action="rewind"]');
-
-    const loopCheckbox =
-        container.querySelector('[data-control="loop"]');
-
-    const progressInput =
-        container.querySelector('[data-control="time"]');
-
-    const timeValue =
-        container.querySelector('[data-value="time"]');
-
-    const speedInput =
-        container.querySelector('[data-control="speed"]');
-
-    const speedValue =
-        container.querySelector('[data-value="speed"]');
-
-    const datasetSelect =
-        container.querySelector(
-            '[data-control="dataset"]'
-        );
+    const playPauseButton = container.querySelector('[data-action="play-pause"]');
+    const rewindButton = container.querySelector('[data-action="rewind"]');
+    const loopCheckbox = container.querySelector('[data-control="loop"]');
+    const progressInput = container.querySelector('[data-control="time"]');
+    const timeValue = container.querySelector('[data-value="time"]');
+    const speedInput = container.querySelector('[data-control="speed"]');
+    const speedValue = container.querySelector('[data-value="speed"]');
+    const datasetSelect = container.querySelector('[data-control="dataset"]');
 
     function setAnimationSettings({
         timelineDuration,
@@ -65,17 +47,10 @@ export function createDebugTimelineControls(
 
         state.currentTime = 0;
 
-        progressInput.max =
-            String(state.timelineDuration);
-
-        speedInput.value =
-            String(state.speed);
-
-        speedValue.textContent =
-            `${state.speed.toFixed(1)}x`;
-
-        loopCheckbox.checked =
-            state.isLooping;
+        progressInput.max = String(state.timelineDuration);
+        speedInput.value = String(state.speed);
+        speedValue.textContent = `${state.speed.toFixed(1)}x`;
+        loopCheckbox.checked = state.isLooping;
 
         updateProgressInput();
         updatePlayPauseButton();
@@ -95,10 +70,7 @@ export function createDebugTimelineControls(
     playPauseButton.addEventListener('click', () => {
         const isStartingPlayback = !state.isPlaying;
 
-        if (
-            isStartingPlayback &&
-            state.currentTime >= state.timelineDuration
-        ) {
+        if (isStartingPlayback && state.currentTime >= state.timelineDuration) {
             state.currentTime = 0;
             updateProgressInput();
         }
@@ -126,31 +98,24 @@ export function createDebugTimelineControls(
         speedValue.textContent = `${state.speed.toFixed(1)}x`;
     });
 
-    datasetSelect.addEventListener(
-        'change',
-        async () => {
-            await onDatasetChange(
-                datasetSelect.value
-            );
-        }
-    );
+    datasetSelect.addEventListener('change', async () => {
+        await onDatasetChange(
+            datasetSelect.value
+        );
+    });
 
     loopCheckbox.checked = state.isLooping;
 
-    progressInput.value =
-        String(state.currentTime);
+    progressInput.value = String(state.currentTime);
 
-    progressInput.max =
-        String(state.timelineDuration);
+    progressInput.max = String(state.timelineDuration);
 
-    speedInput.value =
-        String(state.speed);
+    speedInput.value = String(state.speed);
 
     updatePlayPauseButton();
     updateProgressInput();
 
-    speedValue.textContent =
-        `${state.speed.toFixed(1)}x`;
+    speedValue.textContent = `${state.speed.toFixed(1)}x`;
 
     document.body.appendChild(container);
 
