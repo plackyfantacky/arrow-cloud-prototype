@@ -10,19 +10,12 @@
         "offsetX": 0.28,
         "offsetY": 0.02
     },
-     "environment": {
-        "type": "box",
-        "colour": "#bbbbbb",
-        "size": {
-            "x": 120,
-            "y": 50,
-            "z": 120
-        },
-        "position": {
-            "x": 0,
-            "y": 24,
-            "z": 0
-        }
+    "environment": {
+        "type": "gradient",
+        "startColour": "#F7B76A",
+        "endColour": "#CB6B2D",
+        "groundColour": "#f3e2ce",
+        "groundHeight": -0.25
     },
     "lighting": {
         "shadows": true,
