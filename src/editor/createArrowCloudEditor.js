@@ -3,6 +3,9 @@ import * as THREE from "three";
 //TODO: at some point later rename/refactor this 'debug' system into an 'editor' or 'authoring' system.
 import "./styles.css";
 
+//editor
+import { createEditorPreferences } from "./editorUI.js";
+
 //camera
 import { createCameraController } from './camera/createCameraController.js';
 import { createCameraControls } from './camera/createCameraControls.js';
@@ -35,6 +38,8 @@ export function createArrowCloudEditor({
     onDatasetChange
 }) {
 
+    const preferences = createEditorPreferences();
+
     const sidebar = document.createElement('aside');
     sidebar.className = 'editor-sidebar';
     document.body.append(sidebar);
@@ -55,6 +60,15 @@ export function createArrowCloudEditor({
 
     const cameraControls = createCameraControls({
         container: sidebar,
+
+        initialExpanded: preferences.get('cameraPanelExpanded'),
+        cameraTargetVisible: preferences.get('cameraTargetVisible'),
+        cameraUpVisible: preferences.get('cameraUpVisible'),
+
+        onPanelExpandedChange(isExpanded) {
+            preferences.set('cameraPanelExpanded', isExpanded);
+        },
+
         getCameraMode() {
             return cameraController.getMode();
         },
@@ -81,10 +95,12 @@ export function createArrowCloudEditor({
 
         onCameraTargetVisibilityChange(isVisible) {
             cameraController.setTargetMarkerVisible(isVisible);
+            preferences.set('cameraTargetVisible', isVisible);
         },
 
-        onCameraUpVisibilityChange: (isVisible) => {
+        onCameraUpVisibilityChange(isVisible) {
             cameraController.setUpMarkerVisible(isVisible);
+            preferences.set('cameraUpVisible', isVisible);
         },
 
     });
@@ -96,11 +112,31 @@ export function createArrowCloudEditor({
         );
     }
 
+    cameraController.setTargetMarkerVisible(
+        preferences.get('cameraTargetVisible')
+    );
+
+    cameraController.setUpMarkerVisible(
+        preferences.get('cameraUpVisible')
+    );
+
     const pathTools = createPathTools({
         camera,
         renderer,
         scene,
         arrowPaths,
+        container: sidebar,
+
+        initialExpanded: preferences.get('pathPanelExpanded'),
+        lineLabelsVisible: preferences.get('lineLabelsVisible'),
+
+        onPanelExpandedChange(isExpanded) {
+            preferences.set('pathPanelExpanded', isExpanded);
+        },
+
+        onLineLabelsVisibilityChange(isVisible) {
+            preferences.set('lineLabelsVisible', isVisible);
+        },
 
         getArrows() {
             return getArrows();
@@ -114,6 +150,7 @@ export function createArrowCloudEditor({
     const arrowDisplayState = createArrowDisplayState(pathTools.getArrowPaths());
 
     const gridHelper = new THREE.GridHelper(200, 200);
+    gridHelper.visible = preferences.get('gridVisible');
     gridHelper.userData.editorHelper = true;
     scene.add(gridHelper);
 
@@ -123,6 +160,7 @@ export function createArrowCloudEditor({
     });
 
     axesGauge.position.set(0.1, 0.1, 0.1);
+    axesGauge.visible = preferences.get('axesVisible');
     axesGauge.userData.editorHelper = true;
     scene.add(axesGauge);
 
@@ -130,6 +168,11 @@ export function createArrowCloudEditor({
         container: sidebar,
         gridVisible: gridHelper.visible,
         axesVisible: axesGauge.visible,
+        initialExpanded: preferences.get('scenePanelExpanded'),
+
+        onPanelExpandedChange(isExpanded) {
+            preferences.set('scenePanelExpanded', isExpanded)
+        },
 
         arrowNames: pathTools
             .getArrowPaths()
@@ -137,10 +180,12 @@ export function createArrowCloudEditor({
 
         onGridVisibilityChange(isVisible) {
             gridHelper.visible = isVisible;
+            preferences.set('gridVisible', isVisible);
         },
 
         onAxesVisibilityChange(isVisible) {
             axesGauge.visible = isVisible;
+            preferences.set('axesVisible', isVisible);
         },
 
         onArrowVisibilityChange(arrowName, isVisible) {
@@ -218,6 +263,10 @@ export function createArrowCloudEditor({
         pathTools.attachPathInfo(renderedArrowItems);
         pathTools.syncArrowNameLabels(renderedArrowItems);
         arrowDisplayState.apply(renderedArrowItems);
+
+        pathTools.setArrowNameLabelsVisible(
+            preferences.get('lineLabelsVisible')
+        );
     }
 
     function destroy() {

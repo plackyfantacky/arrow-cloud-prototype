@@ -1,6 +1,10 @@
 import cameraControlsTemplate from './cameraControls.html';
 
+import { createPanelToggle } from "../editorUI";
+
 export function createCameraControls({
+    initialExpanded = true,
+    onPanelExpandedChange = () => { },
     getCameraMode = () => 'orbital',
     getCameraView = () => null,
     onCameraModeChange = () => { },
@@ -9,8 +13,11 @@ export function createCameraControls({
     onCopyCamera = () => { },
     onCameraTargetVisibilityChange = () => { },
     onCameraUpVisibilityChange = () => { },
-    container = document.body
+    container = document.body,
+    cameraTargetVisible = true,
+    cameraUpVisible = true,
 } = {}) {
+
     const template = document.createElement('template');
     template.innerHTML = cameraControlsTemplate;
 
@@ -19,16 +26,12 @@ export function createCameraControls({
     const toggleButton = controlsContainer.querySelector('[data-action="toggle"]');
     const content = controlsContainer.querySelector('[data-content]');
 
-    toggleButton.addEventListener('click', () => {
-    const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true';
-
-    toggleButton.setAttribute('aria-expanded', String(!isExpanded));
-
-    content.hidden = isExpanded;
-
-    toggleButton.textContent = isExpanded
-        ? 'Camera ▸'
-        : 'Camera ▾';
+    const panelToggle = createPanelToggle({
+        button: toggleButton,
+        content,
+        label: 'Camera',
+        initialExpanded,
+        onExpandedChange: onPanelExpandedChange
     });
 
     const cameraModeButtons = [...controlsContainer.querySelectorAll('[data-camera-mode]')];
@@ -85,6 +88,9 @@ export function createCameraControls({
     updateCameraModeButtons();
     updateCameraViewButtons();
 
+    cameraTargetVisibilityInput.checked = cameraTargetVisible;
+    cameraUpVisibilityInput.checked = cameraUpVisible;
+
     container.appendChild(controlsContainer);
 
     return {
@@ -93,6 +99,7 @@ export function createCameraControls({
 
         destroy() {
             controlsContainer.remove();
+            panelToggle.destroy();
         }
     };
 }

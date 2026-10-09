@@ -1,13 +1,17 @@
+import { createPanelToggle } from "../editorUI";
+
 import sceneControlsTemplate from './sceneControls.html';
 
 export function createSceneControls({
+    initialExpanded = true,
+    onPanelExpandedChange = () => { },
     gridVisible = true,
     axesVisible = true,
     arrowNames = [],
-    onGridVisibilityChange = () => {},
-    onAxesVisibilityChange = () => {},
-    onArrowVisibilityChange = () => {},
-    onArrowOpacityChange = () => {},
+    onGridVisibilityChange = () => { },
+    onAxesVisibilityChange = () => { },
+    onArrowVisibilityChange = () => { },
+    onArrowOpacityChange = () => { },
     container = document.body
 }) {
     const template = document.createElement('template');
@@ -18,6 +22,15 @@ export function createSceneControls({
 
     const toggleButton = controlsContainer.querySelector('[data-action="toggle"]');
     const content = controlsContainer.querySelector('[data-content]');
+
+    const panelToggle = createPanelToggle({
+        button: toggleButton,
+        content,
+        label: 'Scene',
+        initialExpanded,
+        onExpandedChange: onPanelExpandedChange
+    });
+
     const gridCheckbox = controlsContainer.querySelector('[data-control="grid"]');
     const axesCheckbox = controlsContainer.querySelector('[data-control="axes"]');
     const linesContainer = controlsContainer.querySelector('[data-lines]');
@@ -25,13 +38,13 @@ export function createSceneControls({
     const lineTemplate = controlsContainer.querySelector('[data-line-template');
 
     function renderArrowControls(nextArrowNames) {
-        
+
         linesContainer.replaceChildren();
-        
+
         nextArrowNames.forEach((arrowName) => {
-        
+
             const row = lineTemplate.content.firstElementChild.cloneNode(true);
-            
+
             const visibilityCheckbox = row.querySelector('[data-control="visibility"]');
             const nameLabel = row.querySelector('[data-line-name]');
             const opacityInput = row.querySelector('[data-control="opacity"]');
@@ -52,17 +65,6 @@ export function createSceneControls({
             linesContainer.appendChild(row);
         });
     }
-
-    toggleButton.addEventListener('click', () => {
-        const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true';
-
-        toggleButton.setAttribute('aria-expanded', String(!isExpanded));
-        content.hidden = isExpanded;
-
-        toggleButton.textContent = isExpanded
-            ? 'Scene ▸'
-            : 'Scene ▾';
-    });
 
     gridCheckbox.checked = gridVisible;
     axesCheckbox.checked = axesVisible;
@@ -85,6 +87,7 @@ export function createSceneControls({
         },
 
         destroy() {
+            panelToggle.destroy();
             controlsContainer.remove();
         }
     };

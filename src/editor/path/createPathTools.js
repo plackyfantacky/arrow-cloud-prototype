@@ -11,7 +11,12 @@ export function createPathTools({
     scene,
     arrowPaths,
     getArrows,
-    onPathsChange
+    onPathsChange,
+    container = document.body,
+    initialExpanded,
+    lineLabelsVisible = true,
+    onPanelExpandedChange,
+    onLineLabelsVisibilityChange
 }) {
     const pathEditor = createPathEditor(arrowPaths);
 
@@ -50,6 +55,16 @@ export function createPathTools({
     }
 
     const pathControls = createPathNudgeControls({
+        container,
+        initialExpanded,
+        lineLabelsVisible,
+        onPanelExpandedChange,
+        
+        onLineLabelsVisibilityChange(isVisible) {
+            setArrowNameLabelsVisible(isVisible);
+            onLineLabelsVisibilityChange?.(isVisible);
+        },
+
         onNudge(amount, targetValue) {
             const didChangePath = pathEditor.nudgeSelectedPathValue(amount, targetValue);
 
@@ -125,7 +140,7 @@ export function createPathTools({
         onDeselect() {
             pathEditor.setSelectedPathInfo(null);
             pathControls.clearSelection();
-            segmentHighlight.getSelectedPathInfo(null); 
+            segmentHighlight.setSelectedPathInfo(null); 
         }
     });
 
@@ -186,12 +201,22 @@ export function createPathTools({
                 labelText,
                 renderedArrowItem.segments[0]
             );
-
+            
+            label.visible = lineLabelsVisible;
+            
             renderedArrowItem.label = label;
 
             scene.add(label);
 
             return label;
+        });
+    }
+
+    function setArrowNameLabelsVisible(isVisible) {
+        lineLabelsVisible = isVisible;
+
+        arrowNameLabels.forEach((label) => {
+            label.visible = isVisible;
         });
     }
 
@@ -231,6 +256,7 @@ export function createPathTools({
         getSelectedPathInfo,
         attachPathInfo,
         syncArrowNameLabels,
+        setArrowNameLabelsVisible,
         update,
         destroy
     };

@@ -1,0 +1,46 @@
+<div class="editor-path-controls">
+    <button type="button" class="editor-path-controls__toggle" data-action="toggle-panel" aria-expanded="true">
+        Path Editor
+    </button>
+
+    <div class="editor-path-controls__content" data-panel-content>
+        <label>
+            <input type="checkbox" data-control="line-labels" checked />
+            Show line labels
+        </label>
+
+        <div data-selected-label>No segment selected</div>
+
+        <select data-control="target">
+            <option value="origin:x">Origin X</option>
+            <option value="origin:y">Origin Y</option>
+            <option value="origin:z">Origin Z</option>
+            <option value="entry:straightUntil">Straight until</option>
+            <option value="move:-1">Previous move</option>
+            <option value="move:0" selected>Selected move</option>
+            <option value="move:1">Next move</option>
+        </select>
+
+        <label>
+            Action
+            <select data-control="action" disabled>
+                <option value="forward">Forward</option>
+                <option value="turnLeft">Turn left</option>
+                <option value="turnRight">Turn right</option>
+                <option value="bendUp">Bend up</option>
+                <option value="bendDown">Bend down</option>
+            </select>
+        </label>
+
+        <div data-nudge-buttons></div>
+
+        <div data-segment-buttons>
+            <button type="button" data-action="insert-before">Insert before</button>
+            <button type="button" data-action="insert-after">Insert after</button>
+            <button type="button" data-action="duplicate">Duplicate</button>
+            <button type="button" data-action="remove">Remove</button>
+        </div>
+
+        <button type="button" data-action="copy">Copy path</button>
+    </div>
+</div>
