@@ -15,6 +15,7 @@ export function createFlyControls(camera, domElement) {
     const controls = {
         enabled: false,
         moveSpeed: 5,
+        boostMultiplier: 4,
         rollSpeed: THREE.MathUtils.degToRad(75),
         lookSpeed: 0.002,
 
@@ -23,8 +24,9 @@ export function createFlyControls(camera, domElement) {
                 return;
             }
 
-            const moveDistance =
-                controls.moveSpeed * deltaTime;
+            const isBoosting = pressedKeys.has('ControlLeft') || pressedKeys.has('ControlRight');
+
+            const moveDistance = controls.moveSpeed * (isBoosting ? controls.boostMultiplier : 1) * deltaTime;
 
             const rollDistance =
                 controls.rollSpeed * deltaTime;
