@@ -20,6 +20,7 @@ import { createArrowMotionGroup, updateArrowIdleMotion } from "./arrows/idle.js"
 import { createEnvironment } from "./environment/createEnvironment.js";
 import { createLights } from './lighting/createLights.js';
 import { createShadowsController } from "./lighting/createShadowsController.js";
+import { createBackgroundShader } from './shaders/createBackgroundShader.js';
 
 import { createArrowCloudEditor } from "./editor/createArrowCloudEditor.js";
 
@@ -46,16 +47,27 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     
     const scene = new THREE.Scene();
     const environment = createEnvironment(scene, dataset.environment);
+    const backgroundShader = createBackgroundShader(scene, dataset.shaders?.background);
     
     if (environment) {
         environment.userData.cameraTargetCollision = false;
     }
 
+    if (backgroundShader) {
+        const backgroundSettings = dataset.shaders.background;
+
+        scene.fog = new THREE.Fog(
+            backgroundSettings.horizonColour ?? '#FFE4D3',
+            backgroundSettings.fogNear ?? 10,
+            backgroundSettings.fogFar ?? 35
+        );
+    }
+
     const camera = new THREE.PerspectiveCamera(
         45,
         stageSize.width / stageSize.height,
-        0.1,
-        100
+        0.5,
+        500
     );
 
     const staticCamera = dataset.staticCamera;

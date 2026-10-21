@@ -6,18 +6,24 @@
         "isPlaying": true,
         "isLooping": false
     },
-    "environment": {
-        "type": "box",
-        "colour": "#bbbbbb",
-        "size": {
-            "x": 120,
-            "y": 50,
-            "z": 120
-        },
-        "position": {
-            "x": 0,
-            "y": 24.65,
-            "z": 0
+     "environment": {
+        "type": "gradient",
+        "startColour": "#F7B76A",
+        "endColour": "#CB6B2D",
+        "groundColour": "#A95F2A",
+        "groundHeight": -0.25,
+        "fog": {
+            "colour": "#C98247",
+            "near": 30,
+            "far": 55
+        }
+    },
+    "shaders": {
+        "background": {
+            "type": "atmosphericSky",
+            "skyColour": "#D97A32",
+            "horizonColour": "#C98247",
+            "gradientHeight": 0.6
         }
     },
     "lighting": {
@@ -25,13 +31,13 @@
         "lights": [
             {
                 "type": "hemisphere",
-                "skyColour": "#ffe0b5",
-                "groundColour": "#9b7653",
+                "skyColour": "#FFAB36",
+                "groundColour": "#9B7653",
                 "intensity": 1
             },
             {
                 "type": "directional",
-                "colour": "#ffffff",
+                "colour": "#FFFFFF",
                 "intensity": 1.5,
                 "position": {
                     "x": 10,

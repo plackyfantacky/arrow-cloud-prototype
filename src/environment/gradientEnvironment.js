@@ -42,13 +42,6 @@ export function createGradientEnvironment(scene, settings) {
     ground.userData.cameraTargetCollision = false;
 
     scene.add(ground);
-
-    console.log('Ground settings:', {
-        configured: settings.groundColour,
-        material: groundMaterial.color.getHexString()
-    });
-
-    console.log('Gradient environment settings:', settings);
-
+    
     return ground;
 }

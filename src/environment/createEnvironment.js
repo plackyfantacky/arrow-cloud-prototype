@@ -9,6 +9,16 @@ export function createEnvironment(scene, environmentSettings) {
         return null;
     }
 
+    const fogSettings = environmentSettings.fog;
+
+    scene.fog = fogSettings
+        ? new THREE.Fog(
+            fogSettings.colour ?? '#FFE4D3',
+            fogSettings.near ?? 10,
+            fogSettings.far ?? 35
+        )
+        : null;
+
     switch (environmentSettings.type) {
         case "box":
             return createBoxEnvironment(scene, environmentSettings);
