@@ -10,6 +10,7 @@ const defaults = {
     cameraUpVisible: true,
     pathPanelExpanded: true,
     lineLabelsVisible: true,
+    cameraFrustumVisible: false,
 };
 
 export function createEditorPreferences() {

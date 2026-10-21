@@ -16,6 +16,8 @@ export function createCameraControls({
     container = document.body,
     cameraTargetVisible = true,
     cameraUpVisible = true,
+    onCameraFrustumVisibilityChange = () => { },
+    cameraFrustumVisible = false,
 } = {}) {
 
     const template = document.createElement('template');
@@ -40,6 +42,7 @@ export function createCameraControls({
     const copyCameraButton = controlsContainer.querySelector('[data-action="copy-camera"]');
     const cameraTargetVisibilityInput = controlsContainer.querySelector('[data-camera-target-visible]');
     const cameraUpVisibilityInput = controlsContainer.querySelector('[data-camera-up-visible]');
+    const cameraFrustumVisibilityInput = controlsContainer.querySelector('[data-camera-frustum-visible]');
 
     function updateCameraModeButtons() {
         const cameraMode = getCameraMode();
@@ -85,11 +88,16 @@ export function createCameraControls({
         onCameraUpVisibilityChange(cameraUpVisibilityInput.checked);
     });
 
+    cameraFrustumVisibilityInput.addEventListener('change', () => {
+        onCameraFrustumVisibilityChange(cameraFrustumVisibilityInput.checked);
+    });
+
     updateCameraModeButtons();
     updateCameraViewButtons();
 
     cameraTargetVisibilityInput.checked = cameraTargetVisible;
     cameraUpVisibilityInput.checked = cameraUpVisible;
+    cameraFrustumVisibilityInput.checked = cameraFrustumVisible;
 
     container.appendChild(controlsContainer);
 

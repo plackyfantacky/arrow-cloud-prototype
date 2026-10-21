@@ -96,6 +96,18 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         dataset.viewport
     );
 
+    const referenceCamera = camera.clone();
+
+    referenceCamera.updateProjectionMatrix();
+    referenceCamera.updateMatrixWorld(true);
+
+    const cameraHelper = new THREE.CameraHelper(referenceCamera);
+
+    cameraHelper.userData.editorHelper = true;
+    cameraHelper.visible = false;
+
+    scene.add(cameraHelper);
+
     const pathLayoutCamera = camera.clone();
 
     applyViewportOffset(

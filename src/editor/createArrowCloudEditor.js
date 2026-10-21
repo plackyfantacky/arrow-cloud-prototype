@@ -9,6 +9,7 @@ import { createEditorPreferences } from "./editorUI.js";
 //camera
 import { createCameraController } from './camera/createCameraController.js';
 import { createCameraControls } from './camera/createCameraControls.js';
+import { createCameraFrustumHelper } from './camera/createCameraFrustumHelper.js';
 
 //scene
 import { createAxesGauge } from './scene/createAxesGauge.js';
@@ -44,6 +45,13 @@ export function createArrowCloudEditor({
     sidebar.className = 'editor-sidebar';
     document.body.append(sidebar);
 
+    //before camera controller is made
+    const cameraFrustumHelper = createCameraFrustumHelper(scene, camera);
+
+    cameraFrustumHelper.setVisible(
+        preferences.get('cameraFrustumVisible')
+    );
+
     //main actions
     const cameraController = createCameraController({
         camera,
@@ -51,7 +59,8 @@ export function createArrowCloudEditor({
         mountElement,
         scene,
         initialCameraTarget,
-        getCameraTrack
+        getCameraTrack,
+        cameraFrustumVisible: preferences.get('cameraFrustumVisible'),
     });
 
     cameraController.setViewPresetChangeHandler(() => {
@@ -103,6 +112,10 @@ export function createArrowCloudEditor({
             preferences.set('cameraUpVisible', isVisible);
         },
 
+        onCameraFrustumVisibilityChange(isVisible) {
+            cameraFrustumHelper.setVisible(isVisible);
+            preferences.set('cameraFrustumVisible', isVisible);
+        },
     });
 
     if (initialCameraView) {
@@ -275,6 +288,7 @@ export function createArrowCloudEditor({
         sceneControls.destroy();
         pathTools.destroy();
         cameraController.destroy();
+        cameraFrustumHelper.destroy();
 
         scene.remove(gridHelper);
         scene.remove(axesGauge);
