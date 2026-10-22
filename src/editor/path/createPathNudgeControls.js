@@ -105,7 +105,7 @@ export function createPathNudgeControls({
     container.appendChild(controlsContainer);
 
     return {
-        setSelectedPathInfo(selectedPathInfo, isLastMove = false) {
+        setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false) {
             state.selectedPathInfo = selectedPathInfo;
 
             selectedLabel.textContent = `${selectedPathInfo.arrowName} · Segment ${selectedPathInfo.segmentIndex + 1}`;
@@ -113,6 +113,7 @@ export function createPathNudgeControls({
             currentActionSelect.disabled = false;
             currentActionSelect.value = selectedPathInfo.actionName;
 
+            newActionSelect.disabled = false;
             nudgeNegativeButton.disabled = false;
             nudgePositiveButton.disabled = false;
             insertBeforeButton.disabled = false;

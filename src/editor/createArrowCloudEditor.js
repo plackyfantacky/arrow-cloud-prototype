@@ -62,11 +62,6 @@ export function createArrowCloudEditor({
         initialCameraTarget,
         getCameraTrack,
         cameraFrustumVisible: preferences.get('cameraFrustumVisible'),
-        lineLabelsVisible: preferences.get('lineLabelsVisible'),
-        
-        onLineLabelsVisibilityChange(isVisible) {
-            preferences.set('lineLabelsVisible', isVisible);
-        },
     });
 
     cameraController.setViewPresetChangeHandler(() => {
@@ -144,16 +139,14 @@ export function createArrowCloudEditor({
         renderer,
         scene,
         arrowPaths,
+        lineLabelsVisible,
         container: sidebar,
 
         initialExpanded: preferences.get('pathPanelExpanded'),
-        
 
         onPanelExpandedChange(isExpanded) {
             preferences.set('pathPanelExpanded', isExpanded);
         },
-
-        
 
         getArrows() {
             return getArrows();
@@ -186,6 +179,11 @@ export function createArrowCloudEditor({
         gridVisible: gridHelper.visible,
         axesVisible: axesGauge.visible,
         initialExpanded: preferences.get('scenePanelExpanded'),
+        lineLabelsVisible: preferences.get('lineLabelsVisible'),
+        
+        onLineLabelsVisibilityChange(isVisible) {
+            preferences.set('lineLabelsVisible', isVisible);
+        },
 
         onPanelExpandedChange(isExpanded) {
             preferences.set('scenePanelExpanded', isExpanded)
