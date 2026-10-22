@@ -1,5 +1,5 @@
-import pathControlsTemplate from './pathControls.html';
-import { createPanelToggle } from '../editorUI.js';
+import pathControlsTemplate from "./pathControls.html";
+import { createPanelToggle } from "../editorUI.js";
 
 export function createPathNudgeControls({
     onNudge,
@@ -13,91 +13,96 @@ export function createPathNudgeControls({
     onPanelExpandedChange = () => {},
     lineLabelsVisible = true,
     initialExpanded = true,
-    container = document.body
+    container = document.body,
 }) {
     const state = {
         selectedPathInfo: null,
-        targetValue: 'move:0'
+        targetValue: "move:0",
     };
 
-    const template = document.createElement('template');
+    const template = document.createElement("template");
     template.innerHTML = pathControlsTemplate;
 
     const controlsContainer = template.content.firstElementChild.cloneNode(true);
 
     const toggleButton = controlsContainer.querySelector('[data-action="toggle-panel"]');
-    const content = controlsContainer.querySelector('[data-panel-content]');
-    const selectedLabel = controlsContainer.querySelector('[data-selected-label]');
-    const targetSelect = controlsContainer.querySelector('[data-control="target"]');
-    const actionSelect = controlsContainer.querySelector('[data-control="action"]');
-    const lineLabelsCheckbox = controlsContainer.querySelector('[data-control="line-labels"]');
+    const content = controlsContainer.querySelector("[data-panel-content]");
 
-    const buttonRow = controlsContainer.querySelector('[data-nudge-buttons]');
+    const selectedLabel = controlsContainer.querySelector("[data-selected-label]");
+
+    const currentActionSelect = controlsContainer.querySelector('[data-control="current-action"]');
+    const newActionSelect = controlsContainer.querySelector('[data-control="new-action"]');
+
+    const nudgeNegativeButton = controlsContainer.querySelector('[data-action="nudge-negative"]');
+    const incrementSelect = controlsContainer.querySelector('[data-control="nudge-increment"]');
+    const nudgePositiveButton = controlsContainer.querySelector('[data-action="nudge-positive"]');
+
+    const trimStartButton = controlsContainer.querySelector('[data-action="trim-start"]');
+    const removeButton = controlsContainer.querySelector('[data-action="remove"]');
+    const trimEndButton = controlsContainer.querySelector('[data-action="trim-end"]');
 
     const insertBeforeButton = controlsContainer.querySelector('[data-action="insert-before"]');
-    const insertAfterButton = controlsContainer.querySelector('[data-action="insert-after"]');
     const duplicateButton = controlsContainer.querySelector('[data-action="duplicate"]');
-    const removeButton = controlsContainer.querySelector('[data-action="remove"]');
+    const insertAfterButton = controlsContainer.querySelector('[data-action="insert-after"]');
+
     const copyButton = controlsContainer.querySelector('[data-action="copy"]');
 
     const panelToggle = createPanelToggle({
         button: toggleButton,
         content,
-        label: 'Path Editor',
+        label: "Path Editor",
         initialExpanded,
-        onExpandedChange: onPanelExpandedChange
+        onExpandedChange: onPanelExpandedChange,
     });
 
-    lineLabelsCheckbox.checked = lineLabelsVisible;
+    function nudge(direction) {
+        const increment = Number(incrementSelect.value);
 
-    lineLabelsCheckbox.addEventListener('change', () => {
-        onLineLabelsVisibilityChange(lineLabelsCheckbox.checked);
+        onNudge(direction * increment, "move:0");
+    }
+
+    nudgeNegativeButton.addEventListener("click", () => nudge(-1));
+    nudgePositiveButton.addEventListener("click", () => nudge(1));
+
+    currentActionSelect.addEventListener("change", () => {
+        onActionChange(currentActionSelect.value);
     });
 
-    targetSelect.addEventListener('change', () => {
-        state.targetValue = targetSelect.value;
-        onTargetChange?.(state.targetValue);
+    insertBeforeButton.addEventListener("click", () => {
+        onInsertMove("before", newActionSelect.value);
     });
 
-    actionSelect.addEventListener('change', () => {
-        onActionChange(actionSelect.value);
+    insertAfterButton.addEventListener("click", () => {
+        onInsertMove("after", newActionSelect.value);
     });
 
-    const nudgeAmounts = [-1, -0.5, -0.25, -0.1, 0.1, 0.25, 0.5, 1];
+    duplicateButton.addEventListener("click", onDuplicateMove);
 
-    nudgeAmounts.forEach((amount) => {
-        const button = document.createElement('button');
+    removeButton.addEventListener("click", () => onRemoveMove("single"));
+    trimStartButton.addEventListener("click", () => onRemoveMove("start"));
+    trimEndButton.addEventListener("click", () => onRemoveMove("end"));
 
-        button.type = 'button';
-        button.textContent = amount > 0
-            ? `+${amount}`
-            : String(amount);
-
-        button.addEventListener('click', () => {
-            onNudge(amount, state.targetValue);
-        });
-
-        buttonRow.appendChild(button);
-    });
-
-    insertBeforeButton.addEventListener('click', () => {
-        onInsertMove('before', actionSelect.value);
-    });
-
-    insertAfterButton.addEventListener('click', () => {
-        onInsertMove('after', actionSelect.value);
-    });
-
-    duplicateButton.addEventListener('click', onDuplicateMove);
-    removeButton.addEventListener('click', onRemoveMove);
-    copyButton.addEventListener('click', onCopy);
+    copyButton.addEventListener("click", onCopy);
 
     function clearSelection() {
         state.selectedPathInfo = null;
 
-        selectedLabel.textContent = 'No segment selected';
-        actionSelect.disabled = true;
-        insertAfterButton.textContent = 'Insert After';
+        selectedLabel.textContent = "No segment selected";
+        currentActionSelect.disabled = true;
+
+        [
+            nudgeNegativeButton,
+            nudgePositiveButton,
+            insertBeforeButton,
+            insertAfterButton,
+            duplicateButton,
+            removeButton,
+            trimStartButton,
+            trimEndButton,
+            copyButton,
+        ].forEach((button) => {
+            button.disabled = true;
+        });
     }
 
     container.appendChild(controlsContainer);
@@ -106,18 +111,23 @@ export function createPathNudgeControls({
         setSelectedPathInfo(selectedPathInfo, isLastMove = false) {
             state.selectedPathInfo = selectedPathInfo;
 
-            selectedLabel.textContent = [
-                `arrowName: ${selectedPathInfo.arrowName}`,
-                `segmentIndex: ${selectedPathInfo.segmentIndex}`,
-                `actionName: ${selectedPathInfo.actionName}`
-            ].join(' | ');
+            selectedLabel.textContent = `${selectedPathInfo.arrowName} · Segment ${selectedPathInfo.segmentIndex + 1}`;
 
-            actionSelect.disabled = false;
-            actionSelect.value = selectedPathInfo.actionName;
+            currentActionSelect.disabled = false;
+            currentActionSelect.value = selectedPathInfo.actionName;
 
-            insertAfterButton.textContent = isLastMove
-                ? 'Add Segment'
-                : 'Insert After';
+            nudgeNegativeButton.disabled = false;
+            nudgePositiveButton.disabled = false;
+            insertBeforeButton.disabled = false;
+            insertAfterButton.disabled = false;
+            duplicateButton.disabled = false;
+            removeButton.disabled = false;
+            copyButton.disabled = false;
+
+            trimStartButton.disabled = isFirstMove || isLastMove;
+            trimEndButton.disabled = isFirstMove || isLastMove;
+
+            insertAfterButton.textContent = isLastMove ? 'Add segment' : 'After';
         },
 
         clearSelection,
@@ -125,6 +135,6 @@ export function createPathNudgeControls({
         destroy() {
             panelToggle.destroy();
             controlsContainer.remove();
-        }
+        },
     };
 }

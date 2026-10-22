@@ -1,7 +1,8 @@
 import * as THREE from "three";
 
-//TODO: at some point later rename/refactor this 'debug' system into an 'editor' or 'authoring' system.
+//styles for UI
 import "./styles.css";
+import './ui.css';
 
 //editor
 import { createEditorPreferences } from "./editorUI.js";
@@ -42,7 +43,7 @@ export function createArrowCloudEditor({
     const preferences = createEditorPreferences();
 
     const sidebar = document.createElement('aside');
-    sidebar.className = 'editor-sidebar';
+    sidebar.className = 'editor-sidebar ui';
     document.body.append(sidebar);
 
     //before camera controller is made

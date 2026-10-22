@@ -9,11 +9,19 @@ export const directions = {
     '-z': new THREE.Vector3(0, 0, -1),
 }
 
-export function getDirectionVector(directionName) {
-    const direction = directions[directionName];
+export function getDirectionVector(directionValue) {
+    if (
+        Array.isArray(directionValue) &&
+        directionValue.length === 3 &&
+        directionValue.every(Number.isFinite)
+    ) {
+        return new THREE.Vector3(...directionValue);
+    }
+
+    const direction = directions[directionValue];
 
     if(!direction) {
-        throw new Error(`Unknown direction: ${directionName}`);
+        throw new Error(`Unknown direction: ${directionValue}`);
     }
 
     return direction.clone();

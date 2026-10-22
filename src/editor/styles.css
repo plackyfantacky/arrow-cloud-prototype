@@ -99,7 +99,8 @@ aside {
 /** timeline **/
 .editor-timeline-controls {
     position: fixed;
-    left: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
     bottom: 1rem;
     z-index: 10;
     display: flex;

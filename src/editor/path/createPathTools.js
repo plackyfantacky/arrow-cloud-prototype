@@ -99,10 +99,9 @@ export function createPathTools({
             }
         },
 
-        onRemoveMove() {
-            const didChangePath = pathEditor.removeSelectedMove();
-
-            if (didChangePath) {
+        onRemoveMove(mode) {
+            if (pathEditor.removeMoves(mode)) {
+                pathControls.clearSelection();
                 rebuild();
             }
         },
@@ -132,7 +131,11 @@ export function createPathTools({
         onSelect(pathInfo) {
             pathEditor.setSelectedPathInfo(pathInfo);
 
-            pathControls.setSelectedPathInfo(pathInfo, pathEditor.isSelectedMoveLast());
+            pathControls.setSelectedPathInfo(
+                pathInfo, 
+                pathEditor.isSelectedMoveLast(),
+                pathEditor.isSelectedMoveFirst()
+            );
 
             segmentHighlight.setSelectedPathInfo(pathInfo);
         },

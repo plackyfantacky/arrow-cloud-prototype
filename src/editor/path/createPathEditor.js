@@ -1,3 +1,5 @@
+import { createArrowPathSegments } from '../../arrows/createArrowPaths.js';
+
 export function createPathEditor(arrowPaths) {
     const state = {
         arrowPaths: arrowPaths.map(cloneArrowPath),
@@ -143,24 +145,75 @@ export function createPathEditor(arrowPaths) {
         return true;
     }
 
-    function removeSelectedMove() {
+    function removeMoves(mode = 'single') {
         const arrowPath = getSelectedArrowPath();
 
         if (!arrowPath) {
             return false;
         }
 
-        if (arrowPath.moves.length <= 1) {
+        const selectedIndex = getSelectedSourceMoveIndex(arrowPath);
+        const moveCount = arrowPath.moves.length;
+
+        if (selectedIndex < 0 || selectedIndex >= moveCount) {
             return false;
         }
 
-        const sourceMoveIndex = getSelectedSourceMoveIndex(arrowPath);
-
-        if (sourceMoveIndex < 0) {
+        // Prevent trimming when only the selected segment would be removed.
+        if ((mode === 'start' && selectedIndex === 0) || (mode === 'end' && selectedIndex === moveCount - 1)) {
             return false;
         }
 
-        arrowPath.moves.splice(sourceMoveIndex, 1);
+        let startIndex;
+        let deleteCount;
+        let nextPathStart = null;
+
+        switch (mode) {
+            case 'start':
+                startIndex = 0;
+                deleteCount = selectedIndex + 1;
+            break;
+
+            case 'end':
+                startIndex = selectedIndex;
+                deleteCount = moveCount - selectedIndex;
+            break;
+
+            default:
+                startIndex = selectedIndex;
+                deleteCount = 1;
+        }
+
+        // A path must retain at least one move.
+        if (moveCount - deleteCount < 1) {
+            return false;
+        }
+
+        if (mode === 'start') {
+            // "Viewport" entries need separate handling because they can override the origin and generate moves.
+            if (arrowPath.entry?.position === 'viewport') {
+                return false;
+            }
+
+            if (arrowPath.entry?.straightUntil != null && ['left', 'right'].includes(arrowPath.entry?.side)) {
+                return false;
+            }
+
+            nextPathStart = getTrimmedPathStart(arrowPath, selectedIndex);
+
+            if (!nextPathStart) {
+                return false;
+            }
+        }
+
+        arrowPath.moves.splice(startIndex, deleteCount);
+
+        if (nextPathStart) {
+            arrowPath.origin = nextPathStart.origin;
+            arrowPath.initialDirection = nextPathStart.initialDirection;
+            arrowPath.initialNormal = nextPathStart.initialNormal;
+        }
+
         state.selectedPathInfo = null;
 
         return true;
@@ -189,6 +242,16 @@ export function createPathEditor(arrowPaths) {
         return sourceMoveIndex === arrowPath.moves.length - 1;
     }
 
+    function isSelectedMoveFirst() {
+        const arrowPath = getSelectedArrowPath();
+
+        if (!arrowPath) {
+            return false;
+        }
+
+        return getSelectedSourceMoveIndex(arrowPath) === 0;
+    }
+
     return {
         getArrowPaths,
         getSelectedArrowPath,
@@ -199,8 +262,9 @@ export function createPathEditor(arrowPaths) {
         changeSelectedMoveAction,
         insertMoveNearSelectedMove,
         duplicateSelectedMove,
-        removeSelectedMove,
-        isSelectedMoveLast
+        removeMoves,
+        isSelectedMoveLast,
+        isSelectedMoveFirst
     };
 }
 
@@ -298,6 +362,12 @@ function cloneArrowPath(arrowPath) {
         timing: arrowPath.timing ? { ...arrowPath.timing } : undefined,
         head: arrowPath.head ? { ...arrowPath.head } : undefined,
         entry: arrowPath.entry ? { ...arrowPath.entry } : undefined,
+        initialDirection: Array.isArray(arrowPath.initialDirection)
+            ? [...arrowPath.initialDirection]
+            : arrowPath.initialDirection,
+        initialNormal: Array.isArray(arrowPath.initialNormal)
+            ? [...arrowPath.initialNormal]
+            : arrowPath.initialNormal,
     };
 }
 
@@ -322,4 +392,19 @@ function cloneMove(move) {
     return options
         ? [actionName, actionValue, { ...options }]
         : [actionName, actionValue];
+}
+
+function getTrimmedPathStart(arrowPath, segmentIndex) {
+    const segments = createArrowPathSegments(arrowPath);
+    const segment = segments[segmentIndex];
+
+    if (!segment) {
+        return null;
+    }
+
+    return {
+        origin: segment.endPoint.toArray(),
+        initialDirection: segment.frame.forward.toArray(),
+        initialNormal: segment.frame.normal.toArray()
+    };
 }

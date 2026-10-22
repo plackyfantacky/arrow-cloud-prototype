@@ -1,0 +1,136 @@
+
+.ui {
+    --ui-bg: rgba(20, 22, 26, 0.94);
+    --ui-surface: #292c32;
+    --ui-hover: #363a42;
+    --ui-border: #454951;
+    --ui-text: #f4f4f5;
+    --ui-muted: #a5a8af;
+    --ui-accent: #ff9d2a;
+
+    color: var(--ui-text);
+    color-scheme: dark;
+    font: 13px system-ui, sans-serif;
+}
+
+.ui :is(button, select, input) {
+    box-sizing: border-box;
+    font: inherit;
+}
+
+.ui .button,
+.ui .select,
+.ui .input {
+    min-height: 32px;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 5px;
+    background: var(--ui-surface);
+    color: var(--ui-text);
+}
+
+.ui .button {
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ui .button:hover:not(:disabled) {
+    background: var(--ui-hover);
+    border-color: var(--ui-accent);
+}
+
+.ui .button:disabled,
+.ui .select:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.ui .button.primary {
+    background: var(--ui-accent);
+    border-color: var(--ui-accent);
+    color: #17191d;
+    font-weight: 600;
+}
+
+.ui .button.primary:hover:not(:disabled) {
+    background: #ffb151;
+}
+
+.ui .icon-button {
+    flex: 0 0 36px;
+    padding-inline: 0.5rem;
+}
+
+.ui .select,
+.ui .input {
+    min-width: 0;
+    width: 100%;
+}
+
+.ui :is(button, select, input):focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+}
+
+.ui .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.ui .checkbox input {
+    accent-color: var(--ui-accent);
+}
+
+.ui .row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ui .row > * {
+    min-width: 0;
+}
+
+.ui .row > .grow {
+    flex: 1;
+}
+
+.ui .column,
+.ui .group,
+.ui .field {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.ui .group {
+    padding-block: 0.75rem;
+    border-top: 1px solid var(--ui-border);
+}
+
+.ui .group h3 {
+    margin: 0;
+    color: var(--ui-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.ui .field {
+    gap: 0.35rem;
+}
+
+.ui .muted {
+    color: var(--ui-muted);
+}
+
+.ui .divider {
+    height: 1px;
+    background: var(--ui-border);
+}
+
+.ui .full {
+    width: 100%;
+}
