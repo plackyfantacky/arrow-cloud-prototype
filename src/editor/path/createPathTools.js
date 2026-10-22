@@ -88,6 +88,7 @@ export function createPathTools({
 
             if (didChangePath) {
                 rebuild();
+                syncSelection();
             }
         },
 
@@ -105,10 +106,6 @@ export function createPathTools({
                 rebuild();
             }
         },
-
-        onTargetChange(targetValue) {
-            segmentHighlight?.setTargetValue(targetValue);
-        }
     });
 
     const lineTooltip = createLineTooltip({
@@ -130,6 +127,7 @@ export function createPathTools({
 
         onSelect(pathInfo) {
             pathEditor.setSelectedPathInfo(pathInfo);
+            syncSelection();
 
             pathControls.setSelectedPathInfo(
                 pathInfo, 
@@ -238,6 +236,24 @@ export function createPathTools({
         segmentHighlight?.setSelectedPathInfo(
             pathEditor.getSelectedPathInfo()
         );
+    }
+
+    function syncSelection() {
+        const selectedPathInfo = pathEditor.getSelectedPathInfo();
+
+        if (!selectedPathInfo) {
+            pathControls.clearSelection();
+            segmentHighlight?.setSelectedPathInfo(null);
+            return;
+        }
+
+        pathControls.setSelectedPathInfo(
+            selectedPathInfo,
+            pathEditor.isSelectedMoveLast(),
+            pathEditor.isSelectedMoveFirst()
+        );
+
+        segmentHighlight?.setSelectedPathInfo(selectedPathInfo);
     }
 
     function update() {

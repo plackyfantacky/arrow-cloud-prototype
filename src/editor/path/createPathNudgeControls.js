@@ -14,7 +14,6 @@ export function createPathNudgeControls({
 }) {
     const state = {
         selectedPathInfo: null,
-        targetValue: "move:0",
     };
 
     const template = document.createElement("template");
@@ -85,7 +84,9 @@ export function createPathNudgeControls({
         state.selectedPathInfo = null;
 
         selectedLabel.textContent = "No segment selected";
+        
         currentActionSelect.disabled = true;
+        newActionSelect.disabled = true;
 
         [
             nudgeNegativeButton,
