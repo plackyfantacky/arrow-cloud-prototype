@@ -8,10 +8,7 @@ export function createPathNudgeControls({
     onInsertMove,
     onDuplicateMove,
     onRemoveMove,
-    onTargetChange,
-    onLineLabelsVisibilityChange = () => {},
     onPanelExpandedChange = () => {},
-    lineLabelsVisible = true,
     initialExpanded = true,
     container = document.body,
 }) {

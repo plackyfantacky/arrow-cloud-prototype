@@ -12,6 +12,8 @@ export function createSceneControls({
     onAxesVisibilityChange = () => { },
     onArrowVisibilityChange = () => { },
     onArrowOpacityChange = () => { },
+    lineLabelsVisible = true,
+    onLineLabelsVisibilityChange = () => { },
     container = document.body
 }) {
     const template = document.createElement('template');
@@ -33,6 +35,7 @@ export function createSceneControls({
 
     const gridCheckbox = controlsContainer.querySelector('[data-control="grid"]');
     const axesCheckbox = controlsContainer.querySelector('[data-control="axes"]');
+    const lineLabelsCheckbox = controlsContainer.querySelector('[data-control="line-labels"]');
     const linesContainer = controlsContainer.querySelector('[data-lines]');
 
     const lineTemplate = controlsContainer.querySelector('[data-line-template');
@@ -68,6 +71,7 @@ export function createSceneControls({
 
     gridCheckbox.checked = gridVisible;
     axesCheckbox.checked = axesVisible;
+    lineLabelsCheckbox.checked = lineLabelsVisible;
 
     gridCheckbox.addEventListener('change', () => {
         onGridVisibilityChange(gridCheckbox.checked);
@@ -75,6 +79,10 @@ export function createSceneControls({
 
     axesCheckbox.addEventListener('change', () => {
         onAxesVisibilityChange(axesCheckbox.checked);
+    });
+
+    lineLabelsCheckbox.addEventListener('change', () => {
+        onLineLabelsVisibilityChange(lineLabelsCheckbox.checked);
     });
 
     renderArrowControls(arrowNames);

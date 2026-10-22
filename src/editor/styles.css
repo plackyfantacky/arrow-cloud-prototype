@@ -122,12 +122,10 @@ aside {
 /** path editor **/
 .editor-path-controls {
     z-index: 10;
+    width: 310px;
     padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.72);
-    color: #fff;
-    font-family: system-ui, sans-serif;
-    font-size: 13px;
     border-radius: 0.5rem;
+    background: var(--ui-bg);
 }
 
 .editor-path-controls__toggle {
@@ -138,16 +136,10 @@ aside {
 .editor-path-controls__content {
     display: grid;
     gap: 0.5rem;
-    padding: 0.75rem;
+    padding: 0;
+    margin-top: 0.75rem;
 }
 
 .editor-path-controls__content[hidden] {
     display: none;
-}
-
-[data-nudge-buttons],
-[data-segment-buttons] {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
 }
