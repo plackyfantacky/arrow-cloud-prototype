@@ -15,8 +15,7 @@ export function createPathTools({
     container = document.body,
     initialExpanded,
     lineLabelsVisible = true,
-    onPanelExpandedChange,
-    onLineLabelsVisibilityChange
+    onPanelExpandedChange
 }) {
     const pathEditor = createPathEditor(arrowPaths);
 
@@ -59,11 +58,6 @@ export function createPathTools({
         initialExpanded,
         lineLabelsVisible,
         onPanelExpandedChange,
-        
-        onLineLabelsVisibilityChange(isVisible) {
-            setArrowNameLabelsVisible(isVisible);
-            onLineLabelsVisibilityChange?.(isVisible);
-        },
 
         onNudge(amount, targetValue) {
             const didChangePath = pathEditor.nudgeSelectedPathValue(amount, targetValue);
@@ -128,20 +122,11 @@ export function createPathTools({
         onSelect(pathInfo) {
             pathEditor.setSelectedPathInfo(pathInfo);
             syncSelection();
-
-            pathControls.setSelectedPathInfo(
-                pathInfo, 
-                pathEditor.isSelectedMoveLast(),
-                pathEditor.isSelectedMoveFirst()
-            );
-
-            segmentHighlight.setSelectedPathInfo(pathInfo);
         },
 
         onDeselect() {
             pathEditor.setSelectedPathInfo(null);
-            pathControls.clearSelection();
-            segmentHighlight.setSelectedPathInfo(null); 
+            syncSelection();
         }
     });
 

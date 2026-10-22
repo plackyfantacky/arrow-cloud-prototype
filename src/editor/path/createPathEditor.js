@@ -117,7 +117,9 @@ export function createPathEditor(arrowPaths) {
         if (position === 'after') {
             state.selectedPathInfo = {
                 ...state.selectedPathInfo,
-                segmentIndex: state.selectedPathInfo.segmentIndex + 1,
+                segmentIndex: position === 'after'
+                    ? state.selectedPathInfo.segmentIndex + 1
+                    : state.selectedPathInfo.segmentIndex,
                 actionName
             };
         }
