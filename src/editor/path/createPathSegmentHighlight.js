@@ -1,7 +1,8 @@
 import * as THREE from "three";
 
+const arrowColour = new THREE.Color(0xffc478);
 const selectedColour = new THREE.Color(0x00ffff);
-const affectedColour = new THREE.Color(0xff3333);
+//const affectedColour = new THREE.Color(0xff3333);
 
 export function createPathSegmentHighlight({ getObjects }) {
     const state = {
@@ -34,20 +35,30 @@ export function createPathSegmentHighlight({ getObjects }) {
             return;
         }
 
-        const affectedCornerPiece = findAffectedCornerPiece(
-            getObjects(),
-            state.selectedPathInfo,
-            state.targetValue
-        );
+        const selectedArrow = getObjects().find((arrow) => {
+            return arrow.userData.revealPieces?.some((piece) => {
+                return piece.userData.pathInfo?.arrowName === state.selectedPathInfo.arrowName;
+            });
+        });
+
+        if (selectedArrow) {
+            applyHighlight(selectedArrow, arrowColour);
+        }
+
+        // const affectedCornerPiece = findAffectedCornerPiece(
+        //     getObjects(),
+        //     state.selectedPathInfo,
+        //     state.targetValue
+        // );
 
         const selectedPiece = findRevealPiece(
             getObjects(),
             state.selectedPathInfo
         );
 
-        if (affectedCornerPiece && affectedCornerPiece !== selectedPiece) {
-            applyHighlight(affectedCornerPiece, affectedColour);
-        }
+        // if (affectedCornerPiece && affectedCornerPiece !== selectedPiece) {
+        //     applyHighlight(affectedCornerPiece, affectedColour);
+        // }
 
         if (selectedPiece) {
             applyHighlight(selectedPiece, selectedColour);
@@ -71,13 +82,13 @@ export function createPathSegmentHighlight({ getObjects }) {
             }
 
             if (object.userData.pathHighlightOriginalMaterial) {
-                return;
+                object.material.dispose();
+            } else {
+                object.userData.pathHighlightOriginalMaterial = object.material;
+                highlightedMeshes.push(object);
             }
 
-            object.userData.pathHighlightOriginalMaterial = object.material;
-            object.material = createHighlightMaterial(object.material, colour);
-
-            highlightedMeshes.push(object);
+            object.material = createHighlightMaterial(object.userData.pathHighlightOriginalMaterial, colour);
         });
     }
 
@@ -113,53 +124,55 @@ function findRevealPiece(arrows, selectedPathInfo) {
     return null;
 }
 
-function findAffectedCornerPiece(arrows, selectedPathInfo, targetValue) {
-    if (!targetValue.startsWith('move:')) {
-        return null;
-    }
+// note: i'm not sure if I truly want to get rid of this function completely. may need to revisit this later
 
-    const targetOffset = Number(targetValue.replace('move:', ''));
+// function findAffectedCornerPiece(arrows, selectedPathInfo, targetValue) {
+//     if (!targetValue.startsWith('move:')) {
+//         return null;
+//     }
 
-    if (Number.isNaN(targetOffset)) {
-        return null;
-    }
+//     const targetOffset = Number(targetValue.replace('move:', ''));
 
-    const affectedCornerSegmentIndex = getAffectedCornerSegmentIndex(
-        selectedPathInfo.segmentIndex,
-        targetOffset
-    );
+//     if (Number.isNaN(targetOffset)) {
+//         return null;
+//     }
 
-    if (affectedCornerSegmentIndex < 0) {
-        return null;
-    }
+//     const affectedCornerSegmentIndex = getAffectedCornerSegmentIndex(
+//         selectedPathInfo.segmentIndex,
+//         targetOffset
+//     );
 
-    for (const arrow of arrows) {
-        const revealPieces = arrow.userData.revealPieces || [];
+//     if (affectedCornerSegmentIndex < 0) {
+//         return null;
+//     }
 
-        const affectedCornerPiece = revealPieces.find((piece) => {
-            const pathInfo = piece.userData.pathInfo;
+//     for (const arrow of arrows) {
+//         const revealPieces = arrow.userData.revealPieces || [];
 
-            return pathInfo
-                && piece.userData.pieceType === 'corner'
-                && pathInfo.arrowName === selectedPathInfo.arrowName
-                && pathInfo.segmentIndex === affectedCornerSegmentIndex;
-        });
+//         const affectedCornerPiece = revealPieces.find((piece) => {
+//             const pathInfo = piece.userData.pathInfo;
 
-        if (affectedCornerPiece) {
-            return affectedCornerPiece;
-        }
-    }
+//             return pathInfo
+//                 && piece.userData.pieceType === 'corner'
+//                 && pathInfo.arrowName === selectedPathInfo.arrowName
+//                 && pathInfo.segmentIndex === affectedCornerSegmentIndex;
+//         });
 
-    return null;
-}
+//         if (affectedCornerPiece) {
+//             return affectedCornerPiece;
+//         }
+//     }
 
-function getAffectedCornerSegmentIndex(segmentIndex, targetOffset) {
-    if (targetOffset < 0) {
-        return segmentIndex - 1;
-    }
+//     return null;
+// }
 
-    return segmentIndex;
-}
+// function getAffectedCornerSegmentIndex(segmentIndex, targetOffset) {
+//     if (targetOffset < 0) {
+//         return segmentIndex - 1;
+//     }
+
+//     return segmentIndex;
+// }
 
 function createHighlightMaterial(material, colour) {
     const highlightMaterial = material.clone();

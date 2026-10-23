@@ -114,15 +114,13 @@ export function createPathEditor(arrowPaths) {
 
         arrowPath.moves.splice(insertIndex, 0, [actionName, 1]);
 
-        if (position === 'after') {
-            state.selectedPathInfo = {
-                ...state.selectedPathInfo,
-                segmentIndex: position === 'after'
-                    ? state.selectedPathInfo.segmentIndex + 1
-                    : state.selectedPathInfo.segmentIndex,
-                actionName
-            };
-        }
+        state.selectedPathInfo = {
+            ...state.selectedPathInfo,
+            segmentIndex: position === 'after'
+                ? state.selectedPathInfo.segmentIndex + 1
+                : state.selectedPathInfo.segmentIndex,
+            actionName
+        };        
 
         return true;
     }

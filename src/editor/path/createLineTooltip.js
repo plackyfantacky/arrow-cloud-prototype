@@ -68,7 +68,7 @@ export function createLineTooltip({ camera, renderer, getObjects }) {
 
         tooltip.textContent = [
             `arrowName: ${pathInfo.arrowName}`,
-            `segmentIndex: ${pathInfo.segmentIndex}`,
+            `segmentIndex: ${pathInfo.segmentIndex + 1}`,
             `actionName: ${pathInfo.actionName}`,
             `segmentLength: ${pathInfo.segmentLength.toFixed(2)}`
         ].join('\n');
