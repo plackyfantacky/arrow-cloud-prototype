@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 import { createPathEditor } from "./createPathEditor.js";
 import { createPathNudgeControls } from "./createPathNudgeControls.js";
 import { createLineTooltip } from "./createLineTooltip.js";
@@ -23,6 +25,7 @@ export function createPathTools({
 
     let arrowNameLabels = [];
     let segmentHighlight = null;
+    let dragPosition = null;
 
     function rebuild() {
         segmentHighlight?.clear();
@@ -56,6 +59,38 @@ export function createPathTools({
             });
     }
 
+    function moveRenderedArrow(arrowName, position) {
+        if (!dragPosition) {
+            const arrowPath = pathEditor.getArrowPaths().find((path) => {
+                return path.name === arrowName;
+            });
+
+            if (!arrowPath) {
+                return;
+            }
+
+            dragPosition = new THREE.Vector3(...arrowPath.origin);
+        }
+
+        const movement = position.clone().sub(dragPosition);
+
+        if (movement.lengthSq() === 0) {
+            return;
+        }
+
+        const arrow = getArrows().find((object) => {
+            return object.userData.revealPieces?.some((piece) => {
+                return piece.userData.pathInfo?.arrowName === arrowName;
+            });
+        });
+
+        if (arrow) {
+            arrow.position.add(movement);
+        }
+
+        dragPosition.copy(position);
+    }
+
     const originMarkers = createPathOriginMarkers({
         camera,
         renderer,
@@ -70,9 +105,15 @@ export function createPathTools({
         },
 
         onOriginChange(arrowName, position) {
+            dragPosition = null;
+            
             if (pathEditor.setPathOrigin(arrowName, position)) {
                 rebuild();
             }
+        },
+
+        onOriginMove(arrowName, position) {
+            moveRenderedArrow(arrowName, position);
         },
     });
 
@@ -200,30 +241,6 @@ export function createPathTools({
             .join(", ");
     }
 
-    function setPathOrigin(arrowName, position) {
-        const arrowPath = state.arrowPaths.find((path) => {
-            return path.name === arrowName;
-        });
-
-        if (!arrowPath || arrowPath.entry?.position === "viewport") {
-            return false;
-        }
-
-        const nextOrigin = position.toArray();
-
-        if (
-            arrowPath.origin.every((value, index) => {
-                return value === nextOrigin[index];
-            })
-        ) {
-            return false;
-        }
-
-        arrowPath.origin = nextOrigin;
-
-        return true;
-    }
-
     function createArrowPathLabelText(arrowPath) {
         return [arrowPath.name, `(${formatVectorValues(arrowPath.origin)})`].join("    ");
     }
@@ -320,7 +337,6 @@ export function createPathTools({
         getArrowPaths,
         getSelectedPathInfo,
         attachPathInfo,
-        setPathOrigin,
         syncArrowNameLabels,
         setArrowNameLabelsVisible,
         update,

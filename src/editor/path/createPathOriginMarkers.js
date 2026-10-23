@@ -9,6 +9,7 @@ export function createPathOriginMarkers({
     onSelect = () => {},
     onDragStateChange = () => {},
     onOriginChange = () => {},
+    onOriginMove = () => {},
 }) {
     const geometry = new THREE.SphereGeometry(0.16, 12, 8);
 
@@ -36,6 +37,14 @@ export function createPathOriginMarkers({
         }
 
         onOriginChange(selectedMarker.userData.arrowName, selectedMarker.position.clone());
+    });
+
+    transformControls.addEventListener("objectChange", () => {
+        if (!selectedMarker || !transformControls.dragging) {
+            return;
+        }
+
+        onOriginMove(selectedMarker.userData.arrowName, selectedMarker.position.clone());
     });
 
     const transformHelper = transformControls.getHelper();
