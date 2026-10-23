@@ -26,6 +26,7 @@ export function createPathTools({
     let arrowNameLabels = [];
     let segmentHighlight = null;
     let dragPosition = null;
+    let selectedOriginArrowName = null;
 
     function rebuild() {
         segmentHighlight?.clear();
@@ -34,10 +35,14 @@ export function createPathTools({
     }
 
     function copyCurrentPath() {
-        const arrowPath = pathEditor.getSelectedArrowPath();
+        const arrowPath = selectedOriginArrowName
+            ? pathEditor.getArrowPaths().find((path) => {
+                  return path.name === selectedOriginArrowName;
+              })
+            : pathEditor.getSelectedArrowPath();
 
         if (!arrowPath) {
-            console.warn("No path segment selected.");
+            console.warn("No arrow path selected.");
             return;
         }
 
@@ -95,18 +100,26 @@ export function createPathTools({
         camera,
         renderer,
         scene,
-        onDragStateChange: onOriginDragStateChange,
+        onDragStateChange(isDragging) {
+            onOriginDragStateChange(isDragging);
+
+            arrowNameLabels.forEach((label) => {
+                label.visible = lineLabelsVisible && !isDragging;
+            });
+        },
 
         onSelect(arrowName, marker) {
+            selectedOriginArrowName = arrowName;
+
             pathEditor.setSelectedPathInfo(null);
             syncSelection();
 
-            console.log("Selected origin:", arrowName, marker.position.toArray());
+            pathControls.setSelectedOrigin(arrowName, marker.position.toArray());
         },
 
         onOriginChange(arrowName, position) {
             dragPosition = null;
-            
+
             if (pathEditor.setPathOrigin(arrowName, position)) {
                 rebuild();
             }
@@ -114,6 +127,10 @@ export function createPathTools({
 
         onOriginMove(arrowName, position) {
             moveRenderedArrow(arrowName, position);
+
+            if (selectedOriginArrowName === arrowName) {
+                pathControls.updateOriginPosition(position.toArray());
+            }
         },
     });
 
@@ -186,13 +203,17 @@ export function createPathTools({
         },
 
         onSelect(pathInfo) {
+            selectedOriginArrowName = null;
             originMarkers.clearSelection();
+
             pathEditor.setSelectedPathInfo(pathInfo);
             syncSelection();
         },
 
         onDeselect() {
+            selectedOriginArrowName = null;
             originMarkers.clearSelection();
+
             pathEditor.setSelectedPathInfo(null);
             syncSelection();
         },
@@ -221,8 +242,14 @@ export function createPathTools({
     });
 
     function setArrowPaths(nextArrowPaths) {
+        selectedOriginArrowName = null;
+        dragPosition = null;
+
+        originMarkers.clearSelection();
         pathEditor.setArrowPaths(nextArrowPaths);
         originMarkers.sync(pathEditor.getArrowPaths());
+
+        syncSelection();
     }
 
     function getArrowPaths() {

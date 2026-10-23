@@ -159,3 +159,7 @@ canvas {
 .editor-path-controls__content[hidden] {
     display: none;
 }
+
+.editor-path-controls [hidden] {
+    display: none;
+}

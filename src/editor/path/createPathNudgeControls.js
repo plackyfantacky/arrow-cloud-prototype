@@ -24,6 +24,10 @@ export function createPathNudgeControls({
     const toggleButton = controlsContainer.querySelector('[data-action="toggle-panel"]');
     const content = controlsContainer.querySelector("[data-panel-content]");
 
+    const originSection = controlsContainer.querySelector("[data-origin-section]");
+    const originLabel = controlsContainer.querySelector("[data-origin-label]");
+    const originPosition = controlsContainer.querySelector("[data-origin-position]");
+
     const selectedLabel = controlsContainer.querySelector("[data-selected-label]");
 
     const currentActionSelect = controlsContainer.querySelector('[data-control="current-action"]');
@@ -83,8 +87,12 @@ export function createPathNudgeControls({
     function clearSelection() {
         state.selectedPathInfo = null;
 
+        originSection.hidden = true;
+        originLabel.textContent = "";
+        originPosition.textContent = "";
+
         selectedLabel.textContent = "No segment selected";
-        
+
         currentActionSelect.disabled = true;
         newActionSelect.disabled = true;
 
@@ -103,12 +111,36 @@ export function createPathNudgeControls({
         });
     }
 
+    function setSelectedOrigin(arrowName, position) {
+        clearSelection();
+
+        originSection.hidden = false;
+        originLabel.textContent = arrowName;
+
+        formatOriginPosition(position);
+
+        copyButton.disabled = false;
+    }
+
+    function updateOriginPosition(position) {
+        formatOriginPosition(position);
+    }
+
+    function formatOriginPosition(position) {
+        return ["X", "Y", "Z"]
+            .map((axis, index) => {
+                return `${axis}: ${Number(position[index]).toFixed(3)}`;
+            })
+            .join("   ");
+    }
+
     container.appendChild(controlsContainer);
 
     return {
         setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false) {
-            state.selectedPathInfo = selectedPathInfo;
+            originSection.hidden = true;
 
+            state.selectedPathInfo = selectedPathInfo;
             selectedLabel.textContent = `${selectedPathInfo.arrowName} · Segment ${selectedPathInfo.segmentIndex + 1}`;
 
             currentActionSelect.disabled = false;
@@ -126,10 +158,12 @@ export function createPathNudgeControls({
             trimStartButton.disabled = isFirstMove || isLastMove;
             trimEndButton.disabled = isFirstMove || isLastMove;
 
-            insertAfterButton.textContent = isLastMove ? 'Add segment' : 'After';
+            insertAfterButton.textContent = isLastMove ? "Add segment" : "After";
         },
 
         clearSelection,
+        setSelectedOrigin,
+        updateOriginPosition,
 
         destroy() {
             panelToggle.destroy();

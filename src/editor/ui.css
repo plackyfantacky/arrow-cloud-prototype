@@ -109,6 +109,10 @@
     border-top: 1px solid var(--ui-border);
 }
 
+.ui .group[hidden] {
+    display: none;
+}
+
 .ui .group h3 {
     margin: 0;
     color: var(--ui-muted);
