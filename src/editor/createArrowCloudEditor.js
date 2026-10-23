@@ -156,7 +156,11 @@ export function createArrowCloudEditor({
 
         onPathsChange() {
             rebuildArrowPaths();
-        }
+        },
+
+        onOriginDragStateChange(isDragging) {
+            cameraController.setInteractionEnabled(!isDragging);
+        },
     });
 
     const arrowDisplayState = createArrowDisplayState(pathTools.getArrowPaths());

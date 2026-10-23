@@ -7,7 +7,9 @@ export function createPathSegmentSelector({
     renderer,
     getObjects,
     onSelect,
-    onDeselect
+    onDeselect,
+    onSelectOrigin = () => false,
+    shouldIgnoreClick = () => false
 }) {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -26,34 +28,39 @@ export function createPathSegmentSelector({
 
         pointerDownPosition = {
             x: event.clientX,
-            y: event.clientY
+            y: event.clientY,
         };
     }
 
     function handlePointerUp(event) {
-        if (
-            event.pointerId !== activePointerId ||
-            !pointerDownPosition
-        ) {
+        if (event.pointerId !== activePointerId || !pointerDownPosition) {
             return;
         }
 
         const distance = Math.hypot(
             event.clientX - pointerDownPosition.x,
-            event.clientY - pointerDownPosition.y
+            event.clientY - pointerDownPosition.y,
         );
 
         resetPointer();
 
+        if (shouldIgnoreClick(event.clientX, event.clientY)) {
+            return;
+        }
+        
         if (distance > clickThreshold) {
             return;
         }
-
+        
         selectAtPosition(event.clientX, event.clientY);
     }
 
     function selectAtPosition(clientX, clientY) {
         const bounds = renderer.domElement.getBoundingClientRect();
+
+        if (onSelectOrigin(clientX, clientY)) {
+            return;
+        }
 
         pointer.x = ((clientX - bounds.left) / bounds.width) * 2 - 1;
         pointer.y = -(((clientY - bounds.top) / bounds.height) * 2 - 1);
@@ -79,37 +86,19 @@ export function createPathSegmentSelector({
         activePointerId = null;
     }
 
-    renderer.domElement.addEventListener(
-        "pointerdown",
-        handlePointerDown
-    );
+    renderer.domElement.addEventListener("pointerdown", handlePointerDown);
 
-    renderer.domElement.addEventListener(
-        "pointerup",
-        handlePointerUp
-    );
+    renderer.domElement.addEventListener("pointerup", handlePointerUp);
 
-    renderer.domElement.addEventListener(
-        "pointercancel",
-        resetPointer
-    );
+    renderer.domElement.addEventListener("pointercancel", resetPointer);
 
     return {
         destroy() {
-            renderer.domElement.removeEventListener(
-                "pointerdown",
-                handlePointerDown
-            );
+            renderer.domElement.removeEventListener("pointerdown", handlePointerDown);
 
-            renderer.domElement.removeEventListener(
-                "pointerup",
-                handlePointerUp
-            );
+            renderer.domElement.removeEventListener("pointerup", handlePointerUp);
 
-            renderer.domElement.removeEventListener(
-                "pointercancel",
-                resetPointer
-            );
-        }
+            renderer.domElement.removeEventListener("pointercancel", resetPointer);
+        },
     };
 }

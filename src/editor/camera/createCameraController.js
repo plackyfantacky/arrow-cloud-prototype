@@ -1,15 +1,15 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { updateCameraTrack } from "../../camera.js";
-import { createFlyControls } from './createFlyControls.js';
-import { createCameraTargetMarker } from './createCameraTargetMarker.js';
-import { createCameraUpMarker } from './createCameraUpMarker.js';
+import { createFlyControls } from "./createFlyControls.js";
+import { createCameraTargetMarker } from "./createCameraTargetMarker.js";
+import { createCameraUpMarker } from "./createCameraUpMarker.js";
 
 const CAMERA_MODES = {
-    TRACKED: 'tracked',
-    ORBITAL: 'orbital',
-    FLY: 'fly'
+    TRACKED: "tracked",
+    ORBITAL: "orbital",
+    FLY: "fly",
 };
 
 const VIEW_PRESETS = {
@@ -18,7 +18,7 @@ const VIEW_PRESETS = {
     left: [-1, 0, 0],
     right: [1, 0, 0],
     top: [0, 1, 0.0001],
-    bottom: [0, -1, -0.0001]
+    bottom: [0, -1, -0.0001],
 };
 
 export function createCameraController({
@@ -28,53 +28,50 @@ export function createCameraController({
     scene,
     initialCameraTarget,
     hasInitialCameraState,
-    getCameraTrack
+    getCameraTrack,
 }) {
-
     let cameraMode = CAMERA_MODES.ORBITAL;
     let currentViewPreset = null;
 
     let isApplyingViewPreset = false;
-    let onViewPresetChange = () => { };
+    let onViewPresetChange = () => {};
+
+    let interactionEnabled = true;
 
     const cameraPivot = new THREE.Vector3(
         initialCameraTarget?.x ?? 0,
         initialCameraTarget?.y ?? 0,
-        initialCameraTarget?.z ?? 0
+        initialCameraTarget?.z ?? 0,
     );
 
     const cameraDirection = new THREE.Vector3();
     const cameraUp = new THREE.Vector3();
 
     if (hasInitialCameraState) {
-        cameraUp
-            .set(0, 1, 0)
-            .applyQuaternion(camera.quaternion)
-            .normalize();
-    
+        cameraUp.set(0, 1, 0).applyQuaternion(camera.quaternion).normalize();
+
         camera.up.copy(cameraUp);
     } else {
         camera.up.set(0, 1, 0);
     }
 
-
     let orbitControls = createOrbitControls();
-    
+
     orbitControls.target.copy(cameraPivot);
-    
+
     orbitControls.enableDamping = true;
     orbitControls.dampingFactor = 0.08;
     orbitControls.enabled = true;
     orbitControls.update();
     orbitControls.saveState();
-    
+
     const initialCameraPosition = camera.position.clone();
     const initialCameraQuaternion = camera.quaternion.clone();
     const initialCameraUp = camera.up.clone();
     const initialOrbitTarget = orbitControls.target.clone();
-    
+
     let orbitDistance = camera.position.distanceTo(orbitControls.target);
-    
+
     const flyControls = createFlyControls(camera, renderer.domElement);
 
     flyControls.enabled = false;
@@ -94,7 +91,7 @@ export function createCameraController({
         positiveY: new THREE.Vector3(0, 1, 0),
         negativeY: new THREE.Vector3(0, -1, 0),
         positiveZ: new THREE.Vector3(0, 0, 1),
-        negativeZ: new THREE.Vector3(0, 0, -1)
+        negativeZ: new THREE.Vector3(0, 0, -1),
     };
 
     //helper functions
@@ -104,17 +101,17 @@ export function createCameraController({
 
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
-        controls.enabled = cameraMode === CAMERA_MODES.ORBITAL;
+        controls.enabled = interactionEnabled && cameraMode === CAMERA_MODES.ORBITAL;
 
         controls.target.copy(cameraPivot);
 
-        controls.addEventListener('change', handleOrbitChange);
+        controls.addEventListener("change", handleOrbitChange);
 
         return controls;
     }
 
     function rebuildOrbitControls(target) {
-        orbitControls.removeEventListener('change', handleOrbitChange);
+        orbitControls.removeEventListener("change", handleOrbitChange);
         orbitControls.dispose();
 
         orbitControls = createOrbitControls();
@@ -139,44 +136,28 @@ export function createCameraController({
         const originalMaterialSides = new Map();
 
         intersectables.forEach((object) => {
-            const materials = Array.isArray(object.material)
-                ? object.material
-                : [object.material];
+            const materials = Array.isArray(object.material) ? object.material : [object.material];
 
             materials.forEach((material) => {
                 if (!material) {
                     return;
                 }
 
-                originalMaterialSides.set(
-                    material,
-                    material.side
-                );
+                originalMaterialSides.set(material, material.side);
 
                 material.side = THREE.DoubleSide;
             });
         });
 
-        Object.entries(targetDirections).forEach(
-            ([armName, direction]) => {
-                targetRaycaster.set(
-                    orbitControls.target,
-                    direction
-                );
+        Object.entries(targetDirections).forEach(([armName, direction]) => {
+            targetRaycaster.set(orbitControls.target, direction);
 
-                targetRaycaster.far = 0.25;
+            targetRaycaster.far = 0.25;
 
-                const intersections = targetRaycaster.intersectObjects(
-                    intersectables,
-                    false
-                );
+            const intersections = targetRaycaster.intersectObjects(intersectables, false);
 
-                cameraTargetMarker.setArmIntersecting(
-                    armName,
-                    intersections.length > 0
-                );
-            }
-        );
+            cameraTargetMarker.setArmIntersecting(armName, intersections.length > 0);
+        });
     }
 
     function getCameraTargetIntersectables() {
@@ -239,26 +220,17 @@ export function createCameraController({
             clearViewPreset();
         }
 
-        orbitControls.enabled = cameraMode === CAMERA_MODES.ORBITAL;
-        flyControls.enabled = cameraMode === CAMERA_MODES.FLY;
+        setInteractionEnabled(interactionEnabled);
 
         if (cameraMode === CAMERA_MODES.ORBITAL && previousCameraMode === CAMERA_MODES.FLY) {
             camera.getWorldDirection(cameraDirection);
 
-            cameraUp
-                .set(0, 1, 0)
-                .applyQuaternion(camera.quaternion)
-                .normalize();
+            cameraUp.set(0, 1, 0).applyQuaternion(camera.quaternion).normalize();
 
             camera.up.copy(cameraUp);
 
-            const target = camera.position
-                .clone()
-                .addScaledVector(
-                    cameraDirection,
-                    orbitDistance
-                );
-            
+            const target = camera.position.clone().addScaledVector(cameraDirection, orbitDistance);
+
             rebuildOrbitControls(target);
         }
     }
@@ -282,12 +254,7 @@ export function createCameraController({
 
         camera.up.set(0, 1, 0);
 
-        camera.position
-            .copy(target)
-            .addScaledVector(
-                direction,
-                distance
-            );
+        camera.position.copy(target).addScaledVector(direction, distance);
 
         camera.lookAt(target);
 
@@ -315,16 +282,24 @@ export function createCameraController({
         cameraUpMarker.setVisible(isVisible);
     }
 
+    function setInteractionEnabled(isEnabled) {
+        interactionEnabled = isEnabled;
+
+        orbitControls.enabled = isEnabled && cameraMode === CAMERA_MODES.ORBITAL;
+
+        flyControls.enabled = isEnabled && cameraMode === CAMERA_MODES.FLY;
+    }
+
     function reset() {
         cameraMode = CAMERA_MODES.ORBITAL;
-        flyControls.enabled = false;
-
+        
         camera.position.copy(initialCameraPosition);
         camera.quaternion.copy(initialCameraQuaternion);
         camera.up.copy(initialCameraUp);
-
+        
         rebuildOrbitControls(initialOrbitTarget);
-        orbitControls.enabled = true;
+        setInteractionEnabled(interactionEnabled);
+        
         orbitDistance = camera.position.distanceTo(initialOrbitTarget);
         cameraTargetDistance = orbitDistance;
 
@@ -336,30 +311,31 @@ export function createCameraController({
             position: {
                 x: Number(camera.position.x.toFixed(3)),
                 y: Number(camera.position.y.toFixed(3)),
-                z: Number(camera.position.z.toFixed(3))
+                z: Number(camera.position.z.toFixed(3)),
             },
             quaternion: {
                 x: Number(camera.quaternion.x.toFixed(6)),
                 y: Number(camera.quaternion.y.toFixed(6)),
                 z: Number(camera.quaternion.z.toFixed(6)),
-                w: Number(camera.quaternion.w.toFixed(6))
+                w: Number(camera.quaternion.w.toFixed(6)),
             },
             target: {
                 x: Number(orbitControls.target.x.toFixed(3)),
                 y: Number(orbitControls.target.y.toFixed(3)),
-                z: Number(orbitControls.target.z.toFixed(3))
+                z: Number(orbitControls.target.z.toFixed(3)),
             },
         };
 
         const json = JSON.stringify(output, null, 4);
 
-        navigator.clipboard.writeText(json)
+        navigator.clipboard
+            .writeText(json)
             .then(() => {
-                console.log('Copied static camera:');
+                console.log("Copied static camera:");
                 console.log(json);
             })
             .catch((error) => {
-                console.warn('Could not copy static camera.');
+                console.warn("Could not copy static camera.");
                 console.log(json);
                 console.error(error);
             });
@@ -367,12 +343,7 @@ export function createCameraController({
 
     function update(deltaTime, currentTime) {
         if (cameraMode === CAMERA_MODES.TRACKED) {
-            updateCameraTrack(
-                mountElement,
-                getCameraTrack(),
-                camera,
-                currentTime
-            );
+            updateCameraTrack(mountElement, getCameraTrack(), camera, currentTime);
 
             return;
         }
@@ -384,26 +355,16 @@ export function createCameraController({
 
             orbitControls.target
                 .copy(camera.position)
-                .addScaledVector(
-                    cameraDirection,
-                    cameraTargetDistance
-                );
+                .addScaledVector(cameraDirection, cameraTargetDistance);
         } else {
             orbitControls.update();
 
-            cameraTargetDistance = camera.position.distanceTo(
-                orbitControls.target
-            );
+            cameraTargetDistance = camera.position.distanceTo(orbitControls.target);
         }
 
-        cameraTargetMarker.setPosition(
-            orbitControls.target
-        );
+        cameraTargetMarker.setPosition(orbitControls.target);
 
-        cameraUp
-            .set(0, 1, 0)
-            .applyQuaternion(camera.quaternion)
-            .normalize();
+        cameraUp.set(0, 1, 0).applyQuaternion(camera.quaternion).normalize();
 
         cameraUpMarker.setPosition(orbitControls.target);
         cameraUpMarker.setDirection(cameraUp);
@@ -412,7 +373,7 @@ export function createCameraController({
     }
 
     function destroy() {
-        orbitControls.removeEventListener('change', handleOrbitChange);
+        orbitControls.removeEventListener("change", handleOrbitChange);
         orbitControls.dispose();
         flyControls.dispose();
     }
@@ -423,11 +384,12 @@ export function createCameraController({
         setMode,
         setViewPreset,
         setViewPresetChangeHandler,
+        setInteractionEnabled,
         setTargetMarkerVisible,
         setUpMarkerVisible,
         reset,
         update,
         copy,
-        destroy
+        destroy,
     };
 }

@@ -1,9 +1,10 @@
-import { createPathEditor } from './createPathEditor.js';
-import { createPathNudgeControls } from './createPathNudgeControls.js';
-import { createLineTooltip } from './createLineTooltip.js';
-import { createPathSegmentSelector } from './createPathSegmentSelector.js';
-import { createPathSegmentHighlight } from './createPathSegmentHighlight.js';
+import { createPathEditor } from "./createPathEditor.js";
+import { createPathNudgeControls } from "./createPathNudgeControls.js";
+import { createLineTooltip } from "./createLineTooltip.js";
+import { createPathSegmentSelector } from "./createPathSegmentSelector.js";
+import { createPathSegmentHighlight } from "./createPathSegmentHighlight.js";
 import { createArrowNameLabel } from "./createArrowNameLabel.js";
+import { createPathOriginMarkers } from "./createPathOriginMarkers.js";
 
 export function createPathTools({
     camera,
@@ -15,7 +16,8 @@ export function createPathTools({
     container = document.body,
     initialExpanded,
     lineLabelsVisible = true,
-    onPanelExpandedChange
+    onPanelExpandedChange,
+    onOriginDragStateChange = () => {},
 }) {
     const pathEditor = createPathEditor(arrowPaths);
 
@@ -25,33 +27,56 @@ export function createPathTools({
     function rebuild() {
         segmentHighlight?.clear();
         onPathsChange();
+        originMarkers.sync(pathEditor.getArrowPaths());
     }
 
     function copyCurrentPath() {
         const arrowPath = pathEditor.getSelectedArrowPath();
 
         if (!arrowPath) {
-            console.warn('No path segment selected.');
+            console.warn("No path segment selected.");
             return;
         }
 
-        const output = JSON.stringify(arrowPath, null, 4)
-            .replace(
-                /\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g,
-                '["$1", $2]'
-            );
+        const output = JSON.stringify(arrowPath, null, 4).replace(
+            /\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g,
+            '["$1", $2]',
+        );
 
-        navigator.clipboard.writeText(output)
+        navigator.clipboard
+            .writeText(output)
             .then(() => {
-                console.log('Copied arrow path:');
+                console.log("Copied arrow path:");
                 console.log(output);
             })
             .catch((error) => {
-                console.warn('Could not copy arrow path to the clipboard.');
+                console.warn("Could not copy arrow path to the clipboard.");
                 console.log(output);
                 console.error(error);
             });
     }
+
+    const originMarkers = createPathOriginMarkers({
+        camera,
+        renderer,
+        scene,
+        onDragStateChange: onOriginDragStateChange,
+
+        onSelect(arrowName, marker) {
+            pathEditor.setSelectedPathInfo(null);
+            syncSelection();
+
+            console.log("Selected origin:", arrowName, marker.position.toArray());
+        },
+
+        onOriginChange(arrowName, position) {
+            if (pathEditor.setPathOrigin(arrowName, position)) {
+                rebuild();
+            }
+        },
+    });
+
+    originMarkers.sync(pathEditor.getArrowPaths());
 
     const pathControls = createPathNudgeControls({
         container,
@@ -108,7 +133,7 @@ export function createPathTools({
 
         getObjects() {
             return getArrows();
-        }
+        },
     });
 
     const segmentSelector = createPathSegmentSelector({
@@ -120,24 +145,43 @@ export function createPathTools({
         },
 
         onSelect(pathInfo) {
+            originMarkers.clearSelection();
             pathEditor.setSelectedPathInfo(pathInfo);
             syncSelection();
         },
 
         onDeselect() {
+            originMarkers.clearSelection();
             pathEditor.setSelectedPathInfo(null);
             syncSelection();
-        }
+        },
+
+        onSelectOrigin(clientX, clientY) {
+            return originMarkers.selectAt(clientX, clientY);
+        },
+
+        // shouldIgnoreClick(clientX, clientY) {
+        //     if (originMarkers.isOtherMarkerAt(clientX, clientY)) {
+        //         return false;
+        //     }
+
+        //     return originMarkers.isGizmoAt(clientX, clientY);
+        // },
+
+        shouldIgnoreClick() {
+            return originMarkers.isGizmoActive();
+        },
     });
 
     segmentHighlight = createPathSegmentHighlight({
         getObjects() {
             return getArrows();
-        }
+        },
     });
 
     function setArrowPaths(nextArrowPaths) {
         pathEditor.setArrowPaths(nextArrowPaths);
+        originMarkers.sync(pathEditor.getArrowPaths());
     }
 
     function getArrowPaths() {
@@ -149,16 +193,39 @@ export function createPathTools({
     }
 
     function formatVectorValues(values) {
-        return values.map((value) => {
-            return Number(value).toFixed(3);
-        }).join(', ');
+        return values
+            .map((value) => {
+                return Number(value).toFixed(3);
+            })
+            .join(", ");
+    }
+
+    function setPathOrigin(arrowName, position) {
+        const arrowPath = state.arrowPaths.find((path) => {
+            return path.name === arrowName;
+        });
+
+        if (!arrowPath || arrowPath.entry?.position === "viewport") {
+            return false;
+        }
+
+        const nextOrigin = position.toArray();
+
+        if (
+            arrowPath.origin.every((value, index) => {
+                return value === nextOrigin[index];
+            })
+        ) {
+            return false;
+        }
+
+        arrowPath.origin = nextOrigin;
+
+        return true;
     }
 
     function createArrowPathLabelText(arrowPath) {
-        return [
-            arrowPath.name,
-            `(${formatVectorValues(arrowPath.origin)})`
-        ].join('    ');
+        return [arrowPath.name, `(${formatVectorValues(arrowPath.origin)})`].join("    ");
     }
 
     function clearArrowNameLabels() {
@@ -166,7 +233,7 @@ export function createPathTools({
             scene.remove(label);
 
             label.geometry?.dispose();
-            
+
             if (label.material?.map) {
                 label.material.map.dispose();
             }
@@ -179,17 +246,12 @@ export function createPathTools({
         clearArrowNameLabels();
 
         arrowNameLabels = renderedArrowItems.map((renderedArrowItem) => {
-            const labelText = createArrowPathLabelText(
-                renderedArrowItem.positionedArrowPath
-            );
+            const labelText = createArrowPathLabelText(renderedArrowItem.positionedArrowPath);
 
-            const label = createArrowNameLabel(
-                labelText,
-                renderedArrowItem.segments[0]
-            );
-            
+            const label = createArrowNameLabel(labelText, renderedArrowItem.segments[0]);
+
             label.visible = lineLabelsVisible;
-            
+
             renderedArrowItem.label = label;
 
             scene.add(label);
@@ -213,14 +275,12 @@ export function createPathTools({
                     arrowName: renderedArrowItem.positionedArrowPath.name,
                     segmentIndex: revealPiece.userData.segmentIndex,
                     actionName: revealPiece.userData.actionName,
-                    segmentLength: revealPiece.userData.segmentLength
+                    segmentLength: revealPiece.userData.segmentLength,
                 };
             });
         });
 
-        segmentHighlight?.setSelectedPathInfo(
-            pathEditor.getSelectedPathInfo()
-        );
+        segmentHighlight?.setSelectedPathInfo(pathEditor.getSelectedPathInfo());
     }
 
     function syncSelection() {
@@ -235,7 +295,7 @@ export function createPathTools({
         pathControls.setSelectedPathInfo(
             selectedPathInfo,
             pathEditor.isSelectedMoveLast(),
-            pathEditor.isSelectedMoveFirst()
+            pathEditor.isSelectedMoveFirst(),
         );
 
         segmentHighlight?.setSelectedPathInfo(selectedPathInfo);
@@ -249,6 +309,7 @@ export function createPathTools({
         clearArrowNameLabels();
 
         pathControls.destroy();
+        originMarkers.destroy();
         lineTooltip.destroy();
         segmentSelector.destroy();
         segmentHighlight.destroy();
@@ -259,9 +320,10 @@ export function createPathTools({
         getArrowPaths,
         getSelectedPathInfo,
         attachPathInfo,
+        setPathOrigin,
         syncArrowNameLabels,
         setArrowNameLabelsVisible,
         update,
-        destroy
+        destroy,
     };
 }
