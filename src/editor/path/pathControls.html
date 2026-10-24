@@ -23,55 +23,57 @@
 
             <div class="muted" data-selected-label>No segment selected</div>
 
-            <label class="field">
-                Current Action
-                <select class="select" data-control="current-action" disabled>
-                    <option value="forward">Forward</option>
-                    <option value="turnLeft">Turn left</option>
-                    <option value="turnRight">Turn right</option>
-                    <option value="bendUp">Bend up</option>
-                    <option value="bendDown">Bend down</option>
-                </select>
-            </label>
-
-            <label class="field">
-                <span class="row">
-                    <button
-                        type="button"
-                        class="button icon-button"
-                        data-action="nudge-negative"
-                        aria-label="Decrease distance"
-                        disabled
-                    >
-                        -
-                    </button>
-                    <select class="select grow" data-control="nudge-increment">
-                        <option value="1">1</option>
-                        <option value="0.5">0.5</option>
-                        <option value="0.25">0.25</option>
-                        <option value="0.1">0.1</option>
-                        <option value="0.05">0.05</option>
+            <div class="column gap-4">
+                <label class="field">
+                    Current Action
+                    <select class="select" data-control="current-action" disabled>
+                        <option value="forward">Forward</option>
+                        <option value="turnLeft">Turn left</option>
+                        <option value="turnRight">Turn right</option>
+                        <option value="bendUp">Bend up</option>
+                        <option value="bendDown">Bend down</option>
                     </select>
-                    <button
-                        type="button"
-                        class="button icon-button"
-                        data-action="nudge-positive"
-                        aria-label="Increase distance"
-                        disabled
-                    >
-                        +
+                </label>
+    
+                <label class="field">
+                    <span class="row">
+                        <button
+                            type="button"
+                            class="button icon-button"
+                            data-action="nudge-negative"
+                            aria-label="Decrease distance"
+                            disabled
+                        >
+                            -
+                        </button>
+                        <select class="select grow" data-control="nudge-increment">
+                            <option value="1">1</option>
+                            <option value="0.5">0.5</option>
+                            <option value="0.25">0.25</option>
+                            <option value="0.1">0.1</option>
+                            <option value="0.05">0.05</option>
+                        </select>
+                        <button
+                            type="button"
+                            class="button icon-button"
+                            data-action="nudge-positive"
+                            aria-label="Increase distance"
+                            disabled
+                        >
+                            +
+                        </button>
+                    </span>
+                </label>
+    
+                <div class="row">
+                    <button type="button" class="button grow" data-action="trim-start" disabled>
+                        Trim start
                     </button>
-                </span>
-            </label>
-
-            <div class="row">
-                <button type="button" class="button grow" data-action="trim-start" disabled>
-                    Trim start
-                </button>
-                <button type="button" class="button grow" data-action="trim-end" disabled>
-                    Trim end
-                </button>
-                <button type="button" class="button" data-action="remove" disabled>Remove</button>
+                    <button type="button" class="button grow" data-action="trim-end" disabled>
+                        Trim end
+                    </button>
+                    <button type="button" class="button" data-action="remove" disabled>Remove</button>
+                </div>
             </div>
         </section>
 
@@ -89,16 +91,21 @@
                 </select>
             </label>
 
-            <div class="row">
-                <button type="button" class="button grow" data-action="insert-before" disabled>
-                    Before
-                </button>
-                <button type="button" class="button grow" data-action="duplicate" disabled>
-                    Duplicate
-                </button>
-                <button type="button" class="button grow" data-action="insert-after" disabled>
-                    After
-                </button>
+            <div class="column gap-4">
+                <div class="row">
+                    <button type="button" class="button grow" data-action="insert-before" disabled>
+                        Insert Before
+                    </button>
+                    <button type="button" class="button grow" data-action="insert-after" disabled>
+                        Insert After
+                    </button>
+                </div>
+                
+                <div class="row">
+                    <button type="button" class="button grow" data-action="duplicate" disabled>
+                        Duplicate
+                    </button>
+                </div>
             </div>
         </section>
 

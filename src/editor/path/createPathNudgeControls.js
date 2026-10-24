@@ -164,7 +164,7 @@ export function createPathNudgeControls({
             trimStartButton.disabled = isFirstMove || isLastMove;
             trimEndButton.disabled = isFirstMove || isLastMove;
 
-            insertAfterButton.textContent = isLastMove ? "Add segment" : "After";
+            insertAfterButton.textContent = isLastMove ? "Add segment" : "Insert After";
         },
 
         clearSelection,
