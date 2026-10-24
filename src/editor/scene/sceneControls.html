@@ -1,7 +1,19 @@
 <div class="editor-scene-controls" data-editor-scene-controls>
-    <button type="button" class="editor-scene-controls__toggle" data-action="toggle" aria-expanded="true">Scene ▾</button>
+    <button
+        type="button"
+        class="editor-scene-controls__toggle"
+        data-action="toggle"
+        aria-expanded="true"
+    >
+        Scene ▾
+    </button>
 
     <div class="editor-scene-controls__content" data-content>
+        <label class="field">
+            Dataset
+            <select class="select" data-control="dataset"></select>
+        </label>
+
         <label class="checkbox">
             <input type="checkbox" data-control="grid" />
             Grid
@@ -17,9 +29,7 @@
             Show line labels
         </label>
 
-        <strong>
-            Lines
-        </strong>
+        <strong> Lines </strong>
 
         <div class="editor-scene-controls__lines" data-lines></div>
 

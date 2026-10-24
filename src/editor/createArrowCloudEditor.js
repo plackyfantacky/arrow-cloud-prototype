@@ -182,6 +182,7 @@ export function createArrowCloudEditor({
 
     const sceneControls = createSceneControls({
         container: sidebar,
+        onDatasetChange,
         gridVisible: gridHelper.visible,
         axesVisible: axesGauge.visible,
         initialExpanded: preferences.get('scenePanelExpanded'),
@@ -221,9 +222,7 @@ export function createArrowCloudEditor({
         }
     });
 
-    const timelineControls = createTimelineControls(animationSettings, {
-        onDatasetChange
-    });
+    const timelineControls = createTimelineControls(animationSettings);
 
     //helpers
 

@@ -198,15 +198,9 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     }
 
     async function setDataset(datasetName) {
-        const nextDataset = await loadDataset(datasetName);
-
-        cameraTrack = nextDataset.cameraTrack;
-
-        debug.setArrowPaths(nextDataset.arrowPaths);
-
-        debug.setAnimationSettings(nextDataset.animationSettings);
-
-        rebuildArrowPaths();
+        const url = new URL(window.location.href);
+        url.searchParams.set('dataset', datasetName);
+        window.location.assign(url);
     }
 
     rebuildArrowPaths();

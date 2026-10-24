@@ -7,10 +7,7 @@ export function createTimelineControls(
         speed = 1,
         isPlaying = true,
         isLooping = true
-    },
-    {
-        onDatasetChange = () => { }
-    } = {}
+    }
 ) {
     const state = {
         currentTime,
@@ -32,7 +29,6 @@ export function createTimelineControls(
     const timeValue = container.querySelector('[data-value="time"]');
     const speedInput = container.querySelector('[data-control="speed"]');
     const speedValue = container.querySelector('[data-value="speed"]');
-    const datasetSelect = container.querySelector('[data-control="dataset"]');
 
     function setAnimationSettings({
         timelineDuration,
@@ -96,12 +92,6 @@ export function createTimelineControls(
     speedInput.addEventListener('input', () => {
         state.speed = Number(speedInput.value);
         speedValue.textContent = `${state.speed.toFixed(1)}x`;
-    });
-
-    datasetSelect.addEventListener('change', async () => {
-        await onDatasetChange(
-            datasetSelect.value
-        );
     });
 
     loopCheckbox.checked = state.isLooping;

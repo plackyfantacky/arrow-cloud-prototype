@@ -1,67 +1,69 @@
 import { createPanelToggle } from "../editorUI";
 
-import sceneControlsTemplate from './sceneControls.html';
+import sceneControlsTemplate from "./sceneControls.html";
+
+import datasetNames from "../../generated/datasets.json";
 
 export function createSceneControls({
     initialExpanded = true,
-    onPanelExpandedChange = () => { },
+    onPanelExpandedChange = () => {},
     gridVisible = true,
     axesVisible = true,
     arrowNames = [],
-    onGridVisibilityChange = () => { },
-    onAxesVisibilityChange = () => { },
-    onArrowVisibilityChange = () => { },
-    onArrowOpacityChange = () => { },
+    onGridVisibilityChange = () => {},
+    onAxesVisibilityChange = () => {},
+    onArrowVisibilityChange = () => {},
+    onArrowOpacityChange = () => {},
     lineLabelsVisible = true,
-    onLineLabelsVisibilityChange = () => { },
-    container = document.body
+    onLineLabelsVisibilityChange = () => {},
+    onDatasetChange = () => {},
+    container = document.body,
 }) {
-    const template = document.createElement('template');
+    const template = document.createElement("template");
 
     template.innerHTML = sceneControlsTemplate;
 
     const controlsContainer = template.content.firstElementChild.cloneNode(true);
 
     const toggleButton = controlsContainer.querySelector('[data-action="toggle"]');
-    const content = controlsContainer.querySelector('[data-content]');
+    const content = controlsContainer.querySelector("[data-content]");
 
     const panelToggle = createPanelToggle({
         button: toggleButton,
         content,
-        label: 'Scene',
+        label: "Scene",
         initialExpanded,
-        onExpandedChange: onPanelExpandedChange
+        onExpandedChange: onPanelExpandedChange,
     });
 
+    const datasetSelect = controlsContainer.querySelector('[data-control="dataset"]');
     const gridCheckbox = controlsContainer.querySelector('[data-control="grid"]');
     const axesCheckbox = controlsContainer.querySelector('[data-control="axes"]');
     const lineLabelsCheckbox = controlsContainer.querySelector('[data-control="line-labels"]');
-    const linesContainer = controlsContainer.querySelector('[data-lines]');
+    const linesContainer = controlsContainer.querySelector("[data-lines]");
 
-    const lineTemplate = controlsContainer.querySelector('[data-line-template');
+    const lineTemplate = controlsContainer.querySelector("[data-line-template");
 
     function renderArrowControls(nextArrowNames) {
-
         linesContainer.replaceChildren();
 
         nextArrowNames.forEach((arrowName) => {
-
             const row = lineTemplate.content.firstElementChild.cloneNode(true);
 
             const visibilityCheckbox = row.querySelector('[data-control="visibility"]');
-            const nameLabel = row.querySelector('[data-line-name]');
+            const nameLabel = row.querySelector("[data-line-name]");
             const opacityInput = row.querySelector('[data-control="opacity"]');
-            const opacityValue = row.querySelector('[data-opacity-value]');
+            const opacityValue = row.querySelector("[data-opacity-value]");
 
             nameLabel.textContent = arrowName;
 
-            opacityInput.addEventListener('input', () => {
+            opacityInput.addEventListener("input", () => {
                 const opacity = Number(opacityInput.value);
                 opacityValue.textContent = `${Math.round(opacity * 100)}%`;
                 onArrowOpacityChange(arrowName, opacity);
             });
 
-            visibilityCheckbox.addEventListener('change', () => {
+            visibilityCheckbox.addEventListener("change", () => {
                 onArrowVisibilityChange(arrowName, visibilityCheckbox.checked);
             });
 
@@ -69,19 +71,37 @@ export function createSceneControls({
         });
     }
 
+    datasetSelect.addEventListener("change", async () => {
+        await onDatasetChange(datasetSelect.value);
+    });
+
+    datasetNames.forEach((datasetName) => {
+        const option = document.createElement("option");
+
+        option.value = datasetName;
+        option.textContent = datasetName
+            .replace(/[-_]/g, " ")
+            .replace(/\b\w/g, (character) => character.toUpperCase());
+
+        datasetSelect.appendChild(option);
+    });
+
+    const searchParams = new URLSearchParams(window.location.search);
+    datasetSelect.value = searchParams.get("dataset") || "labs";
+
     gridCheckbox.checked = gridVisible;
     axesCheckbox.checked = axesVisible;
     lineLabelsCheckbox.checked = lineLabelsVisible;
 
-    gridCheckbox.addEventListener('change', () => {
+    gridCheckbox.addEventListener("change", () => {
         onGridVisibilityChange(gridCheckbox.checked);
     });
 
-    axesCheckbox.addEventListener('change', () => {
+    axesCheckbox.addEventListener("change", () => {
         onAxesVisibilityChange(axesCheckbox.checked);
     });
 
-    lineLabelsCheckbox.addEventListener('change', () => {
+    lineLabelsCheckbox.addEventListener("change", () => {
         onLineLabelsVisibilityChange(lineLabelsCheckbox.checked);
     });
 
@@ -97,6 +117,6 @@ export function createSceneControls({
         destroy() {
             panelToggle.destroy();
             controlsContainer.remove();
-        }
+        },
     };
 }
