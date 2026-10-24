@@ -46,10 +46,29 @@ export function createPathTools({
             return;
         }
 
-        const output = JSON.stringify(arrowPath, null, 4).replace(
-            /\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g,
-            '["$1", $2]',
-        );
+        const output = JSON.stringify(
+            arrowPath,
+            (key, value) => {
+                if (typeof value === "number") {
+                    return Number(value.toFixed(3));
+                }
+
+                return value;
+            },
+            4
+        )
+            // Condense numeric arrays onto one line.
+            .replace(
+                /\[\s*(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?(?:\s*,\s*-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)*)\s*\]/gi,
+                (match, values) => `[${values.split(/\s*,\s*/).join(", ")}]`
+            )
+            // Condense move arrays onto one line.
+            .replace(
+                /\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g,
+                '["$1", $2]'
+            )
+            // Indent the complete fragment by eight spaces.
+            .replace(/^/gm, "        ");
 
         navigator.clipboard
             .writeText(output)
