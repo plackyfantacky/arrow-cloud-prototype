@@ -185,6 +185,8 @@ export function createPathTools({
         },
     });
 
+    syncViewportOriginNotice();
+
     const lineTooltip = createLineTooltip({
         camera,
         renderer,
@@ -250,6 +252,7 @@ export function createPathTools({
         originMarkers.sync(pathEditor.getArrowPaths());
 
         syncSelection();
+        syncViewportOriginNotice();
     }
 
     function getArrowPaths() {
@@ -343,6 +346,14 @@ export function createPathTools({
         );
 
         segmentHighlight?.setSelectedPathInfo(selectedPathInfo);
+    }
+
+    function syncViewportOriginNotice() {
+        const hasViewportOrigins = pathEditor.getArrowPaths().some((arrowPath) => {
+            return arrowPath.entry?.position === "viewport";
+        });
+
+        pathControls.setViewportOriginNoticeVisible(hasViewportOrigins);
     }
 
     function update() {

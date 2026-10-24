@@ -138,3 +138,16 @@
 .ui .full {
     width: 100%;
 }
+
+.ui .viewport-notice {
+    padding: 0.75rem;
+    border-left: 2px solid var(--ui-accent);
+    border-radius: 0 4px 4px 0;
+    background: var(--ui-surface);
+    color: var(--ui-muted);
+    line-height: 1.5;
+}
+
+.ui .viewport-notice[hidden] {
+    display: none;
+}

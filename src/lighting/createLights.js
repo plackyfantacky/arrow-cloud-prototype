@@ -4,10 +4,31 @@ import { createAmbientLight } from "./createAmbientLight.js";
 import { createDirectionalLight } from "./createDirectionalLight.js";
 import { createHemisphereLight } from "./createHemisphereLight.js";
 
+const defaultLights = [
+    {
+        type: 'hemisphere',
+        skyColour: '#ffffff',
+        groundColour: '#777777',
+        intensity: 1.5
+    },
+    {
+        type: 'directional',
+        colour: '#ffffff',
+        intensity: 2,
+        position: {
+            x: 10,
+            y: 16,
+            z: 8
+        }
+    }
+];
+
 export function createLights(scene, settings = {}) {
     const lights = [];
 
-    (settings.lights ?? []).forEach((lightSettings) => {
+    const lightSettingsList = settings?.lights ?? defaultLights;
+
+    lightSettingsList.forEach((lightSettings) => {
         let light = null;
         
         switch (lightSettings.type) {

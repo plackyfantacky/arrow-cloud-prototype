@@ -24,6 +24,8 @@ export function createPathNudgeControls({
     const toggleButton = controlsContainer.querySelector('[data-action="toggle-panel"]');
     const content = controlsContainer.querySelector("[data-panel-content]");
 
+    const viewportNotice = controlsContainer.querySelector("[data-viewport-notice]");
+
     const originSection = controlsContainer.querySelector("[data-origin-section]");
     const originLabel = controlsContainer.querySelector("[data-origin-label]");
     const originPosition = controlsContainer.querySelector("[data-origin-position]");
@@ -134,6 +136,10 @@ export function createPathNudgeControls({
             .join("   ");
     }
 
+    function setViewportOriginNoticeVisible(isVisible) {
+        viewportNotice.hidden = !isVisible;
+    }
+
     container.appendChild(controlsContainer);
 
     return {
@@ -164,6 +170,7 @@ export function createPathNudgeControls({
         clearSelection,
         setSelectedOrigin,
         updateOriginPosition,
+        setViewportOriginNoticeVisible,
 
         destroy() {
             panelToggle.destroy();
