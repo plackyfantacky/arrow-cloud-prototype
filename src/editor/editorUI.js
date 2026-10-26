@@ -1,5 +1,6 @@
+import buildInfoTemplate from "./buildInfo.html";
 
-const STORAGE_KEY = 'arrowCloud.editor.preferences';
+const STORAGE_KEY = "arrowCloud.editor.preferences";
 
 const defaults = {
     cameraPanelExpanded: true,
@@ -17,14 +18,14 @@ export function createEditorPreferences() {
     let savedPreferences = {};
 
     try {
-        savedPreferences = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {};
+        savedPreferences = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") || {};
     } catch (error) {
-        console.warn('Could not load editor preferences:', error);
+        console.warn("Could not load editor preferences:", error);
     }
 
     const preferences = {
         ...defaults,
-        ...savedPreferences
+        ...savedPreferences,
     };
 
     function get(key) {
@@ -37,7 +38,7 @@ export function createEditorPreferences() {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
         } catch (error) {
-            console.warn('Could not save editor preferences:', error);
+            console.warn("Could not save editor preferences:", error);
         }
     }
 
@@ -47,14 +48,14 @@ export function createEditorPreferences() {
         try {
             localStorage.removeItem(STORAGE_KEY);
         } catch (error) {
-            console.warn('Could not reset editor preferences:', error);
+            console.warn("Could not reset editor preferences:", error);
         }
     }
 
     return {
         get,
         set,
-        reset
+        reset,
     };
 }
 
@@ -63,22 +64,22 @@ export function createPanelToggle({
     content,
     label,
     initialExpanded = true,
-    onExpandedChange = () => { }
+    onExpandedChange = () => {},
 }) {
     function setExpanded(isExpanded) {
-        button.setAttribute('aria-expanded', String(isExpanded));
+        button.setAttribute("aria-expanded", String(isExpanded));
         content.hidden = !isExpanded;
-        button.textContent = `${label} ${isExpanded ? '▾' : '▸'}`;
+        button.textContent = `${label} ${isExpanded ? "▾" : "▸"}`;
     }
 
     function handleClick() {
-        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        const isExpanded = button.getAttribute("aria-expanded") === "true";
 
         setExpanded(!isExpanded);
         onExpandedChange(!isExpanded);
     }
 
-    button.addEventListener('click', handleClick);
+    button.addEventListener("click", handleClick);
 
     setExpanded(initialExpanded);
 
@@ -86,7 +87,26 @@ export function createPanelToggle({
         setExpanded,
 
         destroy() {
-            button.removeEventListener('click', handleClick);
-        }
+            button.removeEventListener("click", handleClick);
+        },
+    };
+}
+
+export function createBuildInfo(container, buildInfo) {
+    const template = document.createElement("template");
+    template.innerHTML = buildInfoTemplate.trim();
+
+    const element = template.content.firstElementChild;
+    const identifier = element.querySelector(".editor-build-info__identifier");
+
+    identifier.textContent = buildInfo.identifier;
+    element.title = `${buildInfo.branch} · ${buildInfo.commit}`;
+
+    container.append(element);
+
+    return {
+        destroy() {
+            element.remove();
+        },
     };
 }

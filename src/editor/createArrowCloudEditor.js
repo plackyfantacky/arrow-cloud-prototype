@@ -5,7 +5,8 @@ import "./styles.css";
 import './ui.css';
 
 //editor
-import { createEditorPreferences } from "./editorUI.js";
+import { createEditorPreferences, createBuildInfo } from "./editorUI.js";
+
 
 //camera
 import { createCameraController } from './camera/createCameraController.js';
@@ -222,6 +223,8 @@ export function createArrowCloudEditor({
         }
     });
 
+    const buildInfo = createBuildInfo(sidebar, __ARROW_CLOUD_BUILD__);
+
     const timelineControls = createTimelineControls(animationSettings);
 
     //helpers
@@ -294,6 +297,7 @@ export function createArrowCloudEditor({
         timelineControls.destroy();
         cameraControls.destroy();
         sceneControls.destroy();
+        buildInfo.destroy();
         pathTools.destroy();
         cameraController.destroy();
         cameraFrustumHelper.destroy();
