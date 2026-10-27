@@ -47,10 +47,12 @@ export function createSceneControls({
     const lineTemplate = controlsContainer.querySelector("[data-line-template");
 
     function renderArrowControls(nextArrowNames) {
+        let selectedPathName = null;
         linesContainer.replaceChildren();
 
         nextArrowNames.forEach((arrowName) => {
             const row = lineTemplate.content.firstElementChild.cloneNode(true);
+            row.classList.toggle("is-selected", arrowName === selectedPathName);
 
             const visibilityCheckbox = row.querySelector('[data-control="visibility"]');
             const nameLabel = row.querySelector("[data-line-name]");
@@ -87,9 +89,7 @@ export function createSceneControls({
         const option = document.createElement("option");
 
         option.value = datasetName;
-        option.textContent = datasetName
-            .replace(/[-_]/g, " ")
-            .replace(/\b\w/g, (character) => character.toUpperCase());
+        option.textContent = datasetName.replace(/[-_]/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
 
         datasetSelect.appendChild(option);
     });
@@ -120,6 +120,18 @@ export function createSceneControls({
     return {
         setArrowNames(nextArrowNames) {
             renderArrowControls(nextArrowNames);
+        },
+
+        setSelectedPathName(pathName) {
+            selectedPathName = pathName;
+
+            linesContainer.querySelectorAll("[data-line-name]").forEach((label) => {
+                const row = label.closest("[data-path-row]");
+
+                if (row) {
+                    row.classList.toggle("is-selected", label.textContent === pathName);
+                }
+            });
         },
 
         destroy() {

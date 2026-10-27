@@ -91,6 +91,16 @@ canvas {
     }
 }
 
+.editor-scene-controls [data-path-row] {
+    border-left: 2px solid transparent;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.editor-scene-controls [data-path-row].is-selected {
+    background-color: rgb(255 157 42 / 8%);
+    border-left-color: #FF9D2A;
+}
+
 .editor-scene-controls__lines {
     display: grid;
     gap: 0.35rem;
