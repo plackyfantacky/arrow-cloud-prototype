@@ -8,7 +8,20 @@ import { createPathSegmentHighlight } from "./createPathSegmentHighlight.js";
 import { createArrowNameLabel } from "./createArrowNameLabel.js";
 import { createPathOriginMarkers } from "./createPathOriginMarkers.js";
 
-export function createPathTools({ camera, renderer, scene, arrowPaths, getArrows, onPathsChange, container = document.body, initialExpanded, lineLabelsVisible = true, onPanelExpandedChange, onOriginDragStateChange = () => {} }) {
+export function createPathTools({
+    container = document.body,
+    initialExpanded,
+    onPanelExpandedChange,
+    camera,
+    renderer,
+    scene,
+    arrowPaths,
+    getArrows,
+    onPathsChange,
+    onPathCollectionChange = () => {},
+    lineLabelsVisible = true,
+    onOriginDragStateChange = () => {},
+}) {
     const pathEditor = createPathEditor(arrowPaths);
 
     let arrowNameLabels = [];
@@ -46,7 +59,10 @@ export function createPathTools({ camera, renderer, scene, arrowPaths, getArrows
             4,
         )
             // Condense numeric arrays onto one line.
-            .replace(/\[\s*(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?(?:\s*,\s*-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)*)\s*\]/gi, (match, values) => `[${values.split(/\s*,\s*/).join(", ")}]`)
+            .replace(
+                /\[\s*(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?(?:\s*,\s*-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)*)\s*\]/gi,
+                (match, values) => `[${values.split(/\s*,\s*/).join(", ")}]`,
+            )
             // Condense move arrays onto one line.
             .replace(/\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g, '["$1", $2]')
             // Indent the complete fragment by eight spaces.
@@ -146,6 +162,7 @@ export function createPathTools({ camera, renderer, scene, arrowPaths, getArrows
         onAddPath(origin) {
             pathEditor.addPath(origin);
             rebuild();
+            onPathCollectionChange(pathEditor.getArrowPaths());
         },
 
         onRemovePath() {
@@ -163,6 +180,7 @@ export function createPathTools({ camera, renderer, scene, arrowPaths, getArrows
                 pathControls.clearSelection();
 
                 rebuild();
+                onPathCollectionChange(pathEditor.getArrowPaths());
             }
         },
 

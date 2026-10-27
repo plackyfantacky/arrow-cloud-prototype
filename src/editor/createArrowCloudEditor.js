@@ -2,24 +2,23 @@ import * as THREE from "three";
 
 //styles for UI
 import "./styles.css";
-import './ui.css';
+import "./ui.css";
 
 //editor
 import { createEditorPreferences, createBuildInfo } from "./editorUI.js";
 
-
 //camera
-import { createCameraController } from './camera/createCameraController.js';
-import { createCameraControls } from './camera/createCameraControls.js';
-import { createCameraFrustumHelper } from './camera/createCameraFrustumHelper.js';
+import { createCameraController } from "./camera/createCameraController.js";
+import { createCameraControls } from "./camera/createCameraControls.js";
+import { createCameraFrustumHelper } from "./camera/createCameraFrustumHelper.js";
 
 //scene
-import { createAxesGauge } from './scene/createAxesGauge.js';
-import { createSceneControls } from './scene/createSceneControls.js';
-import { createArrowDisplayState } from './scene/createArrowDisplayState.js';
+import { createAxesGauge } from "./scene/createAxesGauge.js";
+import { createSceneControls } from "./scene/createSceneControls.js";
+import { createArrowDisplayState } from "./scene/createArrowDisplayState.js";
 
 //paths
-import { createPathTools } from './path/createPathTools.js';
+import { createPathTools } from "./path/createPathTools.js";
 
 //timeline
 import { createTimelineControls } from "./timeline/createTimelineControls.js";
@@ -38,21 +37,18 @@ export function createArrowCloudEditor({
     getRenderedArrowItems,
     getArrows,
     rebuildArrowPaths,
-    onDatasetChange
+    onDatasetChange,
 }) {
-
     const preferences = createEditorPreferences();
 
-    const sidebar = document.createElement('aside');
-    sidebar.className = 'editor-sidebar ui';
+    const sidebar = document.createElement("aside");
+    sidebar.className = "editor-sidebar ui";
     document.body.append(sidebar);
 
     //before camera controller is made
     const cameraFrustumHelper = createCameraFrustumHelper(scene, camera);
 
-    cameraFrustumHelper.setVisible(
-        preferences.get('cameraFrustumVisible')
-    );
+    cameraFrustumHelper.setVisible(preferences.get("cameraFrustumVisible"));
 
     //main actions
     const cameraController = createCameraController({
@@ -62,7 +58,7 @@ export function createArrowCloudEditor({
         scene,
         initialCameraTarget,
         getCameraTrack,
-        cameraFrustumVisible: preferences.get('cameraFrustumVisible'),
+        cameraFrustumVisible: preferences.get("cameraFrustumVisible"),
     });
 
     cameraController.setViewPresetChangeHandler(() => {
@@ -72,13 +68,13 @@ export function createArrowCloudEditor({
     const cameraControls = createCameraControls({
         container: sidebar,
 
-        initialExpanded: preferences.get('cameraPanelExpanded'),
-        cameraTargetVisible: preferences.get('cameraTargetVisible'),
-        cameraUpVisible: preferences.get('cameraUpVisible'),
-        cameraFrustumVisible: preferences.get('cameraFrustumVisible'),
+        initialExpanded: preferences.get("cameraPanelExpanded"),
+        cameraTargetVisible: preferences.get("cameraTargetVisible"),
+        cameraUpVisible: preferences.get("cameraUpVisible"),
+        cameraFrustumVisible: preferences.get("cameraFrustumVisible"),
 
         onPanelExpandedChange(isExpanded) {
-            preferences.set('cameraPanelExpanded', isExpanded);
+            preferences.set("cameraPanelExpanded", isExpanded);
         },
 
         getCameraMode() {
@@ -107,34 +103,27 @@ export function createArrowCloudEditor({
 
         onCameraTargetVisibilityChange(isVisible) {
             cameraController.setTargetMarkerVisible(isVisible);
-            preferences.set('cameraTargetVisible', isVisible);
+            preferences.set("cameraTargetVisible", isVisible);
         },
 
         onCameraUpVisibilityChange(isVisible) {
             cameraController.setUpMarkerVisible(isVisible);
-            preferences.set('cameraUpVisible', isVisible);
+            preferences.set("cameraUpVisible", isVisible);
         },
 
         onCameraFrustumVisibilityChange(isVisible) {
             cameraFrustumHelper.setVisible(isVisible);
-            preferences.set('cameraFrustumVisible', isVisible);
+            preferences.set("cameraFrustumVisible", isVisible);
         },
     });
 
     if (initialCameraView) {
-        cameraController.setViewPreset(
-            initialCameraView,
-            initialCameraDistance
-        );
+        cameraController.setViewPreset(initialCameraView, initialCameraDistance);
     }
 
-    cameraController.setTargetMarkerVisible(
-        preferences.get('cameraTargetVisible')
-    );
+    cameraController.setTargetMarkerVisible(preferences.get("cameraTargetVisible"));
 
-    cameraController.setUpMarkerVisible(
-        preferences.get('cameraUpVisible')
-    );
+    cameraController.setUpMarkerVisible(preferences.get("cameraUpVisible"));
 
     const pathTools = createPathTools({
         camera,
@@ -143,12 +132,12 @@ export function createArrowCloudEditor({
         arrowPaths,
         container: sidebar,
 
-        lineLabelsVisible: preferences.get('lineLabelsVisible'),
+        lineLabelsVisible: preferences.get("lineLabelsVisible"),
 
-        initialExpanded: preferences.get('pathPanelExpanded'),
+        initialExpanded: preferences.get("pathPanelExpanded"),
 
         onPanelExpandedChange(isExpanded) {
-            preferences.set('pathPanelExpanded', isExpanded);
+            preferences.set("pathPanelExpanded", isExpanded);
         },
 
         getArrows() {
@@ -159,6 +148,10 @@ export function createArrowCloudEditor({
             rebuildArrowPaths();
         },
 
+        onPathCollectionChange(nextPaths) {
+            sceneControls.setArrowNames(nextPaths.map((path) => path.name));
+        },
+
         onOriginDragStateChange(isDragging) {
             cameraController.setInteractionEnabled(!isDragging);
         },
@@ -167,7 +160,7 @@ export function createArrowCloudEditor({
     const arrowDisplayState = createArrowDisplayState(pathTools.getArrowPaths());
 
     const gridHelper = new THREE.GridHelper(200, 200);
-    gridHelper.visible = preferences.get('gridVisible');
+    gridHelper.visible = preferences.get("gridVisible");
     gridHelper.userData.editorHelper = true;
     scene.add(gridHelper);
 
@@ -177,7 +170,7 @@ export function createArrowCloudEditor({
     });
 
     axesGauge.position.set(0.1, 0.1, 0.1);
-    axesGauge.visible = preferences.get('axesVisible');
+    axesGauge.visible = preferences.get("axesVisible");
     axesGauge.userData.editorHelper = true;
     scene.add(axesGauge);
 
@@ -186,30 +179,36 @@ export function createArrowCloudEditor({
         onDatasetChange,
         gridVisible: gridHelper.visible,
         axesVisible: axesGauge.visible,
-        initialExpanded: preferences.get('scenePanelExpanded'),
-        lineLabelsVisible: preferences.get('lineLabelsVisible'),
-        
+        initialExpanded: preferences.get("scenePanelExpanded"),
+        lineLabelsVisible: preferences.get("lineLabelsVisible"),
+
+        getArrowVisibility(arrowName) {
+            return arrowDisplayState.getVisibility(arrowName);
+        },
+
+        getArrowOpacity(arrowName) {
+            return arrowDisplayState.getOpacity(arrowName);
+        },
+
         onLineLabelsVisibilityChange(isVisible) {
             pathTools.setArrowNameLabelsVisible(isVisible);
-            preferences.set('lineLabelsVisible', isVisible);
+            preferences.set("lineLabelsVisible", isVisible);
         },
 
         onPanelExpandedChange(isExpanded) {
-            preferences.set('scenePanelExpanded', isExpanded)
+            preferences.set("scenePanelExpanded", isExpanded);
         },
 
-        arrowNames: pathTools
-            .getArrowPaths()
-            .map((arrowPath) => arrowPath.name),
+        arrowNames: pathTools.getArrowPaths().map((arrowPath) => arrowPath.name),
 
         onGridVisibilityChange(isVisible) {
             gridHelper.visible = isVisible;
-            preferences.set('gridVisible', isVisible);
+            preferences.set("gridVisible", isVisible);
         },
 
         onAxesVisibilityChange(isVisible) {
             axesGauge.visible = isVisible;
-            preferences.set('axesVisible', isVisible);
+            preferences.set("axesVisible", isVisible);
         },
 
         onArrowVisibilityChange(arrowName, isVisible) {
@@ -220,7 +219,7 @@ export function createArrowCloudEditor({
         onArrowOpacityChange(arrowName, opacity) {
             arrowDisplayState.setOpacity(arrowName, opacity);
             arrowDisplayState.apply(getRenderedArrowItems());
-        }
+        },
     });
 
     const buildInfo = createBuildInfo(sidebar, __ARROW_CLOUD_BUILD__);
@@ -236,11 +235,7 @@ export function createArrowCloudEditor({
             if (timelineControls.state.isLooping) {
                 timelineControls.state.currentTime %= timelineControls.state.timelineDuration;
             } else {
-                timelineControls.state.currentTime = THREE.MathUtils.clamp(
-                    timelineControls.state.currentTime,
-                    0,
-                    timelineControls.state.timelineDuration
-                );
+                timelineControls.state.currentTime = THREE.MathUtils.clamp(timelineControls.state.currentTime, 0, timelineControls.state.timelineDuration);
             }
 
             timelineControls.updateProgressInput();
@@ -276,9 +271,7 @@ export function createArrowCloudEditor({
 
         arrowDisplayState.reset(arrowPaths);
 
-        sceneControls.setArrowNames(
-            arrowPaths.map((arrowPath) => arrowPath.name)
-        );
+        sceneControls.setArrowNames(arrowPaths.map((arrowPath) => arrowPath.name));
     }
 
     function syncRenderedArrowItems() {
@@ -288,9 +281,7 @@ export function createArrowCloudEditor({
         pathTools.syncArrowNameLabels(renderedArrowItems);
         arrowDisplayState.apply(renderedArrowItems);
 
-        pathTools.setArrowNameLabelsVisible(
-            preferences.get('lineLabelsVisible')
-        );
+        pathTools.setArrowNameLabelsVisible(preferences.get("lineLabelsVisible"));
     }
 
     function destroy() {
@@ -313,7 +304,6 @@ export function createArrowCloudEditor({
         setArrowPaths,
         setAnimationSettings,
         syncRenderedArrowItems,
-        destroy
+        destroy,
     };
-
 }

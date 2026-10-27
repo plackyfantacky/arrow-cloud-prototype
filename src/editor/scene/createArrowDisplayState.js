@@ -20,15 +20,13 @@ export function createArrowDisplayState(arrowPaths = []) {
         opacityState.set(arrowName, opacity);
     }
 
-    function setObjectOpacity(object, opacity) { 
+    function setObjectOpacity(object, opacity) {
         object.traverse((childObject) => {
             if (!childObject.isMesh || !childObject.material) {
                 return;
             }
 
-            const materials = Array.isArray(childObject.material)
-                ? childObject.material
-                : [childObject.material];
+            const materials = Array.isArray(childObject.material) ? childObject.material : [childObject.material];
 
             materials.forEach((material) => {
                 material.transparent = opacity < 1;
@@ -59,14 +57,22 @@ export function createArrowDisplayState(arrowPaths = []) {
         });
     }
 
+    function getVisibility(arrowName) {
+        return visibilityState.get(arrowName) ?? true;
+    }
+
+    function getOpacity(arrowName) {
+        return opacityState.get(arrowName) ?? 1;
+    }
+
     reset(arrowPaths);
 
     return {
         reset,
+        getVisibility,
         setVisibility,
+        getOpacity,
         setOpacity,
-        apply
+        apply,
     };
-
 }
-

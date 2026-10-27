@@ -7,6 +7,8 @@ import datasetNames from "../../generated/datasets.json";
 export function createSceneControls({
     initialExpanded = true,
     onPanelExpandedChange = () => {},
+    getArrowVisibility = () => true,
+    getArrowOpacity = () => 1,
     gridVisible = true,
     axesVisible = true,
     arrowNames = [],
@@ -56,6 +58,12 @@ export function createSceneControls({
             const opacityValue = row.querySelector("[data-opacity-value]");
 
             nameLabel.textContent = arrowName;
+
+            visibilityCheckbox.checked = getArrowVisibility(arrowName);
+            const opacity = getArrowOpacity(arrowName);
+
+            opacityInput.value = opacity;
+            opacityValue.textContent = `${Math.round(opacity * 100)}%`;
 
             opacityInput.addEventListener("input", () => {
                 const opacity = Number(opacityInput.value);
