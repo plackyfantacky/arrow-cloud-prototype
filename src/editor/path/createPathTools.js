@@ -376,10 +376,14 @@ export function createPathTools({
     function syncSelection() {
         const selectedPathInfo = pathEditor.getSelectedPathInfo();
 
+        const selectedPathName = selectedOriginArrowName
+            ?? selectedPathInfo?.arrowName
+            ?? null;
+
         if (!selectedPathInfo) {
             pathControls.clearSelection();
             segmentHighlight?.setSelectedPathInfo(null);
-            onSelectionChange();
+            onSelectionChange(selectedPathName);
             return;
         }
 
@@ -392,7 +396,7 @@ export function createPathTools({
 
         segmentHighlight?.setSelectedPathInfo(selectedPathInfo);
 
-        onSelectionChange();
+        onSelectionChange(selectedPathName);
     }
 
     function syncViewportOriginNotice() {
