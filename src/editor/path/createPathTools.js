@@ -19,8 +19,9 @@ export function createPathTools({
     getArrows,
     onPathsChange,
     onPathCollectionChange = () => {},
-    lineLabelsVisible = true,
     onOriginDragStateChange = () => {},
+    onSelectionChange = () => {},
+    lineLabelsVisible = true,
 }) {
     const pathEditor = createPathEditor(arrowPaths);
 
@@ -378,12 +379,19 @@ export function createPathTools({
         if (!selectedPathInfo) {
             pathControls.clearSelection();
             segmentHighlight?.setSelectedPathInfo(null);
+            onSelectionChange();
             return;
         }
 
-        pathControls.setSelectedPathInfo(selectedPathInfo, pathEditor.isSelectedMoveLast(), pathEditor.isSelectedMoveFirst());
+        pathControls.setSelectedPathInfo(
+            selectedPathInfo, 
+            pathEditor.isSelectedMoveLast(), 
+            pathEditor.isSelectedMoveFirst()
+        );
 
         segmentHighlight?.setSelectedPathInfo(selectedPathInfo);
+
+        onSelectionChange();
     }
 
     function syncViewportOriginNotice() {
