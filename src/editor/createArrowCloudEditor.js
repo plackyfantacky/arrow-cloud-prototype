@@ -148,7 +148,7 @@ export function createArrowCloudEditor({
             rebuildArrowPaths();
         },
 
-        onSelectionChange() {
+        onSelectionChange(pathName) {
             arrowDisplayState.apply(getRenderedArrowItems());
             sceneControls.setSelectedPathName(pathName);
         },

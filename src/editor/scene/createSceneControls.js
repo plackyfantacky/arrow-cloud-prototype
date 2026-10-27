@@ -45,9 +45,10 @@ export function createSceneControls({
     const linesContainer = controlsContainer.querySelector("[data-lines]");
 
     const lineTemplate = controlsContainer.querySelector("[data-line-template");
+    
+    let selectedPathName = null;
 
     function renderArrowControls(nextArrowNames) {
-        let selectedPathName = null;
         linesContainer.replaceChildren();
 
         nextArrowNames.forEach((arrowName) => {
