@@ -187,6 +187,16 @@ export function createPathEditor(arrowPaths) {
         return true;
     }
 
+    function canRemoveSelectedMove() {
+        const arrowPath = getSelectedArrowPath();
+
+        if (!arrowPath) {
+            return false;
+        }
+
+        return arrowPath.moves.length > 1;
+    }
+
     function removeMoves(mode = "single") {
         const arrowPath = getSelectedArrowPath();
 
@@ -304,6 +314,7 @@ export function createPathEditor(arrowPaths) {
         insertMoveNearSelectedMove,
         duplicateSelectedMove,
         setPathOrigin,
+        canRemoveSelectedMove,
         removeMoves,
         isSelectedMoveLast,
         isSelectedMoveFirst,

@@ -386,7 +386,8 @@ export function createPathTools({
         pathControls.setSelectedPathInfo(
             selectedPathInfo, 
             pathEditor.isSelectedMoveLast(), 
-            pathEditor.isSelectedMoveFirst()
+            pathEditor.isSelectedMoveFirst(),
+            pathEditor.canRemoveSelectedMove()
         );
 
         segmentHighlight?.setSelectedPathInfo(selectedPathInfo);

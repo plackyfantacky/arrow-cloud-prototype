@@ -146,7 +146,12 @@ export function createPathNudgeControls({ container = document.body, initialExpa
     container.appendChild(controlsContainer);
 
     return {
-        setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false) {
+        setSelectedPathInfo(
+            selectedPathInfo, 
+            isLastMove = false, 
+            isFirstMove = false,
+            canRemoveMove = false
+        ) {
             removePathButton.disabled = false;
             originSection.hidden = true;
 
@@ -162,7 +167,7 @@ export function createPathNudgeControls({ container = document.body, initialExpa
             insertBeforeButton.disabled = false;
             insertAfterButton.disabled = false;
             duplicateButton.disabled = false;
-            removeButton.disabled = false;
+            removeButton.disabled = !canRemoveMove;
             copyButton.disabled = false;
 
             trimStartButton.disabled = isFirstMove || isLastMove;
