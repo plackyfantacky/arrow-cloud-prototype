@@ -166,24 +166,8 @@ export function createPathTools({
             onPathCollectionChange(pathEditor.getArrowPaths());
         },
 
-        onRemovePath() {
-            const pathName = selectedOriginArrowName ?? pathEditor.getSelectedPathInfo()?.arrowName;
-
-            if (!pathName) {
-                return;
-            }
-
-            if (pathEditor.removePath(pathName)) {
-                selectedOriginArrowName = null;
-                dragPosition = null;
-
-                originMarkers.clearSelection();
-                pathControls.clearSelection();
-
-                rebuild();
-                onPathCollectionChange(pathEditor.getArrowPaths());
-            }
-        },
+        onRemovePath: removeSelectedPath,
+        onRemoveMove: removeSelectedMove,
 
         onNudge(amount, targetValue) {
             const didChangePath = pathEditor.nudgeSelectedPathValue(amount, targetValue);
@@ -216,13 +200,6 @@ export function createPathTools({
             const didChangePath = pathEditor.duplicateSelectedMove();
 
             if (didChangePath) {
-                rebuild();
-            }
-        },
-
-        onRemoveMove(mode) {
-            if (pathEditor.removeMoves(mode)) {
-                pathControls.clearSelection();
                 rebuild();
             }
         },
@@ -267,14 +244,6 @@ export function createPathTools({
             return originMarkers.selectAt(clientX, clientY);
         },
 
-        // shouldIgnoreClick(clientX, clientY) {
-        //     if (originMarkers.isOtherMarkerAt(clientX, clientY)) {
-        //         return false;
-        //     }
-
-        //     return originMarkers.isGizmoAt(clientX, clientY);
-        // },
-
         shouldIgnoreClick() {
             return originMarkers.isGizmoActive();
         },
@@ -306,16 +275,76 @@ export function createPathTools({
         return pathEditor.getSelectedPathInfo();
     }
 
-    function formatVectorValues(values) {
-        return values
+    function removeSelectedPath() {
+        const pathName = selectedOriginArrowName ?? pathEditor.getSelectedPathInfo()?.arrowName;
+
+        if (!pathName || !pathEditor.removePath(pathName)) {
+            return false;
+        }
+
+        selectedOriginArrowName = null;
+        dragPosition = null;
+
+        originMarkers.clearSelection();
+        pathControls.clearSelection();
+
+        rebuild();
+        onPathCollectionChange(pathEditor.getArrowPaths());
+        syncSelection();
+
+        return true;
+    }
+
+    function removeSelectedMove(mode = "single") {
+        if (!pathEditor.removeMoves(mode)) {
+            return false;
+        }
+
+        rebuild();
+        syncSelection();
+
+        return true;
+    }
+
+    function handleKeyDown(event) {
+        if (!["Delete", "Backspace"].includes(event.key)) { return; }
+        if (event.metaKey || event.ctrlKey || event.altKey) { return; }
+
+        const target = event.target;
+
+        if (target instanceof HTMLElement && (target.matches("input, textarea, select") || target.isContentEditable)) {
+            return;
+        }
+
+        const selectedPathInfo = pathEditor.getSelectedPathInfo();
+
+        if (selectedOriginArrowName) {
+            event.preventDefault();
+            removeSelectedPath();
+            return;
+        }
+
+        if (!selectedPathInfo) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (pathEditor.canRemoveSelectedMove()) {
+            removeSelectedMove();
+        } else {
+            removeSelectedPath();
+        }
+    }
+
+    function createArrowPathLabelText(arrowPath) {
+        let values = arrowPath.origin
             .map((value) => {
                 return Number(value).toFixed(3);
             })
             .join(", ");
-    }
 
-    function createArrowPathLabelText(arrowPath) {
-        return [arrowPath.name, `(${formatVectorValues(arrowPath.origin)})`].join("    ");
+        return [arrowPath.name, values].join("    ");
     }
 
     function clearArrowNameLabels() {
@@ -408,6 +437,8 @@ export function createPathTools({
     }
 
     function destroy() {
+        window.removeEventListener("keydown", handleKeyDown);
+
         clearArrowNameLabels();
 
         pathControls.destroy();
@@ -416,6 +447,8 @@ export function createPathTools({
         segmentSelector.destroy();
         segmentHighlight.destroy();
     }
+
+    window.addEventListener("keydown", handleKeyDown);
 
     return {
         setArrowPaths,
