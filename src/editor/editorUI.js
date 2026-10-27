@@ -12,6 +12,7 @@ const defaults = {
     pathPanelExpanded: true,
     lineLabelsVisible: true,
     cameraFrustumVisible: false,
+    sceneOriginVisible: true,
 };
 
 export function createEditorPreferences() {

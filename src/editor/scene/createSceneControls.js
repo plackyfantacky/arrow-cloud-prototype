@@ -5,6 +5,7 @@ import sceneControlsTemplate from "./sceneControls.html";
 import datasetNames from "../../generated/datasets.json";
 
 export function createSceneControls({
+    container = document.body,
     initialExpanded = true,
     onPanelExpandedChange = () => {},
     getArrowVisibility = () => true,
@@ -12,14 +13,15 @@ export function createSceneControls({
     gridVisible = true,
     axesVisible = true,
     arrowNames = [],
+    lineLabelsVisible = true,
+    sceneOriginVisible = true,
     onGridVisibilityChange = () => {},
     onAxesVisibilityChange = () => {},
     onArrowVisibilityChange = () => {},
     onArrowOpacityChange = () => {},
-    lineLabelsVisible = true,
     onLineLabelsVisibilityChange = () => {},
+    onSceneOriginVisibilityChange = () => {},
     onDatasetChange = () => {},
-    container = document.body,
 }) {
     const template = document.createElement("template");
 
@@ -42,10 +44,11 @@ export function createSceneControls({
     const gridCheckbox = controlsContainer.querySelector('[data-control="grid"]');
     const axesCheckbox = controlsContainer.querySelector('[data-control="axes"]');
     const lineLabelsCheckbox = controlsContainer.querySelector('[data-control="line-labels"]');
+    const sceneOriginCheckbox = controlsContainer.querySelector('[data-control="scene-origin"]');
     const linesContainer = controlsContainer.querySelector("[data-lines]");
 
     const lineTemplate = controlsContainer.querySelector("[data-line-template");
-    
+
     let selectedPathName = null;
 
     function renderArrowControls(nextArrowNames) {
@@ -101,6 +104,7 @@ export function createSceneControls({
     gridCheckbox.checked = gridVisible;
     axesCheckbox.checked = axesVisible;
     lineLabelsCheckbox.checked = lineLabelsVisible;
+    sceneOriginCheckbox.checked = sceneOriginVisible;
 
     gridCheckbox.addEventListener("change", () => {
         onGridVisibilityChange(gridCheckbox.checked);
@@ -114,6 +118,10 @@ export function createSceneControls({
         onLineLabelsVisibilityChange(lineLabelsCheckbox.checked);
     });
 
+    sceneOriginCheckbox.addEventListener("change", () => {
+        onSceneOriginVisibilityChange(sceneOriginCheckbox.checked);
+    });
+    
     renderArrowControls(arrowNames);
 
     container.appendChild(controlsContainer);

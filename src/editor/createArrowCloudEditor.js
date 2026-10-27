@@ -16,6 +16,7 @@ import { createCameraFrustumHelper } from "./camera/createCameraFrustumHelper.js
 import { createAxesGauge } from "./scene/createAxesGauge.js";
 import { createSceneControls } from "./scene/createSceneControls.js";
 import { createArrowDisplayState } from "./scene/createArrowDisplayState.js";
+import { createSceneOriginMarker } from "./scene/createSceneOriginMarker.js";
 
 //paths
 import { createPathTools } from "./path/createPathTools.js";
@@ -179,6 +180,10 @@ export function createArrowCloudEditor({
     axesGauge.userData.editorHelper = true;
     scene.add(axesGauge);
 
+    const sceneOriginMarker = createSceneOriginMarker({ size: 0.25 });
+    sceneOriginMarker.visible = preferences.get("sceneOriginVisible");
+    scene.add(sceneOriginMarker);
+
     const sceneControls = createSceneControls({
         container: sidebar,
         onDatasetChange,
@@ -186,6 +191,7 @@ export function createArrowCloudEditor({
         axesVisible: axesGauge.visible,
         initialExpanded: preferences.get("scenePanelExpanded"),
         lineLabelsVisible: preferences.get("lineLabelsVisible"),
+        sceneOriginVisible: sceneOriginMarker.visible,
 
         getArrowVisibility(arrowName) {
             return arrowDisplayState.getVisibility(arrowName);
@@ -224,6 +230,11 @@ export function createArrowCloudEditor({
         onArrowOpacityChange(arrowName, opacity) {
             arrowDisplayState.setOpacity(arrowName, opacity);
             arrowDisplayState.apply(getRenderedArrowItems());
+        },
+
+        onSceneOriginVisibilityChange(isVisible) {
+            sceneOriginMarker.visible = isVisible;
+            preferences.set("sceneOriginVisible", isVisible);
         },
     });
 
@@ -300,6 +311,10 @@ export function createArrowCloudEditor({
 
         scene.remove(gridHelper);
         scene.remove(axesGauge);
+
+        scene.remove(sceneOriginMarker);
+
+        sceneOriginMarker.dispose();
     }
 
     //end output
