@@ -96,7 +96,10 @@ export function createPathOriginMarkers({
 
         raycaster.setFromCamera(pointer, camera);
 
-        const intersections = raycaster.intersectObjects([...markers.values()], false);
+        const intersections = raycaster.intersectObjects(
+            [...markers.values()].filter((marker) => marker.visible),
+            false,
+        );
 
         return intersections[0]?.object ?? null;
     }
@@ -150,6 +153,20 @@ export function createPathOriginMarkers({
         transformControls.detach();
     }
 
+    function setVisibility(arrowName, isVisible) {
+        const marker = markers.get(arrowName);
+
+        if (!marker) {
+            return;
+        }
+
+        marker.visible = isVisible;
+
+        if (!isVisible && selectedMarker === marker) {
+            clearSelection();
+        }
+    }
+
     function destroy() {
         clearSelection();
 
@@ -167,6 +184,7 @@ export function createPathOriginMarkers({
 
     return {
         sync,
+        setVisibility,
         selectAt,
         getMarkerAt,
         isGizmoAt,

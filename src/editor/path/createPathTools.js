@@ -18,10 +18,11 @@ export function createPathTools({
     arrowPaths,
     getArrows,
     onPathsChange,
+    lineLabelsVisible = true,
+    getPathVisibility = () => true,
     onPathCollectionChange = () => {},
     onOriginDragStateChange = () => {},
     onSelectionChange = () => {},
-    lineLabelsVisible = true,
 }) {
     const pathEditor = createPathEditor(arrowPaths);
 
@@ -153,6 +154,15 @@ export function createPathTools({
     });
 
     originMarkers.sync(pathEditor.getArrowPaths());
+
+    function setPathVisibility(pathName, isVisible) {
+        originMarkers.setVisibility(pathName, isVisible);
+        arrowNameLabels.forEach((label) => {
+            if (label.userData.pathName === pathName) {
+                label.visible = isVisible && lineLabelsVisible;
+            }
+        });
+    }
 
     const pathControls = createPathNudgeControls({
         container,
@@ -339,6 +349,7 @@ export function createPathTools({
             const labelText = createArrowPathLabelText(renderedArrowItem.positionedArrowPath);
 
             const label = createArrowNameLabel(labelText, renderedArrowItem.segments[0]);
+            label.userData.pathName = renderedArrowItem.positionedArrowPath.name;
 
             label.visible = lineLabelsVisible;
 
@@ -354,7 +365,7 @@ export function createPathTools({
         lineLabelsVisible = isVisible;
 
         arrowNameLabels.forEach((label) => {
-            label.visible = isVisible;
+            label.visible = isVisible && getPathVisibility(label.userData.pathName);
         });
     }
 
@@ -376,9 +387,7 @@ export function createPathTools({
     function syncSelection() {
         const selectedPathInfo = pathEditor.getSelectedPathInfo();
 
-        const selectedPathName = selectedOriginArrowName
-            ?? selectedPathInfo?.arrowName
-            ?? null;
+        const selectedPathName = selectedOriginArrowName ?? selectedPathInfo?.arrowName ?? null;
 
         if (!selectedPathInfo) {
             pathControls.clearSelection();
@@ -388,10 +397,10 @@ export function createPathTools({
         }
 
         pathControls.setSelectedPathInfo(
-            selectedPathInfo, 
-            pathEditor.isSelectedMoveLast(), 
+            selectedPathInfo,
+            pathEditor.isSelectedMoveLast(),
             pathEditor.isSelectedMoveFirst(),
-            pathEditor.canRemoveSelectedMove()
+            pathEditor.canRemoveSelectedMove(),
         );
 
         segmentHighlight?.setSelectedPathInfo(selectedPathInfo);
@@ -428,6 +437,7 @@ export function createPathTools({
         attachPathInfo,
         syncArrowNameLabels,
         setArrowNameLabelsVisible,
+        setPathVisibility,
         update,
         destroy,
     };

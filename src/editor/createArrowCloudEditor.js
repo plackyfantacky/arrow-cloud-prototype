@@ -145,6 +145,10 @@ export function createArrowCloudEditor({
             return getArrows();
         },
 
+        getPathVisibility(pathName) {
+            return arrowDisplayState.getVisibility(pathName);
+        },
+
         onPathsChange() {
             rebuildArrowPaths();
         },
@@ -225,6 +229,7 @@ export function createArrowCloudEditor({
         onArrowVisibilityChange(arrowName, isVisible) {
             arrowDisplayState.setVisibility(arrowName, isVisible);
             arrowDisplayState.apply(getRenderedArrowItems());
+            syncPathVisibility();
         },
 
         onArrowOpacityChange(arrowName, opacity) {
@@ -296,8 +301,15 @@ export function createArrowCloudEditor({
         pathTools.attachPathInfo(renderedArrowItems);
         pathTools.syncArrowNameLabels(renderedArrowItems);
         arrowDisplayState.apply(renderedArrowItems);
+        syncPathVisibility();
 
         pathTools.setArrowNameLabelsVisible(preferences.get("lineLabelsVisible"));
+    }
+
+    function syncPathVisibility() {
+        pathTools.getArrowPaths().forEach((path) => {
+            pathTools.setPathVisibility(path.name, arrowDisplayState.getVisibility(path.name));
+        });
     }
 
     function destroy() {

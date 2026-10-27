@@ -7,8 +7,8 @@ export function createArrowDisplayState(arrowPaths = []) {
         opacityState.clear();
 
         nextArrowPaths.forEach((arrowPath) => {
-            visibilityState.set(arrowPath.name, true);
-            opacityState.set(arrowPath.name, 1);
+            visibilityState.set(arrowPath.name, arrowPath.visible ?? true);
+            opacityState.set(arrowPath.name, arrowPath.opacity ?? 1);
         });
     }
 
