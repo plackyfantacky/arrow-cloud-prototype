@@ -160,8 +160,8 @@ export function createPathTools({
         lineLabelsVisible,
         onPanelExpandedChange,
 
-        onAddPath(origin) {
-            pathEditor.addPath(origin);
+        onAddPath(origin, initialDirection) {
+            pathEditor.addPath(origin, initialDirection);
             rebuild();
             onPathCollectionChange(pathEditor.getArrowPaths());
         },

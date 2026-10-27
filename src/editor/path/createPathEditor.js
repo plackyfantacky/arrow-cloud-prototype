@@ -6,14 +6,14 @@ export function createPathEditor(arrowPaths) {
         selectedPathInfo: null,
     };
 
-    function addPath(origin = [0, 0, 0]) {
+    function addPath(origin = [0, 0, 0], initialDirection = "+x") {
         const pathName = generatePathName(state.arrowPaths);
 
         const newPath = {
             name: pathName,
             origin: [...origin],
-            initialDirection: "+x",
-            initialNormal: "+y",
+            initialDirection: initialDirection,
+            initialNormal: getInitialNormal(initialDirection),
             moves: [["forward", 1]],
         };
 
@@ -329,6 +329,10 @@ function generatePathName(paths) {
     }
 
     return `path-${index}`;
+}
+
+function getInitialNormal(initialDirection) {
+    return ["+y", "-y"].includes(initialDirection) ? "+z" : "+y";
 }
 
 function findArrowPathIndexByName(arrowPaths, arrowName) {

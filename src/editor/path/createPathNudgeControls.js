@@ -1,7 +1,19 @@
 import pathControlsTemplate from "./pathControls.html";
 import { createPanelToggle } from "../editorUI.js";
 
-export function createPathNudgeControls({ container = document.body, initialExpanded = true, onPanelExpandedChange = () => {}, onNudge, onCopy, onActionChange, onInsertMove, onDuplicateMove, onRemoveMove, onAddPath, onRemovePath }) {
+export function createPathNudgeControls({
+    container = document.body,
+    initialExpanded = true,
+    onPanelExpandedChange = () => {},
+    onNudge,
+    onCopy,
+    onActionChange,
+    onInsertMove,
+    onDuplicateMove,
+    onRemoveMove,
+    onAddPath,
+    onRemovePath,
+}) {
     const state = {
         selectedPathInfo: null,
     };
@@ -16,6 +28,7 @@ export function createPathNudgeControls({ container = document.body, initialExpa
 
     const viewportNotice = controlsContainer.querySelector("[data-viewport-notice]");
 
+    const initialDirectionSelect = controlsContainer.querySelector('[data-control="path-initial-direction"]');
     const addPathButton = controlsContainer.querySelector('[data-action="add-path"]');
     const removePathButton = controlsContainer.querySelector('[data-action="remove-path"]');
 
@@ -67,7 +80,7 @@ export function createPathNudgeControls({ container = document.body, initialExpa
             return;
         }
 
-        onAddPath(origin);
+        onAddPath(origin, initialDirectionSelect.value);
     });
 
     removePathButton.addEventListener("click", onRemovePath);
@@ -109,7 +122,17 @@ export function createPathNudgeControls({ container = document.body, initialExpa
         currentActionSelect.disabled = true;
         newActionSelect.disabled = true;
 
-        [nudgeNegativeButton, nudgePositiveButton, insertBeforeButton, insertAfterButton, duplicateButton, removeButton, trimStartButton, trimEndButton, copyButton].forEach((button) => {
+        [
+            nudgeNegativeButton,
+            nudgePositiveButton,
+            insertBeforeButton,
+            insertAfterButton,
+            duplicateButton,
+            removeButton,
+            trimStartButton,
+            trimEndButton,
+            copyButton,
+        ].forEach((button) => {
             button.disabled = true;
         });
     }
@@ -146,12 +169,7 @@ export function createPathNudgeControls({ container = document.body, initialExpa
     container.appendChild(controlsContainer);
 
     return {
-        setSelectedPathInfo(
-            selectedPathInfo, 
-            isLastMove = false, 
-            isFirstMove = false,
-            canRemoveMove = false
-        ) {
+        setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false, canRemoveMove = false) {
             removePathButton.disabled = false;
             originSection.hidden = true;
 

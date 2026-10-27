@@ -30,6 +30,7 @@ canvas {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    min-width: 300px;
 
     position: fixed;
     top: 1rem;
@@ -150,6 +151,10 @@ canvas {
 
 .editor-path-controls [hidden] {
     display: none;
+}
+
+.path-initial-direction {
+    flex:1;
 }
 
 .path-origin-fields {
