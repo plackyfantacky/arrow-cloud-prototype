@@ -8,19 +8,7 @@ import { createPathSegmentHighlight } from "./createPathSegmentHighlight.js";
 import { createArrowNameLabel } from "./createArrowNameLabel.js";
 import { createPathOriginMarkers } from "./createPathOriginMarkers.js";
 
-export function createPathTools({
-    camera,
-    renderer,
-    scene,
-    arrowPaths,
-    getArrows,
-    onPathsChange,
-    container = document.body,
-    initialExpanded,
-    lineLabelsVisible = true,
-    onPanelExpandedChange,
-    onOriginDragStateChange = () => {},
-}) {
+export function createPathTools({ camera, renderer, scene, arrowPaths, getArrows, onPathsChange, container = document.body, initialExpanded, lineLabelsVisible = true, onPanelExpandedChange, onOriginDragStateChange = () => {} }) {
     const pathEditor = createPathEditor(arrowPaths);
 
     let arrowNameLabels = [];
@@ -55,18 +43,12 @@ export function createPathTools({
 
                 return value;
             },
-            4
+            4,
         )
             // Condense numeric arrays onto one line.
-            .replace(
-                /\[\s*(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?(?:\s*,\s*-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)*)\s*\]/gi,
-                (match, values) => `[${values.split(/\s*,\s*/).join(", ")}]`
-            )
+            .replace(/\[\s*(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?(?:\s*,\s*-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)*)\s*\]/gi, (match, values) => `[${values.split(/\s*,\s*/).join(", ")}]`)
             // Condense move arrays onto one line.
-            .replace(
-                /\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g,
-                '["$1", $2]'
-            )
+            .replace(/\[\s*"([^"]+)",\s*(-?\d+(?:\.\d+)?)\s*\]/g, '["$1", $2]')
             // Indent the complete fragment by eight spaces.
             .replace(/^/gm, "        ");
 
@@ -160,6 +142,29 @@ export function createPathTools({
         initialExpanded,
         lineLabelsVisible,
         onPanelExpandedChange,
+
+        onAddPath(origin) {
+            pathEditor.addPath(origin);
+            rebuild();
+        },
+
+        onRemovePath() {
+            const pathName = selectedOriginArrowName ?? pathEditor.getSelectedPathInfo()?.arrowName;
+
+            if (!pathName) {
+                return;
+            }
+
+            if (pathEditor.removePath(pathName)) {
+                selectedOriginArrowName = null;
+                dragPosition = null;
+
+                originMarkers.clearSelection();
+                pathControls.clearSelection();
+
+                rebuild();
+            }
+        },
 
         onNudge(amount, targetValue) {
             const didChangePath = pathEditor.nudgeSelectedPathValue(amount, targetValue);
@@ -358,11 +363,7 @@ export function createPathTools({
             return;
         }
 
-        pathControls.setSelectedPathInfo(
-            selectedPathInfo,
-            pathEditor.isSelectedMoveLast(),
-            pathEditor.isSelectedMoveFirst(),
-        );
+        pathControls.setSelectedPathInfo(selectedPathInfo, pathEditor.isSelectedMoveLast(), pathEditor.isSelectedMoveFirst());
 
         segmentHighlight?.setSelectedPathInfo(selectedPathInfo);
     }

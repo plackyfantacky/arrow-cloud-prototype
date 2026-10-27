@@ -52,15 +52,6 @@ canvas {
 }
 
 /** camera **/
-/* .editor-camera-controls {
-    z-index: 10;
-    padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.72);
-    color: #fff;
-    font-family: system-ui, sans-serif;
-    font-size: 13px;
-    border-radius: 0.5rem;
-} */
 
 .editor-camera-controls__toggle {
     width: 100%;
@@ -84,15 +75,6 @@ canvas {
 }
 
 /** scene **/
-/* .editor-scene-controls {
-    z-index: 10;
-    padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.72);
-    color: #fff;
-    font-family: system-ui, sans-serif;
-    font-size: 13px;
-    border-radius: 0.5rem;
-} */
 
 .editor-scene-controls__toggle {
     width: 100%;
@@ -139,13 +121,6 @@ canvas {
 }
 
 /** path editor **/
-.editor-path-controls {
-    z-index: 10;
-    width: 310px;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    background: var(--ui-bg);
-}
 
 .editor-path-controls__toggle {
     width: 100%;
@@ -167,6 +142,33 @@ canvas {
     display: none;
 }
 
+.path-origin-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.path-origin-field .input {
+    field-sizing: content;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+[data-action="remove"], 
+[data-action="remove-path"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+[data-action="remove"] {
+    flex:1;
+}
+
+/* misc */
 .editor-build-info {
     padding: 0.75rem 1rem;
     font-size: 0.75rem;

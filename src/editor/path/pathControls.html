@@ -1,17 +1,51 @@
 <div class="editor-panel editor-path-controls">
-    <button
-        type="button"
-        class="editor-path-controls__toggle"
-        data-action="toggle-panel"
-        aria-expanded="true"
-    >
-        Path Editor
-    </button>
+    <button type="button" class="editor-path-controls__toggle" data-action="toggle-panel" aria-expanded="true">Path Editor</button>
 
     <div class="editor-path-controls__content" data-panel-content>
-        <div class="viewport-notice" data-viewport-notice hidden>
-            Viewport-relative origins cannot be moved with TransformControls.
-        </div>
+        <div class="viewport-notice" data-viewport-notice hidden>Viewport-relative origins cannot be moved with TransformControls.</div>
+        <section class="group">
+            <h3>Manage paths</h3>
+
+            <div class="column gap-4">
+                <div class="field">
+                    <label>New path origin</label>
+
+                    <div class="path-origin-fields row">
+                        <label class="path-origin-field field grow">
+                            X
+                            <input type="number" class="input" data-control="path-origin-x" value="0" step="0.1" />
+                        </label>
+
+                        <label class="path-origin-field field grow">
+                            Y
+                            <input type="number" class="input" data-control="path-origin-y" value="0" step="0.1" />
+                        </label>
+
+                        <label class="path-origin-field field grow">
+                            Z
+                            <input type="number" class="input" data-control="path-origin-z" value="0" step="0.1" />
+                        </label>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <button type="button" class="button grow" data-action="add-path">Add path</button>
+                </div>
+                <div class="row">
+                    <button type="button" class="button grow" data-action="remove-path" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4h8v2" />
+                            <path d="M19 6l-1 14H6L5 6" />
+                            <path d="M10 11v5" />
+                            <path d="M14 11v5" />
+                        </svg>
+                        Remove path
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <section class="group" data-origin-section hidden>
             <h3>Edit origin</h3>
 
@@ -34,18 +68,10 @@
                         <option value="bendDown">Bend down</option>
                     </select>
                 </label>
-    
+
                 <label class="field">
                     <span class="row">
-                        <button
-                            type="button"
-                            class="button icon-button"
-                            data-action="nudge-negative"
-                            aria-label="Decrease distance"
-                            disabled
-                        >
-                            -
-                        </button>
+                        <button type="button" class="button icon-button" data-action="nudge-negative" aria-label="Decrease distance" disabled>-</button>
                         <select class="select grow" data-control="nudge-increment">
                             <option value="1">1</option>
                             <option value="0.5">0.5</option>
@@ -53,26 +79,25 @@
                             <option value="0.1">0.1</option>
                             <option value="0.05">0.05</option>
                         </select>
-                        <button
-                            type="button"
-                            class="button icon-button"
-                            data-action="nudge-positive"
-                            aria-label="Increase distance"
-                            disabled
-                        >
-                            +
-                        </button>
+                        <button type="button" class="button icon-button" data-action="nudge-positive" aria-label="Increase distance" disabled>+</button>
                     </span>
                 </label>
-    
+
                 <div class="row">
-                    <button type="button" class="button grow" data-action="trim-start" disabled>
-                        Trim start
+                    <button type="button" class="button grow" data-action="trim-start" disabled>Trim start</button>
+                    <button type="button" class="button grow" data-action="trim-end" disabled>Trim end</button>
+                </div>
+                <div class="row">
+                    <button type="button" class="button" data-action="remove" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4h8v2" />
+                            <path d="M19 6l-1 14H6L5 6" />
+                            <path d="M10 11v5" />
+                            <path d="M14 11v5" />
+                        </svg>
+                        Remove Segment
                     </button>
-                    <button type="button" class="button grow" data-action="trim-end" disabled>
-                        Trim end
-                    </button>
-                    <button type="button" class="button" data-action="remove" disabled>Remove</button>
                 </div>
             </div>
         </section>
@@ -93,24 +118,16 @@
 
             <div class="column gap-4">
                 <div class="row">
-                    <button type="button" class="button grow" data-action="insert-before" disabled>
-                        Insert Before
-                    </button>
-                    <button type="button" class="button grow" data-action="insert-after" disabled>
-                        Insert After
-                    </button>
+                    <button type="button" class="button grow" data-action="insert-before" disabled>Insert Before</button>
+                    <button type="button" class="button grow" data-action="insert-after" disabled>Insert After</button>
                 </div>
-                
+
                 <div class="row">
-                    <button type="button" class="button grow" data-action="duplicate" disabled>
-                        Duplicate
-                    </button>
+                    <button type="button" class="button grow" data-action="duplicate" disabled>Duplicate</button>
                 </div>
             </div>
         </section>
 
-        <button type="button" class="button primary full" data-action="copy" disabled>
-            Copy path
-        </button>
+        <button type="button" class="button primary full" data-action="copy" disabled>Copy path</button>
     </div>
 </div>

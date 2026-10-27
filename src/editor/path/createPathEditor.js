@@ -6,6 +6,40 @@ export function createPathEditor(arrowPaths) {
         selectedPathInfo: null,
     };
 
+    function addPath(origin = [0, 0, 0]) {
+        const pathName = generatePathName(state.arrowPaths);
+
+        const newPath = {
+            name: pathName,
+            origin: [...origin],
+            initialDirection: "+x",
+            initialNormal: "+y",
+            moves: [["forward", 1]],
+        };
+
+        state.arrowPaths.push(newPath);
+
+        return newPath;
+    }
+
+    function removePath(pathName) {
+        const pathIndex = state.arrowPaths.findIndex((path) => {
+            return path.name === pathName;
+        });
+
+        if (pathIndex === -1) {
+            return false;
+        }
+
+        state.arrowPaths.splice(pathIndex, 1);
+
+        if (state.selectedPathInfo?.arrowName === pathName) {
+            state.selectedPathInfo = null;
+        }
+
+        return true;
+    }
+
     function setSelectedPathInfo(selectedPathInfo) {
         state.selectedPathInfo = selectedPathInfo;
     }
@@ -25,10 +59,7 @@ export function createPathEditor(arrowPaths) {
             return null;
         }
 
-        const arrowPathIndex = findArrowPathIndexByName(
-            state.arrowPaths,
-            state.selectedPathInfo.arrowName,
-        );
+        const arrowPathIndex = findArrowPathIndexByName(state.arrowPaths, state.selectedPathInfo.arrowName);
 
         if (arrowPathIndex < 0) {
             return null;
@@ -73,9 +104,7 @@ export function createPathEditor(arrowPaths) {
         const move = arrowPath.moves[targetMoveIndex];
         const [, actionValue, options] = move;
 
-        arrowPath.moves[targetMoveIndex] = options
-            ? [actionName, actionValue, options]
-            : [actionName, actionValue];
+        arrowPath.moves[targetMoveIndex] = options ? [actionName, actionValue, options] : [actionName, actionValue];
 
         if (targetOffset === 0) {
             state.selectedPathInfo = {
@@ -107,10 +136,7 @@ export function createPathEditor(arrowPaths) {
 
         state.selectedPathInfo = {
             ...state.selectedPathInfo,
-            segmentIndex:
-                position === "after"
-                    ? state.selectedPathInfo.segmentIndex + 1
-                    : state.selectedPathInfo.segmentIndex,
+            segmentIndex: position === "after" ? state.selectedPathInfo.segmentIndex + 1 : state.selectedPathInfo.segmentIndex,
             actionName,
         };
 
@@ -176,10 +202,7 @@ export function createPathEditor(arrowPaths) {
         }
 
         // Prevent trimming when only the selected segment would be removed.
-        if (
-            (mode === "start" && selectedIndex === 0) ||
-            (mode === "end" && selectedIndex === moveCount - 1)
-        ) {
+        if ((mode === "start" && selectedIndex === 0) || (mode === "end" && selectedIndex === moveCount - 1)) {
             return false;
         }
 
@@ -214,10 +237,7 @@ export function createPathEditor(arrowPaths) {
                 return false;
             }
 
-            if (
-                arrowPath.entry?.straightUntil != null &&
-                ["left", "right"].includes(arrowPath.entry?.side)
-            ) {
+            if (arrowPath.entry?.straightUntil != null && ["left", "right"].includes(arrowPath.entry?.side)) {
                 return false;
             }
 
@@ -272,6 +292,8 @@ export function createPathEditor(arrowPaths) {
     }
 
     return {
+        addPath,
+        removePath,
         getArrowPaths,
         getSelectedArrowPath,
         getSelectedPathInfo,
@@ -286,6 +308,16 @@ export function createPathEditor(arrowPaths) {
         isSelectedMoveLast,
         isSelectedMoveFirst,
     };
+}
+
+function generatePathName(paths) {
+    let index = 1;
+
+    while (paths.some((path) => path.name === `path-${index}`)) {
+        index++;
+    }
+
+    return `path-${index}`;
 }
 
 function findArrowPathIndexByName(arrowPaths, arrowName) {
@@ -338,9 +370,7 @@ function nudgeArrowPathMove(arrowPath, selectedPathInfo, targetValue, amount) {
 
     const nextActionValue = Math.max(0, Number((actionValue + amount).toFixed(3)));
 
-    arrowPath.moves[targetMoveIndex] = options
-        ? [actionName, nextActionValue, options]
-        : [actionName, nextActionValue];
+    arrowPath.moves[targetMoveIndex] = options ? [actionName, nextActionValue, options] : [actionName, nextActionValue];
 
     return true;
 }
@@ -367,22 +397,13 @@ function cloneArrowPath(arrowPath) {
         timing: arrowPath.timing ? { ...arrowPath.timing } : undefined,
         head: arrowPath.head ? { ...arrowPath.head } : undefined,
         entry: arrowPath.entry ? { ...arrowPath.entry } : undefined,
-        initialDirection: Array.isArray(arrowPath.initialDirection)
-            ? [...arrowPath.initialDirection]
-            : arrowPath.initialDirection,
-        initialNormal: Array.isArray(arrowPath.initialNormal)
-            ? [...arrowPath.initialNormal]
-            : arrowPath.initialNormal,
+        initialDirection: Array.isArray(arrowPath.initialDirection) ? [...arrowPath.initialDirection] : arrowPath.initialDirection,
+        initialNormal: Array.isArray(arrowPath.initialNormal) ? [...arrowPath.initialNormal] : arrowPath.initialNormal,
     };
 }
 
 export function getSourceMoveIndex(arrowPath, segmentIndex) {
-    const hasGeneratedEntrySegment = Boolean(
-        arrowPath.entry?.side &&
-        ["left", "right"].includes(arrowPath.entry.side) &&
-        arrowPath.entry.straightUntil !== undefined &&
-        arrowPath.entry.straightUntil !== null,
-    );
+    const hasGeneratedEntrySegment = Boolean(arrowPath.entry?.side && ["left", "right"].includes(arrowPath.entry.side) && arrowPath.entry.straightUntil !== undefined && arrowPath.entry.straightUntil !== null);
 
     if (hasGeneratedEntrySegment) {
         return segmentIndex - 1;

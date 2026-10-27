@@ -1,12 +1,12 @@
 
 .ui {
     --ui-bg: rgba(20, 22, 26, 0.94);
-    --ui-surface: #292c32;
-    --ui-hover: #363a42;
+    --ui-surface: #292C32;
+    --ui-hover: #363A42;
     --ui-border: #454951;
-    --ui-text: #f4f4f5;
-    --ui-muted: #a5a8af;
-    --ui-accent: #ff9d2a;
+    --ui-text: #F4F4F5;
+    --ui-muted: #A5A8AF;
+    --ui-accent: #FF9D2A;
 
     color: var(--ui-text);
     color-scheme: dark;

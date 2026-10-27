@@ -1,17 +1,7 @@
 import pathControlsTemplate from "./pathControls.html";
 import { createPanelToggle } from "../editorUI.js";
 
-export function createPathNudgeControls({
-    onNudge,
-    onCopy,
-    onActionChange,
-    onInsertMove,
-    onDuplicateMove,
-    onRemoveMove,
-    onPanelExpandedChange = () => {},
-    initialExpanded = true,
-    container = document.body,
-}) {
+export function createPathNudgeControls({ container = document.body, initialExpanded = true, onPanelExpandedChange = () => {}, onNudge, onCopy, onActionChange, onInsertMove, onDuplicateMove, onRemoveMove, onAddPath, onRemovePath }) {
     const state = {
         selectedPathInfo: null,
     };
@@ -25,6 +15,13 @@ export function createPathNudgeControls({
     const content = controlsContainer.querySelector("[data-panel-content]");
 
     const viewportNotice = controlsContainer.querySelector("[data-viewport-notice]");
+
+    const addPathButton = controlsContainer.querySelector('[data-action="add-path"]');
+    const removePathButton = controlsContainer.querySelector('[data-action="remove-path"]');
+
+    const pathOriginInputs = ["x", "y", "z"].map((axis) => {
+        return controlsContainer.querySelector(`[data-control="path-origin-${axis}"]`);
+    });
 
     const originSection = controlsContainer.querySelector("[data-origin-section]");
     const originLabel = controlsContainer.querySelector("[data-origin-label]");
@@ -63,6 +60,18 @@ export function createPathNudgeControls({
         onNudge(direction * increment, "move:0");
     }
 
+    addPathButton.addEventListener("click", () => {
+        const origin = pathOriginInputs.map((input) => Number(input.value));
+
+        if (origin.some((value) => !Number.isFinite(value))) {
+            return;
+        }
+
+        onAddPath(origin);
+    });
+
+    removePathButton.addEventListener("click", onRemovePath);
+
     nudgeNegativeButton.addEventListener("click", () => nudge(-1));
     nudgePositiveButton.addEventListener("click", () => nudge(1));
 
@@ -87,6 +96,8 @@ export function createPathNudgeControls({
     copyButton.addEventListener("click", onCopy);
 
     function clearSelection() {
+        removePathButton.disabled = true;
+
         state.selectedPathInfo = null;
 
         originSection.hidden = true;
@@ -98,23 +109,15 @@ export function createPathNudgeControls({
         currentActionSelect.disabled = true;
         newActionSelect.disabled = true;
 
-        [
-            nudgeNegativeButton,
-            nudgePositiveButton,
-            insertBeforeButton,
-            insertAfterButton,
-            duplicateButton,
-            removeButton,
-            trimStartButton,
-            trimEndButton,
-            copyButton,
-        ].forEach((button) => {
+        [nudgeNegativeButton, nudgePositiveButton, insertBeforeButton, insertAfterButton, duplicateButton, removeButton, trimStartButton, trimEndButton, copyButton].forEach((button) => {
             button.disabled = true;
         });
     }
 
     function setSelectedOrigin(arrowName, position) {
         clearSelection();
+
+        removePathButton.disabled = false;
 
         originSection.hidden = false;
         originLabel.textContent = arrowName;
@@ -144,6 +147,7 @@ export function createPathNudgeControls({
 
     return {
         setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false) {
+            removePathButton.disabled = false;
             originSection.hidden = true;
 
             state.selectedPathInfo = selectedPathInfo;
