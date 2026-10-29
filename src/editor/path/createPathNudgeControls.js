@@ -16,48 +16,61 @@ export function createPathNudgeControls({
 }) {
     const state = {
         selectedPathInfo: null,
+        selectionMode: "empty",
+        editorMode: "empty",
     };
 
     const template = document.createElement("template");
     template.innerHTML = pathControlsTemplate;
 
     const controlsContainer = template.content.firstElementChild.cloneNode(true);
+    const query = (selector) => controlsContainer.querySelector(selector);
 
-    const toggleButton = controlsContainer.querySelector('[data-action="toggle-panel"]');
-    const content = controlsContainer.querySelector("[data-panel-content]");
+    // Panel
+    const toggleButton = query('[data-action="toggle-panel"]');
+    const content = query("[data-panel-content]");
+    const viewportNotice = query("[data-viewport-notice]");
 
-    const viewportNotice = controlsContainer.querySelector("[data-viewport-notice]");
+    // Editor sections
+    const emptySection = query("[data-path-empty]");
+    const createSection = query("[data-path-create]");
+    const originSection = query("[data-origin-section]");
+    const editSegmentSection = query("[data-edit-segment]");
+    const addSegmentSection = query("[data-add-segment]");
 
-    const initialDirectionSelect = controlsContainer.querySelector('[data-control="path-initial-direction"]');
-    const addPathButton = controlsContainer.querySelector('[data-action="add-path"]');
-    const removePathButton = controlsContainer.querySelector('[data-action="remove-path"]');
+    // Path creation
+    const newPathButton = query('[data-action="new-path"]');
+    const cancelPathButton = query('[data-action="cancel-path"]');
+    const addPathButton = query('[data-action="add-path"]');
+    const initialDirectionSelect = query('[data-control="path-initial-direction"]');
 
     const pathOriginInputs = ["x", "y", "z"].map((axis) => {
-        return controlsContainer.querySelector(`[data-control="path-origin-${axis}"]`);
+        return query(`[data-control="path-origin-${axis}"]`);
     });
 
-    const originSection = controlsContainer.querySelector("[data-origin-section]");
-    const originLabel = controlsContainer.querySelector("[data-origin-label]");
-    const originPosition = controlsContainer.querySelector("[data-origin-position]");
+    // Selected path
+    const originLabel = query("[data-origin-label]");
+    const originPosition = query("[data-origin-position]");
+    const copyButton = query('[data-action="copy"]');
+    const removePathButton = query('[data-action="remove-path"]');
 
-    const selectedLabel = controlsContainer.querySelector("[data-selected-label]");
+    // Segment editing
+    const selectedLabel = query("[data-selected-label]");
+    const currentActionSelect = query('[data-control="current-action"]');
 
-    const currentActionSelect = controlsContainer.querySelector('[data-control="current-action"]');
-    const newActionSelect = controlsContainer.querySelector('[data-control="new-action"]');
+    const nudgeNegativeButton = query('[data-action="nudge-negative"]');
+    const incrementSelect = query('[data-control="nudge-increment"]');
+    const nudgePositiveButton = query('[data-action="nudge-positive"]');
 
-    const nudgeNegativeButton = controlsContainer.querySelector('[data-action="nudge-negative"]');
-    const incrementSelect = controlsContainer.querySelector('[data-control="nudge-increment"]');
-    const nudgePositiveButton = controlsContainer.querySelector('[data-action="nudge-positive"]');
+    const trimStartButton = query('[data-action="trim-start"]');
+    const removeButton = query('[data-action="remove"]');
+    const trimEndButton = query('[data-action="trim-end"]');
 
-    const trimStartButton = controlsContainer.querySelector('[data-action="trim-start"]');
-    const removeButton = controlsContainer.querySelector('[data-action="remove"]');
-    const trimEndButton = controlsContainer.querySelector('[data-action="trim-end"]');
-
-    const insertBeforeButton = controlsContainer.querySelector('[data-action="insert-before"]');
-    const duplicateButton = controlsContainer.querySelector('[data-action="duplicate"]');
-    const insertAfterButton = controlsContainer.querySelector('[data-action="insert-after"]');
-
-    const copyButton = controlsContainer.querySelector('[data-action="copy"]');
+    // Segment insertion
+    const newActionSelect = query('[data-control="new-action"]');
+    const insertBeforeButton = query('[data-action="insert-before"]');
+    const duplicateButton = query('[data-action="duplicate"]');
+    const insertAfterButton = query('[data-action="insert-after"]');
 
     const panelToggle = createPanelToggle({
         button: toggleButton,
@@ -81,6 +94,15 @@ export function createPathNudgeControls({
         }
 
         onAddPath(origin, initialDirectionSelect.value);
+        showEditorMode(state.selectionMode);
+    });
+
+    newPathButton.addEventListener("click", () => {
+        showEditorMode("create");
+    });
+
+    cancelPathButton.addEventListener("click", () => {
+        showEditorMode(state.selectionMode);
     });
 
     removePathButton.addEventListener("click", onRemovePath);
@@ -135,6 +157,11 @@ export function createPathNudgeControls({
         ].forEach((button) => {
             button.disabled = true;
         });
+
+        state.selectionMode = "empty";
+        if (state.editorMode !== "create") {
+            showEditorMode(state.selectionMode);
+        }
     }
 
     function setSelectedOrigin(arrowName, position) {
@@ -148,6 +175,8 @@ export function createPathNudgeControls({
         formatOriginPosition(position);
 
         copyButton.disabled = false;
+        state.selectionMode = "path";
+        showEditorMode(state.selectionMode);
     }
 
     function updateOriginPosition(position) {
@@ -166,6 +195,17 @@ export function createPathNudgeControls({
         viewportNotice.hidden = !isVisible;
     }
 
+    function showEditorMode(mode) {
+        state.editorMode = mode;
+        emptySection.hidden = mode !== "empty";
+        createSection.hidden = mode !== "create";
+        originSection.hidden = mode !== "path";
+        editSegmentSection.hidden = mode !== "segment";
+        addSegmentSection.hidden = mode !== "segment";
+        copyButton.hidden = mode !== "path" && mode !== "segment";
+    }
+
+    showEditorMode(state.selectionMode);
     container.appendChild(controlsContainer);
 
     return {
@@ -192,6 +232,8 @@ export function createPathNudgeControls({
             trimEndButton.disabled = isFirstMove || isLastMove;
 
             insertAfterButton.textContent = isLastMove ? "Add segment" : "Insert After";
+            state.selectionMode = "segment";
+            showEditorMode(state.selectionMode);
         },
 
         clearSelection,

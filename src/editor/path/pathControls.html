@@ -3,9 +3,14 @@
 
     <div class="editor-path-controls__content" data-panel-content>
         <div class="viewport-notice" data-viewport-notice hidden>Viewport-relative origins cannot be moved with TransformControls.</div>
-        <section class="group">
-            <h3>Manage paths</h3>
 
+        <section class="group" data-path-empty>
+            <strong>No path selected</strong>
+            <p class="muted">Select a path in the viewport to edit it, or create a new one.</p>
+            <button type="button" class="button primary full" data-action="new-path">New path</button>
+        </section>
+
+        <section class="group" data-path-create hidden>
             <div class="column gap-4">
                 <div class="field">
                     <label>New path origin</label>
@@ -43,9 +48,19 @@
                 </div>
 
                 <div class="row">
-                    <button type="button" class="button grow" data-action="add-path">Add path</button>
+                    <button type="button" class="button grow" data-action="add-path">Create path</button>
+                    <button type="button" class="button grow" data-action="cancel-path">Cancel</button>
                 </div>
-                <div class="row">
+            </div>
+        </section>
+
+        <section class="group" data-origin-section hidden>
+            <h3>Edit origin</h3>
+            <div class="row">
+                <div class="muted" data-origin-label></div>
+                <div class="muted" data-origin-position></div>
+            </div>
+            <div class="row">
                     <button type="button" class="button grow" data-action="remove-path" disabled>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -68,16 +83,8 @@
                         Remove path
                     </button>
                 </div>
-            </div>
         </section>
-
-        <section class="group" data-origin-section hidden>
-            <h3>Edit origin</h3>
-
-            <div class="muted" data-origin-label></div>
-            <div class="muted" data-origin-position></div>
-        </section>
-        <section class="group">
+        <section class="group" data-edit-segment hidden>
             <h3>Edit segment</h3>
 
             <div class="muted" data-selected-label>No segment selected</div>
@@ -138,7 +145,7 @@
             </div>
         </section>
 
-        <section class="group">
+        <section class="group" data-add-segment hidden>
             <h3>Add segment</h3>
 
             <label class="field">
@@ -163,7 +170,9 @@
                 </div>
             </div>
         </section>
-
-        <button type="button" class="button primary full" data-action="copy" disabled>Copy path</button>
+        <section class="group" data-export-data hidden>
+            <!-- later on: a button to export all path data -->
+            <button type="button" class="button primary full" data-action="copy" disabled>Copy path</button>
+        </section>
     </div>
 </div>
