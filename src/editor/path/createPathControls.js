@@ -290,6 +290,10 @@ export function createPathControls({
 
     function setSelectedOrigin(arrowName, position, initialDirection) {
         clearSelection();
+        
+        updateInitialDirection(initialDirection);
+        selectedInitialDirectionSelect.disabled = false;
+
         editorHeading.textContent = arrowName;
 
         removePathButton.disabled = false;
