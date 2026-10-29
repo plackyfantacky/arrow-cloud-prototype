@@ -50,8 +50,9 @@ export function createPathNudgeControls({
     });
 
     // Selected path
-
-    const originPosition = query("[data-origin-position]");
+    const selectedOriginInputs = ["x", "y", "z"].map((axis) => {
+        return query(`[data-control="selected-origin-${axis}"]`);
+    });
     const removePathButton = query('[data-action="remove-path"]');
 
     // Segment editing
@@ -162,7 +163,9 @@ export function createPathNudgeControls({
 
         originSection.hidden = true;
 
-        originPosition.textContent = "";
+        selectedOriginInputs.forEach((input) => {
+            input.value = "";
+        });
 
         editorHeading.textContent = "No path selected";
 
@@ -197,7 +200,7 @@ export function createPathNudgeControls({
 
         originSection.hidden = false;
 
-        originPosition.textContent = formatOriginPosition(position);
+        updateOriginPosition(position);
 
         copyButton.disabled = false;
         state.selectionMode = "path";
@@ -205,15 +208,9 @@ export function createPathNudgeControls({
     }
 
     function updateOriginPosition(position) {
-        originPosition.textContent = formatOriginPosition(position);
-    }
-
-    function formatOriginPosition(position) {
-        return ["X", "Y", "Z"]
-            .map((axis, index) => {
-                return `${axis}: ${Number(position[index]).toFixed(3)}`;
-            })
-            .join("   ");
+        selectedOriginInputs.forEach((input, index) => {
+            input.value = String(Number(position[index].toFixed(3)));
+        });
     }
 
     function setViewportOriginNoticeVisible(isVisible) {

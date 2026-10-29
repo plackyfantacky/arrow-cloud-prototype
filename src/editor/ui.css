@@ -67,6 +67,10 @@
     width: 100%;
 }
 
+.ui input[type="number"] {
+    field-sizing: content;
+}
+
 .ui :is(button, select, input):focus-visible {
     outline: 2px solid var(--ui-accent);
     outline-offset: 2px;
@@ -138,6 +142,11 @@
 
 .ui .field {
     gap: 0.35rem;
+}
+
+.ui .row > .field.grow {
+    min-width: 0;
+    flex: 1 1 0;
 }
 
 .ui .muted {

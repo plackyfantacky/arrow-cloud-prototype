@@ -57,8 +57,28 @@
         </section>
 
         <section class="group" data-origin-section hidden>
-            <h3>Edit origin</h3>
-            <div class="muted" data-origin-position></div>
+            <h3>Edit path</h3>
+
+            <div class="field">
+                <span>Origin</span>
+
+                <div class="row">
+                    <label class="field grow">
+                        X
+                        <input type="number" class="input" data-control="selected-origin-x" step="0.1" disabled />
+                    </label>
+
+                    <label class="field grow">
+                        Y
+                        <input type="number" class="input" data-control="selected-origin-y" step="0.1" disabled />
+                    </label>
+
+                    <label class="field grow">
+                        Z
+                        <input type="number" class="input" data-control="selected-origin-z" step="0.1" disabled />
+                    </label>
+                </div>
+            </div>
         </section>
 
         <section class="group" data-edit-segment hidden>
@@ -125,13 +145,13 @@
                         <option value="bendDown">Bend down</option>
                     </select>
                 </label>
-    
+
                 <div class="column gap-4">
                     <div class="row">
                         <button type="button" class="button grow" data-action="insert-before" disabled>Insert Before</button>
                         <button type="button" class="button grow" data-action="insert-after" disabled>Insert After</button>
                     </div>
-    
+
                     <div class="row">
                         <button type="button" class="button grow" data-action="duplicate" disabled>Duplicate</button>
                     </div>
@@ -141,7 +161,6 @@
                     </div>
                 </div>
             </div>
-
         </section>
         <section class="group" data-export-data hidden>
             <!-- later on: a button to export all path data -->
