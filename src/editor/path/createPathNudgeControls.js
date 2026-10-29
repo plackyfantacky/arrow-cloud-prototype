@@ -50,7 +50,7 @@ export function createPathNudgeControls({
     });
 
     // Selected path
-    const originLabel = query("[data-origin-label]");
+
     const originPosition = query("[data-origin-position]");
     const removePathButton = query('[data-action="remove-path"]');
 
@@ -67,10 +67,13 @@ export function createPathNudgeControls({
     // Segment insertion
     const toggleAddSegmentButton = query('[data-action="toggle-add-segment"]');
     const addSegmentContent = query("[data-add-segment-content]");
+    const addSegmentIndicator = query("[data-add-segment-indicator]");
+
     const newActionSelect = query('[data-control="new-action"]');
     const insertBeforeButton = query('[data-action="insert-before"]');
-    const duplicateButton = query('[data-action="duplicate"]');
     const insertAfterButton = query('[data-action="insert-after"]');
+    const duplicateButton = query('[data-action="duplicate"]');
+    const cancelAddSegmentButton = query('[data-action="cancel-add-segment"]');
 
     // Data Export
     const exportSection = query("[data-export-data]");
@@ -132,11 +135,16 @@ export function createPathNudgeControls({
     function setAddSegmentExpanded(isExpanded) {
         addSegmentContent.hidden = !isExpanded;
         toggleAddSegmentButton.setAttribute("aria-expanded", String(isExpanded));
-        toggleAddSegmentButton.textContent = isExpanded ? "Cancel" : "Add segment";
+        addSegmentIndicator.textContent = isExpanded ? "▴" : "▾";
     }
 
     toggleAddSegmentButton.addEventListener("click", () => {
         setAddSegmentExpanded(addSegmentContent.hidden);
+    });
+
+    cancelAddSegmentButton.addEventListener("click", () => {
+        setAddSegmentExpanded(false);
+        toggleAddSegmentButton.focus();
     });
 
     duplicateButton.addEventListener("click", onDuplicateMove);
@@ -153,7 +161,7 @@ export function createPathNudgeControls({
         state.selectedPathInfo = null;
 
         originSection.hidden = true;
-        originLabel.textContent = "";
+
         originPosition.textContent = "";
 
         editorHeading.textContent = "No path selected";
@@ -188,9 +196,8 @@ export function createPathNudgeControls({
         removePathButton.disabled = false;
 
         originSection.hidden = false;
-        originLabel.textContent = arrowName;
 
-        formatOriginPosition(position);
+        originPosition.textContent = formatOriginPosition(position);
 
         copyButton.disabled = false;
         state.selectionMode = "path";
@@ -198,7 +205,7 @@ export function createPathNudgeControls({
     }
 
     function updateOriginPosition(position) {
-        formatOriginPosition(position);
+        originPosition.textContent = formatOriginPosition(position);
     }
 
     function formatOriginPosition(position) {
@@ -214,6 +221,9 @@ export function createPathNudgeControls({
     }
 
     function showEditorMode(mode) {
+        if (mode !== "segment" || state.editorMode !== "segment") {
+            setAddSegmentExpanded(false);
+        }
         state.editorMode = mode;
         emptySection.hidden = mode !== "empty";
         createSection.hidden = mode !== "create";

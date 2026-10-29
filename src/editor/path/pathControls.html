@@ -58,21 +58,6 @@
 
         <section class="group" data-origin-section hidden>
             <h3>Edit origin</h3>
-            <div class="row">
-                <strong class="grow">Edit origin</strong>
-                <button type="button" class="button icon-button" data-action="remove-path" aria-label="Remove path" title="Remove path" disabled>
-                    <!-- prettier-ignore -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4h8v2" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v5" />
-                        <path d="M14 11v5" />
-                    </svg>
-                </button>
-            </div>
-
-            <div class="muted" data-origin-label></div>
             <div class="muted" data-origin-position></div>
         </section>
 
@@ -125,9 +110,11 @@
         </section>
 
         <section class="group" data-add-segment hidden>
-            <button type="button" class="button full" data-action="toggle-add-segment" aria-expanded="false">Add segment</button>
+            <button type="button" class="button full" data-action="toggle-add-segment" aria-expanded="false">
+                Add segment <span data-add-segment-indicator aria-hidden="true">▾</span>
+            </button>
 
-            <div class="group" data-add-segment-content hidden>
+            <div class="group inset-panel" data-add-segment-content hidden>
                 <label class="field">
                     New Action
                     <select class="select" data-control="new-action" disabled>
@@ -147,6 +134,10 @@
     
                     <div class="row">
                         <button type="button" class="button grow" data-action="duplicate" disabled>Duplicate</button>
+                    </div>
+
+                    <div class="row">
+                        <button type="button" class="button full" data-action="cancel-add-segment">Cancel</button>
                     </div>
                 </div>
             </div>

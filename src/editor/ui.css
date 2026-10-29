@@ -115,6 +115,14 @@
     border-top: 1px solid var(--ui-border);
 }
 
+.ui .inset-panel {
+    padding: 0.75rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 5px;
+    background: var(--ui-bg);
+    gap: 0.75rem;
+}
+
 .ui .group[hidden] {
     display: none;
 }
