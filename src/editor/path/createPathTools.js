@@ -133,7 +133,11 @@ export function createPathTools({
             pathEditor.setSelectedPathInfo(null);
             syncSelection();
 
-            pathControls.setSelectedOrigin(arrowName, marker.position.toArray());
+            const arrowPath = pathEditor.getArrowPaths().find((path) => {
+                return path.name === arrowName;
+            });
+
+            pathControls.setSelectedOrigin(arrowName, marker.position.toArray(), arrowPath.initialDirection);
         },
 
         onOriginChange(arrowName, position) {
@@ -210,6 +214,31 @@ export function createPathTools({
             const didChangePath = pathEditor.duplicateSelectedMove();
 
             if (didChangePath) {
+                rebuild();
+            }
+        },
+
+        onSelectedOriginChange(axisIndex, value) {
+            const arrowPath = pathEditor.getArrowPaths().find((path) => {
+                return path.name === selectedOriginArrowName;
+            });
+
+            if (!arrowPath) {
+                return;
+            }
+
+            const position = new THREE.Vector3(...arrowPath.origin);
+            position.setComponent(axisIndex, value);
+
+            if (pathEditor.setPathOrigin(arrowPath.name, position)) {
+                rebuild();
+            }
+
+            pathControls.updateOriginPosition(arrowPath.origin);
+        },
+        
+        onSelectedInitialDirectionChange(initialDirection) {
+            if (pathEditor.setPathInitialDirection(selectedOriginArrowName, initialDirection)) {
                 rebuild();
             }
         },
@@ -317,8 +346,12 @@ export function createPathTools({
     }
 
     function handleKeyDown(event) {
-        if (!["Delete", "Backspace"].includes(event.key)) { return; }
-        if (event.metaKey || event.ctrlKey || event.altKey) { return; }
+        if (!["Delete", "Backspace"].includes(event.key)) {
+            return;
+        }
+        if (event.metaKey || event.ctrlKey || event.altKey) {
+            return;
+        }
 
         const target = event.target;
 

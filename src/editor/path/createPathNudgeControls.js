@@ -13,6 +13,8 @@ export function createPathNudgeControls({
     onRemoveMove,
     onAddPath,
     onRemovePath,
+    onSelectedOriginChange,
+    onSelectedInitialDirectionChange,
 }) {
     const state = {
         selectedPathInfo: null,
@@ -53,6 +55,7 @@ export function createPathNudgeControls({
     const selectedOriginInputs = ["x", "y", "z"].map((axis) => {
         return query(`[data-control="selected-origin-${axis}"]`);
     });
+    const selectedInitialDirectionSelect = query('[data-control="selected-initial-direction"]');
     const removePathButton = query('[data-action="remove-path"]');
 
     // Segment editing
@@ -156,6 +159,51 @@ export function createPathNudgeControls({
 
     copyButton.addEventListener("click", onCopy);
 
+    selectedOriginInputs.forEach((input, axisIndex) => {
+        input.addEventListener("change", () => {
+            const value = input.valueAsNumber;
+
+            if (state.selectionMode !== "path" || !Number.isFinite(value)) {
+                return;
+            }
+
+            onSelectedOriginChange(axisIndex, value);
+        });
+    });
+
+    selectedInitialDirectionSelect.addEventListener("change", () => {
+        if (state.selectionMode !== "path") {
+            return;
+        }
+
+        onSelectedInitialDirectionChange(selectedInitialDirectionSelect.value);
+    });
+
+    function updateInitialDirection(initialDirection) {
+        const axisDirections = [
+            ["+x", [1, 0, 0]],
+            ["-x", [-1, 0, 0]],
+            ["+y", [0, 1, 0]],
+            ["-y", [0, -1, 0]],
+            ["+z", [0, 0, 1]],
+            ["-z", [0, 0, -1]],
+        ];
+
+        let directionValue = initialDirection;
+
+        if (Array.isArray(initialDirection)) {
+            const length = Math.hypot(...initialDirection);
+
+            directionValue = axisDirections.find(([, vector]) => {
+                return vector.every((value, index) => {
+                    return Math.abs(value - initialDirection[index] / length) < 1e-6;
+                });
+            })?.[0];
+        }
+
+        selectedInitialDirectionSelect.value = directionValue ?? "";
+    }
+
     function clearSelection() {
         removePathButton.disabled = true;
 
@@ -165,6 +213,7 @@ export function createPathNudgeControls({
 
         selectedOriginInputs.forEach((input) => {
             input.value = "";
+            input.disabled = true;
         });
 
         editorHeading.textContent = "No path selected";
@@ -192,8 +241,12 @@ export function createPathNudgeControls({
         }
     }
 
-    function setSelectedOrigin(arrowName, position) {
+    function setSelectedOrigin(arrowName, position, initialDirection) {
         clearSelection();
+        
+        updateInitialDirection(initialDirection);
+        selectedInitialDirectionSelect.disabled = false;
+        
         editorHeading.textContent = arrowName;
 
         removePathButton.disabled = false;
@@ -203,6 +256,11 @@ export function createPathNudgeControls({
         updateOriginPosition(position);
 
         copyButton.disabled = false;
+
+        selectedOriginInputs.forEach((input) => {
+            input.disabled = false;
+        });
+
         state.selectionMode = "path";
         showEditorMode(state.selectionMode);
     }

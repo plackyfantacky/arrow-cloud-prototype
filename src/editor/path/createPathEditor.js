@@ -1,3 +1,5 @@
+import { Quaternion } from "three";
+import { getDirectionVector } from "../../arrows/directions.js";
 import { createArrowPathSegments } from "../../arrows/createArrowPaths.js";
 
 export function createPathEditor(arrowPaths) {
@@ -187,6 +189,33 @@ export function createPathEditor(arrowPaths) {
         return true;
     }
 
+    function setPathInitialDirection(arrowName, initialDirection) {
+        const validDirections = ["+x", "-x", "+y", "-y", "+z", "-z"];
+
+        if (!validDirections.includes(initialDirection)) {
+            return false;
+        }
+
+        const arrowPath = state.arrowPaths.find((path) => {
+            return path.name === arrowName;
+        });
+
+        if (!arrowPath || arrowPath.entry?.position === "viewport") {
+            return false;
+        }
+
+        const initialNormal = getInitialNormal(initialDirection);
+
+        if (arrowPath.initialDirection === initialDirection && arrowPath.initialNormal === initialNormal) {
+            return false;
+        }
+
+        arrowPath.initialDirection = initialDirection;
+        arrowPath.initialNormal = initialNormal;
+
+        return true;
+    }
+
     function canRemoveSelectedMove() {
         const arrowPath = getSelectedArrowPath();
 
@@ -314,6 +343,7 @@ export function createPathEditor(arrowPaths) {
         insertMoveNearSelectedMove,
         duplicateSelectedMove,
         setPathOrigin,
+        setPathInitialDirection,
         canRemoveSelectedMove,
         removeMoves,
         isSelectedMoveLast,
@@ -418,7 +448,12 @@ function cloneArrowPath(arrowPath) {
 }
 
 export function getSourceMoveIndex(arrowPath, segmentIndex) {
-    const hasGeneratedEntrySegment = Boolean(arrowPath.entry?.side && ["left", "right"].includes(arrowPath.entry.side) && arrowPath.entry.straightUntil !== undefined && arrowPath.entry.straightUntil !== null);
+    const hasGeneratedEntrySegment = Boolean(
+        arrowPath.entry?.side &&
+        ["left", "right"].includes(arrowPath.entry.side) &&
+        arrowPath.entry.straightUntil !== undefined &&
+        arrowPath.entry.straightUntil !== null,
+    );
 
     if (hasGeneratedEntrySegment) {
         return segmentIndex - 1;
