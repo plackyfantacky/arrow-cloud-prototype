@@ -32,6 +32,7 @@ export function createPathNudgeControls({
     const viewportNotice = query("[data-viewport-notice]");
 
     // Editor sections
+    const editorHeading = query("[data-editor-heading]");
     const emptySection = query("[data-path-empty]");
     const createSection = query("[data-path-create]");
     const originSection = query("[data-origin-section]");
@@ -51,13 +52,10 @@ export function createPathNudgeControls({
     // Selected path
     const originLabel = query("[data-origin-label]");
     const originPosition = query("[data-origin-position]");
-    const copyButton = query('[data-action="copy"]');
     const removePathButton = query('[data-action="remove-path"]');
 
     // Segment editing
-    const selectedLabel = query("[data-selected-label]");
     const currentActionSelect = query('[data-control="current-action"]');
-
     const nudgeNegativeButton = query('[data-action="nudge-negative"]');
     const incrementSelect = query('[data-control="nudge-increment"]');
     const nudgePositiveButton = query('[data-action="nudge-positive"]');
@@ -67,10 +65,19 @@ export function createPathNudgeControls({
     const trimEndButton = query('[data-action="trim-end"]');
 
     // Segment insertion
+    const toggleAddSegmentButton = query('[data-action="toggle-add-segment"]');
+    const addSegmentContent = query("[data-add-segment-content]");
     const newActionSelect = query('[data-control="new-action"]');
     const insertBeforeButton = query('[data-action="insert-before"]');
     const duplicateButton = query('[data-action="duplicate"]');
     const insertAfterButton = query('[data-action="insert-after"]');
+
+    // Data Export
+    const exportSection = query("[data-export-data]");
+    const copyButton = query('[data-action="copy"]');
+
+    // Path Actions
+    const pathActionsSection = query("[data-path-actions]");
 
     const panelToggle = createPanelToggle({
         button: toggleButton,
@@ -122,6 +129,16 @@ export function createPathNudgeControls({
         onInsertMove("after", newActionSelect.value);
     });
 
+    function setAddSegmentExpanded(isExpanded) {
+        addSegmentContent.hidden = !isExpanded;
+        toggleAddSegmentButton.setAttribute("aria-expanded", String(isExpanded));
+        toggleAddSegmentButton.textContent = isExpanded ? "Cancel" : "Add segment";
+    }
+
+    toggleAddSegmentButton.addEventListener("click", () => {
+        setAddSegmentExpanded(addSegmentContent.hidden);
+    });
+
     duplicateButton.addEventListener("click", onDuplicateMove);
 
     removeButton.addEventListener("click", () => onRemoveMove("single"));
@@ -139,7 +156,7 @@ export function createPathNudgeControls({
         originLabel.textContent = "";
         originPosition.textContent = "";
 
-        selectedLabel.textContent = "No segment selected";
+        editorHeading.textContent = "No path selected";
 
         currentActionSelect.disabled = true;
         newActionSelect.disabled = true;
@@ -166,6 +183,7 @@ export function createPathNudgeControls({
 
     function setSelectedOrigin(arrowName, position) {
         clearSelection();
+        editorHeading.textContent = arrowName;
 
         removePathButton.disabled = false;
 
@@ -202,7 +220,8 @@ export function createPathNudgeControls({
         originSection.hidden = mode !== "path";
         editSegmentSection.hidden = mode !== "segment";
         addSegmentSection.hidden = mode !== "segment";
-        copyButton.hidden = mode !== "path" && mode !== "segment";
+        exportSection.hidden = mode !== "path" && mode !== "segment";
+        pathActionsSection.hidden = mode !== "path" && mode !== "segment";
     }
 
     showEditorMode(state.selectionMode);
@@ -214,7 +233,7 @@ export function createPathNudgeControls({
             originSection.hidden = true;
 
             state.selectedPathInfo = selectedPathInfo;
-            selectedLabel.textContent = `${selectedPathInfo.arrowName} · Segment ${selectedPathInfo.segmentIndex + 1}`;
+            editorHeading.textContent = `${selectedPathInfo.arrowName} · Segment ${selectedPathInfo.segmentIndex + 1}`;
 
             currentActionSelect.disabled = false;
             currentActionSelect.value = selectedPathInfo.actionName;

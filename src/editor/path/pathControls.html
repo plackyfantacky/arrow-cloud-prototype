@@ -2,10 +2,12 @@
     <button type="button" class="editor-path-controls__toggle" data-action="toggle-panel" aria-expanded="true">Path Editor</button>
 
     <div class="editor-path-controls__content" data-panel-content>
-        <div class="viewport-notice" data-viewport-notice hidden>Viewport-relative origins cannot be moved with TransformControls.</div>
+        <div class="group">
+            <div class="viewport-notice" data-viewport-notice hidden>Viewport-relative origins cannot be moved with TransformControls.</div>
+            <strong data-editor-heading>No path selected</strong>
+        </div>
 
         <section class="group" data-path-empty>
-            <strong>No path selected</strong>
             <p class="muted">Select a path in the viewport to edit it, or create a new one.</p>
             <button type="button" class="button primary full" data-action="new-path">New path</button>
         </section>
@@ -57,54 +59,44 @@
         <section class="group" data-origin-section hidden>
             <h3>Edit origin</h3>
             <div class="row">
-                <div class="muted" data-origin-label></div>
-                <div class="muted" data-origin-position></div>
+                <strong class="grow">Edit origin</strong>
+                <button type="button" class="button icon-button" data-action="remove-path" aria-label="Remove path" title="Remove path" disabled>
+                    <!-- prettier-ignore -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4h8v2" />
+                        <path d="M19 6l-1 14H6L5 6" />
+                        <path d="M10 11v5" />
+                        <path d="M14 11v5" />
+                    </svg>
+                </button>
             </div>
-            <div class="row">
-                    <button type="button" class="button grow" data-action="remove-path" disabled>
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
-                            <path d="M3 6h18" />
-                            <path d="M8 6V4h8v2" />
-                            <path d="M19 6l-1 14H6L5 6" />
-                            <path d="M10 11v5" />
-                            <path d="M14 11v5" />
-                        </svg>
-                        Remove path
-                    </button>
-                </div>
+
+            <div class="muted" data-origin-label></div>
+            <div class="muted" data-origin-position></div>
         </section>
+
         <section class="group" data-edit-segment hidden>
             <h3>Edit segment</h3>
-
-            <div class="muted" data-selected-label>No segment selected</div>
-
             <div class="column gap-4">
-                <label class="field">
-                    Current Action
-                    <select class="select" data-control="current-action" disabled>
-                        <option value="forward">Forward</option>
-                        <option value="turnLeft">Turn left</option>
-                        <option value="turnRight">Turn right</option>
-                        <option value="bendUp">Bend up</option>
-                        <option value="bendDown">Bend down</option>
-                    </select>
-                </label>
+                <div class="column">
+                    <label class="field">
+                        Current Action
+                        <select class="select" data-control="current-action" disabled>
+                            <option value="forward">Forward</option>
+                            <option value="turnLeft">Turn left</option>
+                            <option value="turnRight">Turn right</option>
+                            <option value="bendUp">Bend up</option>
+                            <option value="bendDown">Bend down</option>
+                        </select>
+                    </label>
+                </div>
 
-                <label class="field">
-                    <span class="row">
-                        <button type="button" class="button icon-button" data-action="nudge-negative" aria-label="Decrease distance" disabled>-</button>
-                        <select class="select grow" data-control="nudge-increment">
+                <div class="column">
+                    <span>Adjust distance</span>
+                    <div class="row">
+                        <button type="button" class="button icon-button" data-action="nudge-negative" aria-label="Decrease distance" disabled>−</button>
+                        <select class="select grow" data-control="nudge-increment" aria-label="Distance increment">
                             <option value="1">1</option>
                             <option value="0.5">0.5</option>
                             <option value="0.25">0.25</option>
@@ -112,67 +104,61 @@
                             <option value="0.05">0.05</option>
                         </select>
                         <button type="button" class="button icon-button" data-action="nudge-positive" aria-label="Increase distance" disabled>+</button>
-                    </span>
-                </label>
+                    </div>
+                </div>
 
                 <div class="row">
                     <button type="button" class="button grow" data-action="trim-start" disabled>Trim start</button>
                     <button type="button" class="button grow" data-action="trim-end" disabled>Trim end</button>
-                </div>
-                <div class="row">
-                    <button type="button" class="button" data-action="remove" disabled>
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
+                    <button type="button" class="button icon-button" data-action="remove" aria-label="Remove segment" title="Remove segment" disabled>
+                        <!-- prettier-ignore -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 6h18" />
                             <path d="M8 6V4h8v2" />
                             <path d="M19 6l-1 14H6L5 6" />
                             <path d="M10 11v5" />
                             <path d="M14 11v5" />
                         </svg>
-                        Remove Segment
                     </button>
                 </div>
             </div>
         </section>
 
         <section class="group" data-add-segment hidden>
-            <h3>Add segment</h3>
+            <button type="button" class="button full" data-action="toggle-add-segment" aria-expanded="false">Add segment</button>
 
-            <label class="field">
-                New Action
-                <select class="select" data-control="new-action" disabled>
-                    <option value="forward">Forward</option>
-                    <option value="turnLeft">Turn left</option>
-                    <option value="turnRight">Turn right</option>
-                    <option value="bendUp">Bend up</option>
-                    <option value="bendDown">Bend down</option>
-                </select>
-            </label>
-
-            <div class="column gap-4">
-                <div class="row">
-                    <button type="button" class="button grow" data-action="insert-before" disabled>Insert Before</button>
-                    <button type="button" class="button grow" data-action="insert-after" disabled>Insert After</button>
-                </div>
-
-                <div class="row">
-                    <button type="button" class="button grow" data-action="duplicate" disabled>Duplicate</button>
+            <div class="group" data-add-segment-content hidden>
+                <label class="field">
+                    New Action
+                    <select class="select" data-control="new-action" disabled>
+                        <option value="forward">Forward</option>
+                        <option value="turnLeft">Turn left</option>
+                        <option value="turnRight">Turn right</option>
+                        <option value="bendUp">Bend up</option>
+                        <option value="bendDown">Bend down</option>
+                    </select>
+                </label>
+    
+                <div class="column gap-4">
+                    <div class="row">
+                        <button type="button" class="button grow" data-action="insert-before" disabled>Insert Before</button>
+                        <button type="button" class="button grow" data-action="insert-after" disabled>Insert After</button>
+                    </div>
+    
+                    <div class="row">
+                        <button type="button" class="button grow" data-action="duplicate" disabled>Duplicate</button>
+                    </div>
                 </div>
             </div>
+
         </section>
         <section class="group" data-export-data hidden>
             <!-- later on: a button to export all path data -->
             <button type="button" class="button primary full" data-action="copy" disabled>Copy path</button>
+        </section>
+
+        <section class="group" data-path-actions hidden>
+            <button type="button" class="button danger full" data-action="remove-path" disabled>Delete path</button>
         </section>
     </div>
 </div>
