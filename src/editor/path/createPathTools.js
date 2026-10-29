@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import { createPathEditor } from "./createPathEditor.js";
-import { createPathNudgeControls } from "./createPathNudgeControls.js";
+import { createPathControls } from "./createPathControls.js";
 import { createLineTooltip } from "./createLineTooltip.js";
 import { createPathSegmentSelector } from "./createPathSegmentSelector.js";
 import { createPathSegmentHighlight } from "./createPathSegmentHighlight.js";
@@ -168,7 +168,7 @@ export function createPathTools({
         });
     }
 
-    const pathControls = createPathNudgeControls({
+    const pathControls = createPathControls({
         container,
         initialExpanded,
         lineLabelsVisible,
@@ -236,7 +236,7 @@ export function createPathTools({
 
             pathControls.updateOriginPosition(arrowPath.origin);
         },
-        
+
         onSelectedInitialDirectionChange(initialDirection) {
             if (pathEditor.setPathInitialDirection(selectedOriginArrowName, initialDirection)) {
                 rebuild();
