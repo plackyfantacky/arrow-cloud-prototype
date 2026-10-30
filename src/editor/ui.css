@@ -174,3 +174,24 @@
 .ui .viewport-notice[hidden] {
     display: none;
 }
+
+.ui .path-creation-panel {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    box-sizing: border-box;
+    width: min(320px, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    padding: 1rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 8px;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    box-shadow: 0 12px 36px rgb(0 0 0 / 45%);
+}
+
+.ui .path-creation-panel:popover-open {
+    display: grid;
+    gap: 1rem;
+}

@@ -1,6 +1,36 @@
 import pathControlsTemplate from "./pathControls.html";
 import { createPanelToggle } from "../editorUI.js";
 
+// Helper functions
+function getInitialDirectionValue(initialDirection) {
+    if (!Array.isArray(initialDirection)) {
+        return initialDirection ?? "";
+    }
+
+    const axisDirections = [
+        ["+x", [1, 0, 0]],
+        ["-x", [-1, 0, 0]],
+        ["+y", [0, 1, 0]],
+        ["-y", [0, -1, 0]],
+        ["+z", [0, 0, 1]],
+        ["-z", [0, 0, -1]],
+    ];
+
+    const length = Math.hypot(...initialDirection);
+
+    if (!Number.isFinite(length) || length === 0) {
+        return "";
+    }
+
+    const matchingDirection = axisDirections.find(([, vector]) => {
+        return vector.every((value, index) => {
+            return Math.abs(value - initialDirection[index] / length) < 1e-6;
+        });
+    });
+
+    return matchingDirection?.[0] ?? "";
+}
+
 export function createPathControls({
     container = document.body,
     initialExpanded = true,
@@ -20,6 +50,7 @@ export function createPathControls({
         selectedPathInfo: null,
         selectionMode: "empty",
         editorMode: "empty",
+        isCreatingPath: false,
     };
 
     const template = document.createElement("template");
@@ -30,6 +61,7 @@ export function createPathControls({
 
     // Panel
     const toggleButton = query('[data-action="toggle-panel"]');
+    const closePathCreateButton = query('[data-action="close-path-create"]');
     const content = query("[data-panel-content]");
     const viewportNotice = query("[data-viewport-notice]");
 
@@ -99,25 +131,54 @@ export function createPathControls({
     function bindPathCreationEvents() {
         // new path
         newPathButton.addEventListener("click", () => {
-            showEditorMode("create");
+            setPathCreationOpen(true);
+        });
+
+        // close "x" button
+        closePathCreateButton.addEventListener("click", () => {
+            setPathCreationOpen(false);
         });
 
         // cancel
         cancelPathButton.addEventListener("click", () => {
-            showEditorMode(state.selectionMode);
+            setPathCreationOpen(false);
         });
 
         // add path
         addPathButton.addEventListener("click", () => {
-            const origin = pathOriginInputs.map((input) => Number(input.value));
+            const origin = pathOriginInputs.map((input) => input.valueAsNumber);
 
             if (origin.some((value) => !Number.isFinite(value))) {
                 return;
             }
 
             onAddPath(origin, initialDirectionSelect.value);
-            showEditorMode(state.selectionMode);
+            setPathCreationOpen(false);
         });
+
+        function handleEscape(event) {
+            if (event.key !== "Escape" || !state.isCreatingPath) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            setPathCreationOpen(false);
+        }
+
+        function handleResize() {
+            if (state.isCreatingPath) {
+                positionPathCreationPanel();
+            }
+        }
+
+        window.addEventListener("keydown", handleEscape, true);
+        window.addEventListener("resize", handleResize);
+
+        return function unbindPathCreationEvents() {
+            window.removeEventListener("keydown", handleEscape, true);
+            window.removeEventListener("resize", handleResize);
+        };
     }
 
     function bindPathPropertyEvents() {
@@ -209,48 +270,69 @@ export function createPathControls({
         resetSelectedFields();
         updateSelectionControls();
 
-        // clearing selection must not close new-path panel
-        if (state.editorMode !== "create") {
-            showEditorMode(state.selectionMode);
-        }
+        showEditorMode(state.selectionMode);
     }
 
     function setSelectedOrigin(arrowName, position, initialDirection) {
         clearSelection();
-
         state.selectionMode = "path";
 
         editorHeading.textContent = arrowName;
         updateInitialDirection(initialDirection);
         updateOriginPosition(position);
-        
+
         updateSelectionControls();
         showEditorMode(state.selectionMode);
     }
 
-    function setSelectedPathInfo(
-        selectedPathInfo, 
-        isLastMove = false, 
-        isFirstMove = false, 
-        canRemoveMove = false
-    ) {
+    function setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false, canRemoveMove = false) {
         state.selectedPathInfo = selectedPathInfo;
         state.selectionMode = "segment";
-        
+
         editorHeading.textContent = `${selectedPathInfo.arrowName} · Segment ${selectedPathInfo.segmentIndex + 1}`;
         currentActionSelect.value = selectedPathInfo.actionName;
         insertAfterButton.textContent = isLastMove ? "Add segment" : "Insert After";
 
-        updateSelectionControls(
-            isFirstMove,
-            isLastMove,
-            canRemoveMove
-        );
-        
+        updateSelectionControls({ isFirstMove, isLastMove, canRemoveMove });
         showEditorMode(state.selectionMode);
     }
 
     // Display helpers
+    function setPathCreationOpen(isOpen) {
+        if (isOpen === state.isCreatingPath) {
+            return;
+        }
+
+        if (isOpen) {
+            createSection.showPopover();
+            positionPathCreationPanel();
+            initialDirectionSelect.focus();
+        } else {
+            createSection.hidePopover();
+            newPathButton.focus();
+        }
+
+        state.isCreatingPath = isOpen;
+        newPathButton.setAttribute("aria-expanded", String(isOpen));
+    }
+
+    function positionPathCreationPanel() {
+        const openerBounds = newPathButton.getBoundingClientRect();
+        const panelBounds = createSection.getBoundingClientRect();
+        const margin = 16;
+        const gap = 20;
+
+        const maximumLeft = window.innerWidth - panelBounds.width - margin;
+        const maximumTop = window.innerHeight - panelBounds.height - margin;
+
+        const left = Math.max(margin, Math.min(openerBounds.right + gap, maximumLeft));
+
+        const top = Math.max(margin, Math.min(openerBounds.top, maximumTop));
+
+        createSection.style.left = `${left}px`;
+        createSection.style.top = `${top}px`;
+    }
+
     function resetSelectedFields() {
         editorHeading.textContent = "No path selected";
         selectedInitialDirectionSelect.value = "";
@@ -299,7 +381,6 @@ export function createPathControls({
         }
         state.editorMode = mode;
         emptySection.hidden = mode !== "empty";
-        createSection.hidden = mode !== "create";
         originSection.hidden = mode !== "path";
         editSegmentSection.hidden = mode !== "segment";
         addSegmentSection.hidden = mode !== "segment";
@@ -320,28 +401,7 @@ export function createPathControls({
     }
 
     function updateInitialDirection(initialDirection) {
-        const axisDirections = [
-            ["+x", [1, 0, 0]],
-            ["-x", [-1, 0, 0]],
-            ["+y", [0, 1, 0]],
-            ["-y", [0, -1, 0]],
-            ["+z", [0, 0, 1]],
-            ["-z", [0, 0, -1]],
-        ];
-
-        let directionValue = initialDirection;
-
-        if (Array.isArray(initialDirection)) {
-            const length = Math.hypot(...initialDirection);
-
-            directionValue = axisDirections.find(([, vector]) => {
-                return vector.every((value, index) => {
-                    return Math.abs(value - initialDirection[index] / length) < 1e-6;
-                });
-            })?.[0];
-        }
-
-        selectedInitialDirectionSelect.value = directionValue ?? "";
+        selectedInitialDirectionSelect.value = getInitialDirectionValue(initialDirection);
     }
 
     function setViewportOriginNoticeVisible(isVisible) {
@@ -352,10 +412,11 @@ export function createPathControls({
     function destroy() {
         panelToggle.destroy();
         controlsContainer.remove();
+        unbindPathCreationEvents();
     }
 
     // Initialise
-    bindPathCreationEvents();
+    const unbindPathCreationEvents = bindPathCreationEvents();
     bindPathPropertyEvents();
     bindSegmentEditingEvents();
     bindSegmentInsertionEvents();

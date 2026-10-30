@@ -1,5 +1,64 @@
 <div class="editor-panel editor-path-controls">
-    <button type="button" class="editor-path-controls__toggle" data-action="toggle-panel" aria-expanded="true">Path Editor</button>
+    <div class="row">
+        <button type="button" class="editor-path-controls__toggle grow" data-action="toggle-panel" aria-expanded="true">Path Editor</button>
+
+        <button type="button" class="button icon-button" data-action="new-path" aria-label="New path" title="New path" aria-expanded="false">
+            <!-- prettier-ignore -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+                <path d="M14 2v6h6" />
+                <path d="M12 12v6M9 15h6" />
+            </svg>
+        </button>
+    </div>
+
+    <section class="path-creation-panel" data-path-create popover="manual" role="dialog" aria-label="New path">
+        <div class="row">
+            <strong class="grow">New path</strong>
+            <button type="button" class="button icon-button" data-action="close-path-create" aria-label="Close new path" title="Close">×</button>
+        </div>
+        <div class="column gap-4">
+            <div class="field">
+                <label>New path origin</label>
+
+                <div class="row">
+                    <label class="field path-initial-direction">
+                        Initial direction
+                        <select class="select" data-control="path-initial-direction">
+                            <option value="+x">+X</option>
+                            <option value="-x">-X</option>
+                            <option value="+y">+Y</option>
+                            <option value="-y">-Y</option>
+                            <option value="+z">+Z</option>
+                            <option value="-z">-Z</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="path-origin-fields row">
+                    <label class="path-origin-field field grow">
+                        X
+                        <input type="number" class="input" data-control="path-origin-x" value="0" step="0.1" />
+                    </label>
+
+                    <label class="path-origin-field field grow">
+                        Y
+                        <input type="number" class="input" data-control="path-origin-y" value="0" step="0.1" />
+                    </label>
+
+                    <label class="path-origin-field field grow">
+                        Z
+                        <input type="number" class="input" data-control="path-origin-z" value="0" step="0.1" />
+                    </label>
+                </div>
+            </div>
+
+            <div class="row">
+                <button type="button" class="button grow" data-action="add-path">Add path</button>
+                <button type="button" class="button grow" data-action="cancel-path">Cancel</button>
+            </div>
+        </div>
+    </section>
 
     <div class="editor-path-controls__content" data-panel-content>
         <div class="group">
@@ -9,51 +68,6 @@
 
         <section class="group" data-path-empty>
             <p class="muted">Select a path in the viewport to edit it, or create a new one.</p>
-            <button type="button" class="button primary full" data-action="new-path">New path</button>
-        </section>
-
-        <section class="group" data-path-create hidden>
-            <div class="column gap-4">
-                <div class="field">
-                    <label>New path origin</label>
-
-                    <div class="row">
-                        <label class="field path-initial-direction">
-                            Initial direction
-                            <select class="select" data-control="path-initial-direction">
-                                <option value="+x">+X</option>
-                                <option value="-x">-X</option>
-                                <option value="+y">+Y</option>
-                                <option value="-y">-Y</option>
-                                <option value="+z">+Z</option>
-                                <option value="-z">-Z</option>
-                            </select>
-                        </label>
-                    </div>
-
-                    <div class="path-origin-fields row">
-                        <label class="path-origin-field field grow">
-                            X
-                            <input type="number" class="input" data-control="path-origin-x" value="0" step="0.1" />
-                        </label>
-
-                        <label class="path-origin-field field grow">
-                            Y
-                            <input type="number" class="input" data-control="path-origin-y" value="0" step="0.1" />
-                        </label>
-
-                        <label class="path-origin-field field grow">
-                            Z
-                            <input type="number" class="input" data-control="path-origin-z" value="0" step="0.1" />
-                        </label>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <button type="button" class="button grow" data-action="add-path">Add path</button>
-                    <button type="button" class="button grow" data-action="cancel-path">Cancel</button>
-                </div>
-            </div>
         </section>
 
         <section class="group" data-origin-section hidden>
