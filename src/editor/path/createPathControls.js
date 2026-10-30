@@ -86,7 +86,7 @@ export function createPathControls({
     // Path Actions
     const pathActionsSection = query("[data-path-actions]");
 
-    // UI helpers
+    // Panel setup
     const panelToggle = createPanelToggle({
         button: toggleButton,
         content,
@@ -95,7 +95,7 @@ export function createPathControls({
         onExpandedChange: onPanelExpandedChange,
     });
 
-    // Binding Function - New Path Panel
+    // Event binding
     function bindPathCreationEvents() {
         // new path
         newPathButton.addEventListener("click", () => {
@@ -120,7 +120,6 @@ export function createPathControls({
         });
     }
 
-    // Binding Function - Edit > Origin Point
     function bindPathPropertyEvents() {
         selectedOriginInputs.forEach((input, axisIndex) => {
             input.addEventListener("change", () => {
@@ -194,7 +193,6 @@ export function createPathControls({
         duplicateButton.addEventListener("click", onDuplicateMove);
     }
 
-    // Binding Function - Other Path Actions
     function bindPathActionEvents() {
         // copy
         copyButton.addEventListener("click", onCopy);
@@ -203,94 +201,25 @@ export function createPathControls({
         removePathButton.addEventListener("click", onRemovePath);
     }
 
-    function setAddSegmentExpanded(isExpanded) {
-        addSegmentContent.hidden = !isExpanded;
-        toggleAddSegmentButton.setAttribute("aria-expanded", String(isExpanded));
-        addSegmentIndicator.textContent = isExpanded ? "▴" : "▾";
-    }
-
-    function updateInitialDirection(initialDirection) {
-        const axisDirections = [
-            ["+x", [1, 0, 0]],
-            ["-x", [-1, 0, 0]],
-            ["+y", [0, 1, 0]],
-            ["-y", [0, -1, 0]],
-            ["+z", [0, 0, 1]],
-            ["-z", [0, 0, -1]],
-        ];
-
-        let directionValue = initialDirection;
-
-        if (Array.isArray(initialDirection)) {
-            const length = Math.hypot(...initialDirection);
-
-            directionValue = axisDirections.find(([, vector]) => {
-                return vector.every((value, index) => {
-                    return Math.abs(value - initialDirection[index] / length) < 1e-6;
-                });
-            })?.[0];
-        }
-
-        selectedInitialDirectionSelect.value = directionValue ?? "";
-    }
-
+    // Selection functions
     function clearSelection() {
-        editorHeading.textContent = "No path selected";
-        
-        removePathButton.disabled = true;
-
         state.selectedPathInfo = null;
-        selectedInitialDirectionSelect.value = "";
-        selectedInitialDirectionSelect.disabled = true;
+        state.selectionMode = "empty";
+
+        resetSelectedFields();
+        disableSelectionControls();
 
         originSection.hidden = true;
 
-        selectedOriginInputs.forEach((input) => {
-            input.value = "";
-            input.disabled = true;
-        });
-
-        currentActionSelect.disabled = true;
-        newActionSelect.disabled = true;
-
-        [
-            nudgeNegativeButton,
-            nudgePositiveButton,
-            insertBeforeButton,
-            insertAfterButton,
-            duplicateButton,
-            removeButton,
-            trimStartButton,
-            trimEndButton,
-            copyButton,
-        ].forEach((button) => {
-            button.disabled = true;
-        });
-
-        state.selectionMode = "empty";
+        // clearing selection must not close new-path panel
         if (state.editorMode !== "create") {
             showEditorMode(state.selectionMode);
         }
-
-    }
-
-    function showEditorMode(mode) {
-        if (mode !== "segment" || state.editorMode !== "segment") {
-            setAddSegmentExpanded(false);
-        }
-        state.editorMode = mode;
-        emptySection.hidden = mode !== "empty";
-        createSection.hidden = mode !== "create";
-        originSection.hidden = mode !== "path";
-        editSegmentSection.hidden = mode !== "segment";
-        addSegmentSection.hidden = mode !== "segment";
-        exportSection.hidden = mode !== "path" && mode !== "segment";
-        pathActionsSection.hidden = mode !== "path" && mode !== "segment";
     }
 
     function setSelectedOrigin(arrowName, position, initialDirection) {
         clearSelection();
-        
+
         updateInitialDirection(initialDirection);
         selectedInitialDirectionSelect.disabled = false;
 
@@ -310,16 +239,6 @@ export function createPathControls({
 
         state.selectionMode = "path";
         showEditorMode(state.selectionMode);
-    }
-
-    function updateOriginPosition(position) {
-        selectedOriginInputs.forEach((input, index) => {
-            input.value = String(Number(position[index].toFixed(3)));
-        });
-    }
-
-    function setViewportOriginNoticeVisible(isVisible) {
-        viewportNotice.hidden = !isVisible;
     }
 
     function setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false, canRemoveMove = false) {
@@ -349,11 +268,101 @@ export function createPathControls({
         showEditorMode(state.selectionMode);
     }
 
+    // Display helpers
+    function resetSelectedFields() {
+        editorHeading.textContent = "No path selected";
+        selectedInitialDirectionSelect.value = "";
+
+        selectedOriginInputs.forEach((input) => {
+            input.value = "";
+        });
+    }
+
+    function disableSelectionControls() {
+        const selectionControls = [
+            ...selectedOriginInputs,
+            selectedInitialDirectionSelect,
+            currentActionSelect,
+            newActionSelect,
+            nudgeNegativeButton,
+            nudgePositiveButton,
+            insertBeforeButton,
+            insertAfterButton,
+            duplicateButton,
+            removeButton,
+            trimStartButton,
+            trimEndButton,
+            copyButton,
+            removePathButton,
+        ];
+
+        selectionControls.forEach((control) => {
+            control.disabled = true;
+        });
+    }
+
+    function showEditorMode(mode) {
+        if (mode !== "segment" || state.editorMode !== "segment") {
+            setAddSegmentExpanded(false);
+        }
+        state.editorMode = mode;
+        emptySection.hidden = mode !== "empty";
+        createSection.hidden = mode !== "create";
+        originSection.hidden = mode !== "path";
+        editSegmentSection.hidden = mode !== "segment";
+        addSegmentSection.hidden = mode !== "segment";
+        exportSection.hidden = mode !== "path" && mode !== "segment";
+        pathActionsSection.hidden = mode !== "path" && mode !== "segment";
+    }
+
+    function setAddSegmentExpanded(isExpanded) {
+        addSegmentContent.hidden = !isExpanded;
+        toggleAddSegmentButton.setAttribute("aria-expanded", String(isExpanded));
+        addSegmentIndicator.textContent = isExpanded ? "▴" : "▾";
+    }
+
+    function updateOriginPosition(position) {
+        selectedOriginInputs.forEach((input, index) => {
+            input.value = String(Number(position[index].toFixed(3)));
+        });
+    }
+
+    function updateInitialDirection(initialDirection) {
+        const axisDirections = [
+            ["+x", [1, 0, 0]],
+            ["-x", [-1, 0, 0]],
+            ["+y", [0, 1, 0]],
+            ["-y", [0, -1, 0]],
+            ["+z", [0, 0, 1]],
+            ["-z", [0, 0, -1]],
+        ];
+
+        let directionValue = initialDirection;
+
+        if (Array.isArray(initialDirection)) {
+            const length = Math.hypot(...initialDirection);
+
+            directionValue = axisDirections.find(([, vector]) => {
+                return vector.every((value, index) => {
+                    return Math.abs(value - initialDirection[index] / length) < 1e-6;
+                });
+            })?.[0];
+        }
+
+        selectedInitialDirectionSelect.value = directionValue ?? "";
+    }
+
+    function setViewportOriginNoticeVisible(isVisible) {
+        viewportNotice.hidden = !isVisible;
+    }
+
+    // Clean up
     function destroy() {
         panelToggle.destroy();
         controlsContainer.remove();
     }
 
+    // Initialise
     bindPathCreationEvents();
     bindPathPropertyEvents();
     bindSegmentEditingEvents();
@@ -363,6 +372,7 @@ export function createPathControls({
     showEditorMode(state.selectionMode);
     container.appendChild(controlsContainer);
 
+    // Public API
     return {
         setSelectedPathInfo,
         clearSelection,
