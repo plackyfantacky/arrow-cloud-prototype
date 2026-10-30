@@ -207,9 +207,7 @@ export function createPathControls({
         state.selectionMode = "empty";
 
         resetSelectedFields();
-        disableSelectionControls();
-
-        originSection.hidden = true;
+        updateSelectionControls();
 
         // clearing selection must not close new-path panel
         if (state.editorMode !== "create") {
@@ -220,51 +218,35 @@ export function createPathControls({
     function setSelectedOrigin(arrowName, position, initialDirection) {
         clearSelection();
 
-        updateInitialDirection(initialDirection);
-        selectedInitialDirectionSelect.disabled = false;
+        state.selectionMode = "path";
 
         editorHeading.textContent = arrowName;
-
-        removePathButton.disabled = false;
-
-        originSection.hidden = false;
-
+        updateInitialDirection(initialDirection);
         updateOriginPosition(position);
-
-        copyButton.disabled = false;
-
-        selectedOriginInputs.forEach((input) => {
-            input.disabled = false;
-        });
-
-        state.selectionMode = "path";
+        
+        updateSelectionControls();
         showEditorMode(state.selectionMode);
     }
 
-    function setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false, canRemoveMove = false) {
-        removePathButton.disabled = false;
-        originSection.hidden = true;
-
+    function setSelectedPathInfo(
+        selectedPathInfo, 
+        isLastMove = false, 
+        isFirstMove = false, 
+        canRemoveMove = false
+    ) {
         state.selectedPathInfo = selectedPathInfo;
-        editorHeading.textContent = `${selectedPathInfo.arrowName} · Segment ${selectedPathInfo.segmentIndex + 1}`;
-
-        currentActionSelect.disabled = false;
-        currentActionSelect.value = selectedPathInfo.actionName;
-
-        newActionSelect.disabled = false;
-        nudgeNegativeButton.disabled = false;
-        nudgePositiveButton.disabled = false;
-        insertBeforeButton.disabled = false;
-        insertAfterButton.disabled = false;
-        duplicateButton.disabled = false;
-        removeButton.disabled = !canRemoveMove;
-        copyButton.disabled = false;
-
-        trimStartButton.disabled = isFirstMove || isLastMove;
-        trimEndButton.disabled = isFirstMove || isLastMove;
-
-        insertAfterButton.textContent = isLastMove ? "Add segment" : "Insert After";
         state.selectionMode = "segment";
+        
+        editorHeading.textContent = `${selectedPathInfo.arrowName} · Segment ${selectedPathInfo.segmentIndex + 1}`;
+        currentActionSelect.value = selectedPathInfo.actionName;
+        insertAfterButton.textContent = isLastMove ? "Add segment" : "Insert After";
+
+        updateSelectionControls(
+            isFirstMove,
+            isLastMove,
+            canRemoveMove
+        );
+        
         showEditorMode(state.selectionMode);
     }
 
@@ -278,10 +260,18 @@ export function createPathControls({
         });
     }
 
-    function disableSelectionControls() {
-        const selectionControls = [
-            ...selectedOriginInputs,
-            selectedInitialDirectionSelect,
+    function updateSelectionControls({ isFirstMove = false, isLastMove = false, canRemoveMove = false } = {}) {
+        const isPathSelected = state.selectionMode === "path";
+        const isSegmentSelected = state.selectionMode === "segment";
+        const hasSelection = isPathSelected || isSegmentSelected;
+
+        selectedOriginInputs.forEach((input) => {
+            input.disabled = !isPathSelected;
+        });
+
+        selectedInitialDirectionSelect.disabled = !isPathSelected;
+
+        const segmentControls = [
             currentActionSelect,
             newActionSelect,
             nudgeNegativeButton,
@@ -289,16 +279,18 @@ export function createPathControls({
             insertBeforeButton,
             insertAfterButton,
             duplicateButton,
-            removeButton,
-            trimStartButton,
-            trimEndButton,
-            copyButton,
-            removePathButton,
         ];
 
-        selectionControls.forEach((control) => {
-            control.disabled = true;
+        segmentControls.forEach((control) => {
+            control.disabled = !isSegmentSelected;
         });
+
+        removeButton.disabled = !isSegmentSelected || !canRemoveMove;
+        trimStartButton.disabled = !isSegmentSelected || isFirstMove || isLastMove;
+        trimEndButton.disabled = !isSegmentSelected || isFirstMove || isLastMove;
+
+        copyButton.disabled = !hasSelection;
+        removePathButton.disabled = !hasSelection;
     }
 
     function showEditorMode(mode) {
