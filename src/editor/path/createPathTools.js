@@ -175,9 +175,22 @@ export function createPathTools({
         onPanelExpandedChange,
 
         onAddPath(origin, initialDirection) {
-            pathEditor.addPath(origin, initialDirection);
+            const newPath = pathEditor.addPath(origin, initialDirection);
+
+            selectedOriginArrowName = null;
+            dragPosition = null;
+            originMarkers.clearSelection();
+
+            pathEditor.setSelectedPathInfo({
+                arrowName: newPath.name,
+                segmentIndex: 0,
+                actionName: "forward",
+                segmentLength: newPath.moves[0][1],
+            })
+
             rebuild();
             onPathCollectionChange(pathEditor.getArrowPaths());
+            syncSelection();
         },
 
         onRemovePath: removeSelectedPath,
@@ -463,6 +476,7 @@ export function createPathTools({
             pathEditor.isSelectedMoveLast(),
             pathEditor.isSelectedMoveFirst(),
             pathEditor.canRemoveSelectedMove(),
+            pathEditor.getSelectedArrowPath(),
         );
 
         segmentHighlight?.setSelectedPathInfo(selectedPathInfo);

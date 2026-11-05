@@ -90,6 +90,14 @@ export function createPathControls({
     const selectedInitialDirectionSelect = query('[data-control="selected-initial-direction"]');
     const removePathButton = query('[data-action="remove-path"]');
 
+    const pathPropertiesForm = query("[data-path-properties-form]");
+    const pathPropertiesSummary = query("[data-path-properties-summary]");
+    const pathSummaryDirection = query("[data-path-summary-direction]");
+
+    const pathSummaryCoordinates = ["x", "y", "z"].map((axis) => {
+        return query(`[data-path-summary-${axis}]`);
+    });
+
     // Segment editing
     const currentActionSelect = query('[data-control="current-action"]');
     const nudgeNegativeButton = query('[data-action="nudge-negative"]');
@@ -285,13 +293,15 @@ export function createPathControls({
         showEditorMode(state.selectionMode);
     }
 
-    function setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false, canRemoveMove = false) {
+    function setSelectedPathInfo(selectedPathInfo, isLastMove = false, isFirstMove = false, canRemoveMove, arrowPath) {
         state.selectedPathInfo = selectedPathInfo;
         state.selectionMode = "segment";
 
         editorHeading.textContent = `${selectedPathInfo.arrowName} · Segment ${selectedPathInfo.segmentIndex + 1}`;
         currentActionSelect.value = selectedPathInfo.actionName;
         insertAfterButton.textContent = isLastMove ? "Add segment" : "Insert After";
+
+        updatePathPropertiesSummary(arrowPath);
 
         updateSelectionControls({ isFirstMove, isLastMove, canRemoveMove });
         showEditorMode(state.selectionMode);
@@ -381,11 +391,14 @@ export function createPathControls({
         }
         state.editorMode = mode;
         emptySection.hidden = mode !== "empty";
-        originSection.hidden = mode !== "path";
+        originSection.hidden = mode !== "path" && mode !== "segment";
         editSegmentSection.hidden = mode !== "segment";
         addSegmentSection.hidden = mode !== "segment";
         exportSection.hidden = mode !== "path" && mode !== "segment";
         pathActionsSection.hidden = mode !== "path" && mode !== "segment";
+        
+        pathPropertiesForm.hidden = mode !== "path";
+        pathPropertiesSummary.hidden = mode !== "segment";
     }
 
     function setAddSegmentExpanded(isExpanded) {
@@ -402,6 +415,16 @@ export function createPathControls({
 
     function updateInitialDirection(initialDirection) {
         selectedInitialDirectionSelect.value = getInitialDirectionValue(initialDirection);
+    }
+
+    function updatePathPropertiesSummary(arrowPath) {
+        const direction = getInitialDirectionValue(arrowPath.initialDirection);
+
+        pathSummaryDirection.textContent = direction ? direction.toUpperCase().replace("-", "−") : "Custom direction";
+
+        pathSummaryCoordinates.forEach((cell, index) => {
+            cell.textContent = String(Number(arrowPath.origin[index].toFixed(3)));
+        });
     }
 
     function setViewportOriginNoticeVisible(isVisible) {

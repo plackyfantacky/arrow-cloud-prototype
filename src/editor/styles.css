@@ -16,22 +16,14 @@ canvas {
     display: block;
 }
 
-.editor-panel {
-    z-index: 10;
-    padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.72);
-    color: #fff;
-    font-family: system-ui, sans-serif;
-    font-size: 13px;
-    border-radius: 0.5rem;
-    min-width:350px;
-}
 
 .editor-sidebar {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    min-width: 300px;
+    min-width: 320px;
+    width: 320px;
+    
 
     position: fixed;
     top: 1rem;
@@ -47,6 +39,22 @@ canvas {
 
     scrollbar-width: thin;
     scrollbar-color: var(--ui-border) transparent;
+}
+
+.editor-panel {
+    z-index: 10;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    font-family: system-ui, sans-serif;
+    font-size: 13px;
+    border-radius: 0.5rem;
+}
+
+.editor-sidebar > .editor-panel {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
 }
 
 .editor-sidebar > * {
@@ -152,6 +160,25 @@ canvas {
 
 .editor-path-controls [hidden] {
     display: none;
+}
+
+.ui .path-properties-summary {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.ui .path-properties-summary th {
+    padding: 0.5rem 0.25rem 0.25rem;
+    color: var(--ui-muted);
+    font-weight: 400;
+}
+
+.ui .path-properties-summary td {
+    padding: 0.25rem 0.25rem 0.75rem;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
 }
 
 .path-initial-direction {
