@@ -184,7 +184,7 @@ export function createArrowCloudEditor({
     axesGauge.userData.editorHelper = true;
     scene.add(axesGauge);
 
-    const sceneOriginMarker = createSceneOriginMarker({ size: 0.25 });
+    const sceneOriginMarker = createSceneOriginMarker({ size: 2 });
     sceneOriginMarker.visible = preferences.get("sceneOriginVisible");
     scene.add(sceneOriginMarker);
 

@@ -1,76 +1,33 @@
 import * as THREE from "three";
 
-export function createSceneOriginMarker({ size = 0.4, colour = 0xa78bfa, opacity = 0.85 } = {}) {
+export function createSceneOriginMarker({ size = 2, colour = 0xa78bfa, opacity = 0.85 } = {}) {
     const group = new THREE.Group();
 
-    const halfSize = size * 0.5;
-    const labelOffset = 0.002;
-    const labelSize = size * 0.65;
-
-    // Invisible solid cube used only for depth, so rear labels are hidden.
-    const depthCube = new THREE.Mesh(
-        new THREE.BoxGeometry(size, size, size),
-        new THREE.MeshBasicMaterial({
-            colorWrite: false,
-            depthWrite: true,
-        }),
-    );
-
-    group.add(depthCube);
-
-    // Visible wireframe cube.
-    const wireframe = new THREE.LineSegments(
-        new THREE.EdgesGeometry(new THREE.BoxGeometry(size, size, size)),
-        new THREE.LineBasicMaterial({
-            color: colour,
-            transparent: true,
-            opacity,
-        }),
-    );
-
-    group.add(wireframe);
-
-    const labelDefinitions = [
-        {
-            position: [0, 0, halfSize + labelOffset],
-            rotation: [0, 0, 0], // front
-        },
-        {
-            position: [0, 0, -halfSize - labelOffset],
-            rotation: [0, Math.PI, 0], // back
-        },
-        {
-            position: [halfSize + labelOffset, 0, 0],
-            rotation: [0, Math.PI / 2, 0], // right
-        },
-        {
-            position: [-halfSize - labelOffset, 0, 0],
-            rotation: [0, -Math.PI / 2, 0], // left
-        },
-        {
-            position: [0, halfSize + labelOffset, 0],
-            rotation: [-Math.PI / 2, 0, 0], // top
-        },
-        {
-            position: [0, -halfSize - labelOffset, 0],
-            rotation: [Math.PI / 2, 0, 0], // bottom
-        },
+    const arrowDefinitions = [
+        { label: "+x", rotation: 0, position: [1, 0] },
+        { label: "-x", rotation: Math.PI, position: [-1, 0] },
+        { label: "+z", rotation: -Math.PI / 2, position: [0, 1] },
+        { label: "-z", rotation: Math.PI / 2, position: [0, -1] },
     ];
 
-    labelDefinitions.forEach(({ position, rotation }) => {
-        const label = createZeroFace({
-            size: labelSize,
-            colour,
+    arrowDefinitions.forEach(({ label, rotation, position }) => {
+        const arrow = createArrowOutline({ size, colour, opacity });
+
+        arrow.rotation.y = rotation;
+        group.add(arrow);
+
+        const axisLabel = createAxisLabel({
+            text: label,
+            size: size * 0.18,
             opacity,
         });
 
-        label.position.set(...position);
-        label.rotation.set(...rotation);
+        axisLabel.position.set(position[0] * size * 0.26, 0.002, position[1] * size * 0.26);
 
-        group.add(label);
+        group.add(axisLabel);
     });
 
-    group.position.set(0, 0, 0);
+    group.position.set(0, 0.01, 0);
     group.userData.editorHelper = true;
 
     group.dispose = () => {
@@ -91,28 +48,45 @@ export function createSceneOriginMarker({ size = 0.4, colour = 0xa78bfa, opacity
     return group;
 }
 
-function createZeroFace({ size, colour, opacity }) {
+function createArrowOutline({ size, colour, opacity }) {
+    // One arrow pointing towards +X, with space around the origin.
+    const points = [
+        [0.07, -0.07],
+        [0.3, -0.07],
+        [0.3, -0.16],
+        [0.5, 0],
+        [0.3, 0.16],
+        [0.3, 0.07],
+        [0.07, 0.07],
+    ];
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(points.map(([x, z]) => new THREE.Vector3(x * size, 0, z * size)));
+
+    const material = new THREE.LineBasicMaterial({
+        color: colour,
+        transparent: true,
+        opacity,
+    });
+
+    return new THREE.Line(geometry, material);
+}
+
+function createAxisLabel({ text, size, opacity }) {
     const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
 
     canvas.width = 256;
     canvas.height = 256;
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.font = "bold 180px system-ui, sans-serif";
+    const context = canvas.getContext("2d");
+
+    context.font = "bold 110px system-ui, sans-serif";
     context.textAlign = "center";
     context.textBaseline = "middle";
-
-    const colourHex = `#${colour.toString(16).padStart(6, "0")}`;
-
-    context.lineWidth = 14;
-    context.strokeStyle = "rgba(0, 0, 0, 0.35)";
-    context.strokeText("0", canvas.width * 0.5, canvas.height * 0.53);
-
-    context.fillStyle = colourHex;
-    context.fillText("0", canvas.width * 0.5, canvas.height * 0.53);
+    context.fillStyle = "#ffffff";
+    context.fillText(text, 128, 128);
 
     const texture = new THREE.CanvasTexture(canvas);
+
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
@@ -122,12 +96,13 @@ function createZeroFace({ size, colour, opacity }) {
         map: texture,
         transparent: true,
         opacity,
-        side: THREE.FrontSide,
-        depthTest: true,
+        side: THREE.DoubleSide,
         depthWrite: false,
     });
 
-    const geometry = new THREE.PlaneGeometry(size, size);
+    const label = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
 
-    return new THREE.Mesh(geometry, material);
+    label.rotation.x = -Math.PI / 2;
+
+    return label;
 }
