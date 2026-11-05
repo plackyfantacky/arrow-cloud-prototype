@@ -410,9 +410,9 @@ export function createPathControls({
 
     // Clean up
     function destroy() {
+        unbindPathCreationEvents();
         panelToggle.destroy();
         controlsContainer.remove();
-        unbindPathCreationEvents();
     }
 
     // Initialise
