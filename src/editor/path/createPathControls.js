@@ -406,7 +406,7 @@ export function createPathControls({
 
     function showEditorMode(mode) {
         if (mode !== "segment" || state.editorMode !== "segment") {
-            setAddSegmentOpen(false);
+            setAddSegmentOpen(false, false);
         }
         state.editorMode = mode;
         emptySection.hidden = mode !== "empty";
@@ -448,7 +448,6 @@ export function createPathControls({
 
     function closeAddSegmentPanel() {
         setAddSegmentOpen(false);
-        toggleAddSegmentButton.focus();
     }
 
     function updateOriginPosition(position) {
