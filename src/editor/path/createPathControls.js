@@ -51,6 +51,7 @@ export function createPathControls({
         selectionMode: "empty",
         editorMode: "empty",
         isCreatingPath: false,
+        isAddingSegment: false,
     };
 
     const template = document.createElement("template");
@@ -111,7 +112,7 @@ export function createPathControls({
     // Segment insertion
     const toggleAddSegmentButton = query('[data-action="toggle-add-segment"]');
     const addSegmentContent = query("[data-add-segment-content]");
-    const addSegmentIndicator = query("[data-add-segment-indicator]");
+    const closeAddSegmentButton = query('[data-action="close-add-segment"]');
 
     const newActionSelect = query('[data-control="new-action"]');
     const insertBeforeButton = query('[data-action="insert-before"]');
@@ -165,18 +166,27 @@ export function createPathControls({
         });
 
         function handleEscape(event) {
-            if (event.key !== "Escape" || !state.isCreatingPath) {
+            if (event.key !== "Escape" || (!state.isCreatingPath && !state.isAddingSegment)) {
                 return;
             }
 
             event.preventDefault();
             event.stopImmediatePropagation();
-            setPathCreationOpen(false);
+            
+            if (state.isAddingSegment) {
+                closeAddSegmentPanel();
+            } else {
+                setPathCreationOpen(false);
+            }
         }
 
         function handleResize() {
             if (state.isCreatingPath) {
                 positionPathCreationPanel();
+            }
+
+            if (state.isAddingSegment) {
+                positionPanel(addSegmentContent, toggleAddSegmentButton);
             }
         }
 
@@ -239,27 +249,32 @@ export function createPathControls({
     function bindSegmentInsertionEvents() {
         // add segment toggle
         toggleAddSegmentButton.addEventListener("click", () => {
-            setAddSegmentExpanded(addSegmentContent.hidden);
+            setAddSegmentOpen(!state.isAddingSegment);
         });
 
-        // cancel/collapse add segment panel
-        cancelAddSegmentButton.addEventListener("click", () => {
-            setAddSegmentExpanded(false);
-            toggleAddSegmentButton.focus();
-        });
+        closeAddSegmentButton.addEventListener("click", closeAddSegmentPanel);
+        cancelAddSegmentButton.addEventListener("click", closeAddSegmentPanel);
 
         // insert after (and "Add segment")
         insertAfterButton.addEventListener("click", () => {
-            onInsertMove("after", newActionSelect.value);
+            if (onInsertMove("after", newActionSelect.value)) {
+                closeAddSegmentPanel();
+            }
         });
 
         //insert before
         insertBeforeButton.addEventListener("click", () => {
-            onInsertMove("before", newActionSelect.value);
+            if (onInsertMove("before", newActionSelect.value)) {
+                closeAddSegmentPanel();
+            }
         });
 
         //duplicate
-        duplicateButton.addEventListener("click", onDuplicateMove);
+        duplicateButton.addEventListener("click", () => {
+            if (onDuplicateMove()) {
+                closeAddSegmentPanel();
+            }
+        });
     }
 
     function bindPathActionEvents() {
@@ -314,6 +329,7 @@ export function createPathControls({
         }
 
         if (isOpen) {
+            setAddSegmentOpen(false, false);
             createSection.showPopover();
             positionPathCreationPanel();
             initialDirectionSelect.focus();
@@ -327,8 +343,12 @@ export function createPathControls({
     }
 
     function positionPathCreationPanel() {
-        const openerBounds = newPathButton.getBoundingClientRect();
-        const panelBounds = createSection.getBoundingClientRect();
+        positionPanel(createSection, newPathButton);
+    }
+
+    function positionPanel(panel, opener) {
+        const openerBounds = opener.getBoundingClientRect();
+        const panelBounds = panel.getBoundingClientRect();
         const margin = 16;
         const gap = 20;
 
@@ -336,11 +356,10 @@ export function createPathControls({
         const maximumTop = window.innerHeight - panelBounds.height - margin;
 
         const left = Math.max(margin, Math.min(openerBounds.right + gap, maximumLeft));
-
         const top = Math.max(margin, Math.min(openerBounds.top, maximumTop));
 
-        createSection.style.left = `${left}px`;
-        createSection.style.top = `${top}px`;
+        panel.style.left = `${left}px`;
+        panel.style.top = `${top}px`;
     }
 
     function resetSelectedFields() {
@@ -387,7 +406,7 @@ export function createPathControls({
 
     function showEditorMode(mode) {
         if (mode !== "segment" || state.editorMode !== "segment") {
-            setAddSegmentExpanded(false);
+            setAddSegmentOpen(false);
         }
         state.editorMode = mode;
         emptySection.hidden = mode !== "empty";
@@ -396,15 +415,40 @@ export function createPathControls({
         addSegmentSection.hidden = mode !== "segment";
         exportSection.hidden = mode !== "path" && mode !== "segment";
         pathActionsSection.hidden = mode !== "path" && mode !== "segment";
-        
+
         pathPropertiesForm.hidden = mode !== "path";
         pathPropertiesSummary.hidden = mode !== "segment";
     }
 
-    function setAddSegmentExpanded(isExpanded) {
-        addSegmentContent.hidden = !isExpanded;
-        toggleAddSegmentButton.setAttribute("aria-expanded", String(isExpanded));
-        addSegmentIndicator.textContent = isExpanded ? "▴" : "▾";
+    function setAddSegmentOpen(isOpen, restoreFocus = true) {
+        if (isOpen === state.isAddingSegment) {
+            return;
+        }
+
+        if (isOpen) {
+            if (state.selectionMode !== "segment") {
+                return;
+            }
+
+            setPathCreationOpen(false);
+            addSegmentContent.showPopover();
+            positionPanel(addSegmentContent, toggleAddSegmentButton);
+            newActionSelect.focus();
+        } else {
+            addSegmentContent.hidePopover();
+
+            if (restoreFocus) {
+                toggleAddSegmentButton.focus();
+            }
+        }
+
+        state.isAddingSegment = isOpen;
+        toggleAddSegmentButton.setAttribute("aria-expanded", String(isOpen));
+    }
+
+    function closeAddSegmentPanel() {
+        setAddSegmentOpen(false);
+        toggleAddSegmentButton.focus();
     }
 
     function updateOriginPosition(position) {

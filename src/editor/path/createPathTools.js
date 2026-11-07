@@ -221,6 +221,8 @@ export function createPathTools({
                 rebuild();
                 syncSelection();
             }
+
+            return didChangePath;
         },
 
         onDuplicateMove() {
@@ -229,6 +231,8 @@ export function createPathTools({
             if (didChangePath) {
                 rebuild();
             }
+
+            return didChangePath;
         },
 
         onSelectedOriginChange(axisIndex, value) {

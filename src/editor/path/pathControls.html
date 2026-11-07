@@ -78,25 +78,23 @@
                     <tr>
                         <th colspan="3">Initial direction</th>
                     </tr>
-                    <tr>
-                        <td colspan="3" data-path-summary-direction></td>
-                    </tr>
+                    <td colspan="3">
+                        <span class="value-badge" data-path-summary-direction></span>
+                    </td>
                     <tr>
                         <th>X</th>
                         <th>Y</th>
                         <th>Z</th>
                     </tr>
                     <tr>
-                        <td data-path-summary-x></td>
-                        <td data-path-summary-y></td>
-                        <td data-path-summary-z></td>
+                        <td><span class="value-badge" data-path-summary-x></span></td>
+                        <td><span class="value-badge" data-path-summary-y></span></td>
+                        <td><span class="value-badge" data-path-summary-z></span></td>
                     </tr>
                 </tbody>
             </table>
 
             <div class="field" data-path-properties-form>
-                <span>Origin</span>
-
                 <label class="field">
                     Initial direction
                     <select class="select" data-control="selected-initial-direction" disabled>
@@ -179,10 +177,15 @@
 
         <section class="group" data-add-segment hidden>
             <button type="button" class="button full" data-action="toggle-add-segment" aria-expanded="false">
-                Add segment <span data-add-segment-indicator aria-hidden="true">▾</span>
+                Add segment
             </button>
 
-            <div class="group inset-panel" data-add-segment-content hidden>
+            <section class="path-creation-panel" data-add-segment-content popover="manual" role="dialog" aria-label="Add segment">
+                <div class="row">
+                    <strong class="grow">Add segment</strong>
+                    <button type="button" class="button icon-button" data-action="close-add-segment" aria-label="Close add segment" title="Close">×</button>
+                </div>
+
                 <label class="field">
                     New Action
                     <select class="select" data-control="new-action" disabled>
@@ -199,20 +202,22 @@
                         <button type="button" class="button grow" data-action="insert-before" disabled>Insert Before</button>
                         <button type="button" class="button grow" data-action="insert-after" disabled>Insert After</button>
                     </div>
-
-                    <div class="row">
-                        <button type="button" class="button grow" data-action="duplicate" disabled>Duplicate</button>
-                    </div>
-
-                    <div class="row">
-                        <button type="button" class="button full" data-action="cancel-add-segment">Cancel</button>
-                    </div>
+                    
+                    <button type="button" class="button grow" data-action="duplicate" disabled>Duplicate</button>
+                    <button type="button" class="button full" data-action="cancel-add-segment">Cancel</button>
                 </div>
-            </div>
+            </section>
         </section>
         <section class="group" data-export-data hidden>
-            <!-- later on: a button to export all path data -->
-            <button type="button" class="button primary full" data-action="copy" disabled>Copy path</button>
+            <!-- prettier-ignore -->
+            <button type="button" class="button primary full path-export-button" data-action="copy" title="Copy selected path as JSON" aria-label="Export: copy selected path as JSON" disabled>
+                <!-- prettier-ignore -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 16V3M7 8l5-5 5 5" />
+                    <path d="M4 16v5h16v-5" />
+                </svg>
+                <span>Export</span>
+            </button>
         </section>
 
         <section class="group" data-path-actions hidden>
