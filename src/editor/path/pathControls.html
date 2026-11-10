@@ -1,4 +1,4 @@
-<div class="editor-panel editor-path-controls">
+<div class="panel panel--sidebar editor-path-controls">
     <div class="row">
         <button type="button" class="editor-path-controls__toggle grow" data-action="toggle-panel" aria-expanded="true">Path Editor</button>
 
@@ -12,7 +12,7 @@
         </button>
     </div>
 
-    <section class="path-creation-panel" data-path-create popover="manual" role="dialog" aria-label="New path">
+    <section class="panel--modal" data-path-create popover="manual" role="dialog" aria-label="New path">
         <div class="row">
             <strong class="grow">New path</strong>
             <button type="button" class="button icon-button" data-action="close-path-create" aria-label="Close new path" title="Close">×</button>
@@ -62,7 +62,7 @@
 
     <div class="editor-path-controls__content" data-panel-content>
         <div class="group">
-            <div class="viewport-notice" data-viewport-notice hidden>Viewport-relative origins cannot be moved with TransformControls.</div>
+            <div class="notice" data-viewport-notice hidden>Viewport-relative origins cannot be moved with TransformControls.</div>
             <strong data-editor-heading>No path selected</strong>
         </div>
 
@@ -182,7 +182,7 @@
                 Add segment
             </button>
 
-            <section class="path-creation-panel" data-add-segment-content popover="manual" role="dialog" aria-label="Add segment">
+            <section class="panel--modal" data-add-segment-content popover="manual" role="dialog" aria-label="Add segment">
                 <div class="row">
                     <strong class="grow">Add segment</strong>
                     <button type="button" class="button icon-button" data-action="close-add-segment" aria-label="Close add segment" title="Close">×</button>

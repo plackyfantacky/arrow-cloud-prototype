@@ -2,7 +2,6 @@ import * as THREE from "three";
 
 //styles for UI
 import "./styles.css";
-import "./ui.css";
 
 //editor
 import { createEditorPreferences, createBuildInfo } from "./editorUI.js";

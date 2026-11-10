@@ -11,11 +11,12 @@ export function createPathOriginMarkers({
     onOriginChange = () => {},
     onOriginMove = () => {},
 }) {
-    const geometry = new THREE.SphereGeometry(0.16, 12, 8);
+    const geometry = new THREE.SphereGeometry(0.20, 8, 4);
 
     const material = new THREE.MeshBasicMaterial({
         color: 0xff9d2a,
         depthTest: false,
+        wireframe: true,
     });
 
     const raycaster = new THREE.Raycaster();
