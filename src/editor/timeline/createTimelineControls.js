@@ -1,21 +1,7 @@
 import controlsTemplate from './timelineControls.html';
 
-export function createTimelineControls(
-    {
-        currentTime = 0,
-        timelineDuration = 8,
-        speed = 1,
-        isPlaying = true,
-        isLooping = true
-    }
-) {
-    const state = {
-        currentTime,
-        timelineDuration,
-        speed,
-        isPlaying,
-        isLooping,
-    };
+export function createTimelineControls(playback) {
+    const state = playback.state;
 
     const template = document.createElement('template');
 

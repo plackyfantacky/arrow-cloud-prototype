@@ -24,6 +24,7 @@ import { createPathTools } from "./path/createPathTools.js";
 import { createTimelineControls } from "./timeline/createTimelineControls.js";
 
 export function createArrowCloudEditor({
+    playback,
     camera,
     renderer,
     mountElement,
@@ -246,7 +247,7 @@ export function createArrowCloudEditor({
 
     const buildInfo = createBuildInfo(sidebar, __ARROW_CLOUD_BUILD__);
 
-    const timelineControls = createTimelineControls(animationSettings);
+    const timelineControls = createTimelineControls(playback);
 
     //helpers
 
@@ -276,38 +277,20 @@ export function createArrowCloudEditor({
         };
     }
 
-    function updateTimeline(deltaTime) {
-        if (timelineControls.state.isPlaying) {
-            timelineControls.state.currentTime += deltaTime * timelineControls.state.speed;
-
-            if (timelineControls.state.isLooping) {
-                timelineControls.state.currentTime %= timelineControls.state.timelineDuration;
-            } else {
-                timelineControls.state.currentTime = THREE.MathUtils.clamp(timelineControls.state.currentTime, 0, timelineControls.state.timelineDuration);
-            }
-
-            timelineControls.updateProgressInput();
-        }
-
-        return timelineControls.state.currentTime;
-    }
-
     function setAnimationSettings(animationSettings) {
         timelineControls.setAnimationSettings(animationSettings);
     }
 
     //exposed output functions
 
-    function update({ deltaTime }) {
-        const currentTime = updateTimeline(deltaTime);
+    function update({ deltaTime, currentTime }) {
+        timelineControls.updateProgressInput();
 
         cameraController.update(deltaTime, currentTime);
         pathTools.update();
 
         gridHelper.position.x = Math.round(camera.position.x);
         gridHelper.position.z = Math.round(camera.position.z);
-
-        return currentTime;
     }
 
     function getArrowPaths() {

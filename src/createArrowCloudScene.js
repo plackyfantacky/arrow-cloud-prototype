@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { getStageSize } from "./stage.js";
 import { updateCameraTrack } from "./camera.js";
 
+import { createPlaybackController } from "./animation/createPlaybackController.js";
 import { applyViewportOffset, handleResize as responsiveResize, positionArrowPathForViewport } from "./responsive.js";
 
 import { renderArrowPaths } from "./arrows/renderArrowPaths.js";
@@ -27,6 +28,8 @@ export function createArrowCloudScene(mountElement, options = {}) {
         ...dataset.animationSettings,
         ...options.animationSettings,
     };
+
+    const playback = createPlaybackController(animationSettings);
 
     const arrowPaths = options.arrowPaths || dataset.arrowPaths;
     const cameraTrack = options.cameraTrack || dataset.cameraTrack || null;
@@ -116,9 +119,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
         animationFrameId = requestAnimationFrame(animate);
         timer.update();
 
-        const rawCurrentTime = timer.getElapsed() * animationSettings.speed;
-
-        const currentTime = animationSettings.isLooping ? rawCurrentTime % animationSettings.timelineDuration : rawCurrentTime;
+        const currentTime = playback.update(timer.getDelta());
 
         if (cameraTrack) {
             updateCameraTrack(mountElement, cameraTrack, camera, currentTime);

@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { getStageSize } from "./stage.js";
 
+import { createPlaybackController } from "./animation/createPlaybackController.js";
 import { applyViewportOffset, handleResize as responsiveResize } from "./responsive.js";
 
 import { renderArrowPaths } from "./arrows/renderArrowPaths.js";
@@ -34,6 +35,8 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         ...dataset.animationSettings,
         ...options.animationSettings,
     };
+
+    const playback = createPlaybackController(animationSettings);
 
     let arrowPaths = options.arrowPaths || dataset.arrowPaths;
     let cameraTrack = options.cameraTrack || dataset.cameraTrack;
@@ -113,6 +116,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
     const debug = animationSettings.debugMode
         ? createArrowCloudEditor({
+              playback,
               camera,
               renderer,
               mountElement,
@@ -191,13 +195,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
         const deltaTime = timer.getDelta();
 
-        const rawCurrentTime = timer.getElapsed() * animationSettings.speed;
-
-        const currentTime = debug
-            ? debug.update({ deltaTime })
-            : animationSettings.isLooping
-              ? rawCurrentTime % animationSettings.timelineDuration
-              : rawCurrentTime;
+        const currentTime = playback.update(deltaTime);
 
         arrows.forEach((arrow) => {
             updateArrowReveal(arrow, currentTime);
