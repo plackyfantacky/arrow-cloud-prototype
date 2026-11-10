@@ -197,6 +197,11 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
         const currentTime = playback.update(deltaTime);
 
+        debug?.update({
+            deltaTime,
+            currentTime,
+        });
+
         arrows.forEach((arrow) => {
             updateArrowReveal(arrow, currentTime);
         });
