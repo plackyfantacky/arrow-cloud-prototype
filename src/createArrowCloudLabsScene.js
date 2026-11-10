@@ -10,9 +10,6 @@ import { updateArrowReveal } from "./arrows/reveal.js";
 import { updateArrowIdleMotion } from "./arrows/idle.js";
 
 import { arrowCloudLabsSettings } from "./arrowCloudLabsSettings.js";
-import { setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
-import { updateArrowReveal } from "./arrows/reveal.js";
-import { updateArrowIdleMotion } from "./arrows/idle.js";
 
 import { createEnvironment } from "./environment/createEnvironment.js";
 import { createLights } from "./lighting/createLights.js";
@@ -38,7 +35,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         ...options.animationSettings,
     };
 
-    const arrowPaths = options.arrowPaths || dataset.arrowPaths;
+    let arrowPaths = options.arrowPaths || dataset.arrowPaths;
     let cameraTrack = options.cameraTrack || dataset.cameraTrack;
     const stageSize = getStageSize(mountElement);
 
@@ -139,7 +136,10 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
                   return arrows;
               },
 
-              rebuildArrowPaths,
+              onArrowPathsChange(nextArrowPaths) {
+                  arrowPaths = nextArrowPaths;
+                  rebuildArrowPaths();
+              },
 
               onDatasetChange(datasetName) {
                   return setDataset(datasetName);
@@ -163,7 +163,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             fieldSettings: arrowCloudLabsSettings.field,
             initialRevealProgress: animationSettings.debugMode ? null : 0,
             previousRenderedArrowItems: renderedArrowItems,
-            arrowPaths: debug.getArrowPaths(),
+            arrowPaths,
         });
 
         renderedArrowItems = renderState.renderedArrowItems;

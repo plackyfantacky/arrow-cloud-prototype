@@ -36,7 +36,7 @@ export function createArrowCloudEditor({
     getCameraTrack,
     getRenderedArrowItems,
     getArrows,
-    rebuildArrowPaths,
+    onArrowPathsChange,
     onDatasetChange,
 }) {
     const preferences = createEditorPreferences();
@@ -150,8 +150,8 @@ export function createArrowCloudEditor({
             return arrowDisplayState.getVisibility(pathName);
         },
 
-        onPathsChange() {
-            rebuildArrowPaths();
+        onPathsChange(nextArrowPaths) {
+            onArrowPathsChange(nextArrowPaths);
         },
 
         onSelectionChange(pathName) {

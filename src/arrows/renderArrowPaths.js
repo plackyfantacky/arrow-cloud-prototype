@@ -50,7 +50,7 @@ function createRenderedArrowPath({
     arrowPath
 }) {
 
-    const renderedArrowMaterial = arrowMaterial.clone();
+    const renderedArrowMaterial = createArrowMaterial();
 
     renderedArrowMaterial.transparent = true;
     renderedArrowMaterial.opacity = 1;
