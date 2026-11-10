@@ -254,6 +254,24 @@
     }
 }
 
+.editor-ui-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.editor-ui-hidden .editor-sidebar,
+.editor-ui-hidden .editor-sidebar *,
+.editor-ui-hidden .editor-timeline-controls,
+.editor-ui-hidden .editor-line-tooltip {
+    visibility: hidden !important;
+}
+
 /** camera **/
 
 .editor-camera-controls__toggle {

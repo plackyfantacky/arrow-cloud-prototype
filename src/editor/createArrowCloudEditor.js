@@ -41,6 +41,7 @@ export function createArrowCloudEditor({
 }) {
     const preferences = createEditorPreferences();
 
+    const uiVisibilityToggle = createUIVisibilityToggle();
     const sidebar = document.createElement("aside");
     sidebar.className = "editor-sidebar ui";
     document.body.append(sidebar);
@@ -64,6 +65,7 @@ export function createArrowCloudEditor({
     cameraController.setViewPresetChangeHandler(() => {
         cameraControls.updateCameraViewButtons();
     });
+
 
     const cameraControls = createCameraControls({
         container: sidebar,
@@ -248,6 +250,32 @@ export function createArrowCloudEditor({
 
     //helpers
 
+    function createUIVisibilityToggle() {
+        const element = document.createElement("label");
+        element.className = "editor-ui-toggle editor-panel ui";
+        element.innerHTML = `
+            <input type="checkbox" checked>
+            Show UI
+        `;
+
+        const checkbox = element.querySelector("input");
+
+        function handleChange() {
+            document.body.classList.toggle("editor-ui-hidden", !checkbox.checked);
+        }
+
+        checkbox.addEventListener("change", handleChange);
+        document.body.append(element);
+
+        return {
+            destroy() {
+                checkbox.removeEventListener("change", handleChange);
+                element.remove();
+                document.body.classList.remove("editor-ui-hidden");
+            },
+        };
+    }
+
     function updateTimeline(deltaTime) {
         if (timelineControls.state.isPlaying) {
             timelineControls.state.currentTime += deltaTime * timelineControls.state.speed;
@@ -312,6 +340,7 @@ export function createArrowCloudEditor({
     }
 
     function destroy() {
+        uiVisibilityToggle.destroy();
         timelineControls.destroy();
         cameraControls.destroy();
         sceneControls.destroy();
@@ -324,7 +353,6 @@ export function createArrowCloudEditor({
         scene.remove(axesGauge);
 
         scene.remove(sceneOriginMarker);
-
         sceneOriginMarker.dispose();
     }
 
