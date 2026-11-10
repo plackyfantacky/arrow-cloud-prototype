@@ -31,6 +31,7 @@ export function createArrowNameLabel(text, segment) {
 
     const geometry = new THREE.PlaneGeometry(2.4, 0.6);
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData.editorHelper = true;
 
     const worldUp = new THREE.Vector3(0, 1, 0);
 

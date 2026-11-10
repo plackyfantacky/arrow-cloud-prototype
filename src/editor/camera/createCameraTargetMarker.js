@@ -35,6 +35,7 @@ export function createCameraTargetMarker(scene, size = 0.5) {
     };
 
     const marker = new THREE.Group();
+    marker.userData.editorHelper = true;
     const arms = {};
 
     Object.entries(armDefinitions).forEach(([armName, points]) => {

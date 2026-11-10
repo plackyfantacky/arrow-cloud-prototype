@@ -30,7 +30,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
     }
 
     const dataset = options.dataset;
-    const loadDataset = options.loadDataset;
+    //const loadDataset = options.loadDataset;
 
     const timer = new THREE.Timer();
     let animationFrameId = null;
@@ -267,8 +267,43 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             setPathComponentReveal(componentMesh, revealProgress);
         });
 
-        renderer.render(scene, camera);
+        if (document.body.classList.contains("editor-ui-hidden")) {
+            renderScenePreview();
+        } else {
+            renderer.render(scene, camera);
+        }
 
+    }
+
+    function renderScenePreview() {
+        const helperVisibility = new Map();
+        const highlightMaterials = new Map();
+
+        scene.traverse((object) => {
+            if (object.userData.editorHelper) {
+                helperVisibility.set(object, object.visible);
+                object.visible = false;
+            }
+
+            const originalMaterial = object.userData.pathHighlightOriginalMaterial;
+
+            if (originalMaterial) {
+                highlightMaterials.set(object, object.material);
+                object.material = originalMaterial;
+            }
+        });
+
+        try {
+            renderer.render(scene, camera);
+        } finally {
+            helperVisibility.forEach((wasVisible, object) => {
+                object.visible = wasVisible;
+            });
+
+            highlightMaterials.forEach((material, object) => {
+                object.material = material;
+            });
+        }
     }
 
     function handleResize() {
@@ -291,8 +326,6 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
         rebuildArrowPaths();
     }
-
-    window.addEventListener('resize', handleResize);
 
     function destroy() {
         if (isDestroyed) {
@@ -334,6 +367,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         }
     }
 
+    window.addEventListener('resize', handleResize);
     animate();
 
     return {
