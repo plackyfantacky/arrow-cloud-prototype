@@ -55,7 +55,7 @@ function updateIdleMotion({
 
     const idleStartTime = motionGroup.userData.idleStartTime;
 
-    if (!idleStartTime === undefined) {
+    if (idleStartTime === undefined) {
         return;
     }
 

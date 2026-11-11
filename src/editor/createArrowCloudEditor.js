@@ -283,14 +283,18 @@ export function createArrowCloudEditor({
 
     //exposed output functions
 
-    function update({ deltaTime, currentTime }) {
+    function update({ deltaTime }) {
         timelineControls.updateProgressInput();
 
-        cameraController.update(deltaTime, currentTime);
+        cameraController.update(deltaTime);
         pathTools.update();
 
         gridHelper.position.x = Math.round(camera.position.x);
         gridHelper.position.z = Math.round(camera.position.z);
+    }
+
+    function isCameraOverridden() {
+        return cameraController.getMode() !== "tracked";
     }
 
     function getArrowPaths() {
@@ -342,6 +346,7 @@ export function createArrowCloudEditor({
     //end output
     return {
         update,
+        isCameraOverridden,
         getArrowPaths,
         setArrowPaths,
         setAnimationSettings,

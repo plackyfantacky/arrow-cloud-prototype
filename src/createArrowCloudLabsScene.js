@@ -16,6 +16,7 @@ import { createShadowsController } from "./lighting/createShadowsController.js";
 import { createBackgroundShader } from "./shaders/createBackgroundShader.js";
 
 import { createArrowCloudEditor } from "./editor/createArrowCloudEditor.js";
+import { updateCameraTrack } from "./camera.js";
 
 export function createArrowCloudLabsScene(mountElement, options = {}) {
     if (!mountElement) {
@@ -193,6 +194,15 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         const deltaTime = timer.getDelta();
 
         const currentTime = playback.update(deltaTime);
+
+        if (cameraTrack && !debug?.isCameraOverridden()) {
+            updateCameraTrack(
+                mountElement,
+                cameraTrack,
+                camera,
+                currentTime
+            );
+        }
 
         debug?.update({
             deltaTime,

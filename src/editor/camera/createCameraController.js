@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-import { updateCameraTrack } from "../../camera.js";
 import { createFlyControls } from "./createFlyControls.js";
 import { createCameraTargetMarker } from "./createCameraTargetMarker.js";
 import { createCameraUpMarker } from "./createCameraUpMarker.js";
@@ -343,8 +342,6 @@ export function createCameraController({
 
     function update(deltaTime, currentTime) {
         if (cameraMode === CAMERA_MODES.TRACKED) {
-            updateCameraTrack(mountElement, getCameraTrack(), camera, currentTime);
-
             return;
         }
 
