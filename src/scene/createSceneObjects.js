@@ -1,0 +1,51 @@
+import * as THREE from "three";
+
+import { createGeometry } from "../primitives/geometry/createGeometry.js";
+
+export function createSceneObjects(scene, definitions = []) {
+    const objectsById = new Map();
+
+    definitions.forEach((definition) => {
+        if (typeof definition.id !== "string" || definition.id.trim() === "") {
+            throw new Error("Scene objects require a non-empty id.");
+        }
+
+        if (objectsById.has(definition.id)) {
+            throw new Error(`Duplicate scene object id: ${definition.id}`);
+        }
+
+        if (definition.type !== "mesh") {
+            throw new Error(`Unsupported scene object type: ${definition.type}`);
+        }
+
+        const geometry = createGeometry(definition.geometry);
+        const materialSettings = definition.material ?? {};
+        const opacity = materialSettings.opacity ?? 1;
+
+        const material = new THREE.MeshStandardMaterial({
+            color: materialSettings.colour ?? "#FF9D2A",
+            roughness: materialSettings.roughness ?? 0.45,
+            metalness: materialSettings.metalness ?? 0.15,
+            opacity,
+            transparent: opacity < 1,
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+
+        mesh.name = definition.name ?? definition.id;
+        mesh.userData.sceneObjectId = definition.id;
+
+        mesh.position.fromArray(definition.position ?? [0, 0, 0]);
+        mesh.rotation.set(...(definition.rotation ?? [0, 0, 0]));
+        mesh.scale.fromArray(definition.scale ?? [1, 1, 1]);
+
+        mesh.visible = definition.visible ?? true;
+        mesh.castShadow = definition.castShadow ?? true;
+        mesh.receiveShadow = definition.receiveShadow ?? true;
+
+        scene.add(mesh);
+        objectsById.set(definition.id, mesh);
+    });
+
+    return objectsById;
+}

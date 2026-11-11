@@ -247,5 +247,41 @@
                 "duration": 4
             }
         }
+    ],
+    "sceneObjects": [
+        {
+            "id": "logo-placeholder",
+            "type": "mesh",
+            "geometry": {
+                "type": "extrude",
+                "depth": 0.25,
+                "shapes": [
+                    {
+                        "outline": [
+                            [-0.75, -0.75],
+                            [0.75, -0.75],
+                            [0.75, 0.75],
+                            [-0.75, 0.75]
+                        ],
+                        "holes": [
+                            [
+                                [-0.4, -0.4],
+                                [-0.4, 0.4],
+                                [0.4, 0.4],
+                                [0.4, -0.4]
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "material": {
+                "colour": "#4FD1C5",
+                "roughness": 0.4,
+                "metalness": 0.15
+            },
+            "position": [6, 2, -4],
+            "rotation": [0, 0.4, 0],
+            "scale": [1, 1, 1]
+        }
     ]
 }

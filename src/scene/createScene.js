@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { getStageSize } from "./stage.js";
 import { updateCameraTrack } from "./camera.js";
 
+import { createSceneObjects } from "./createSceneObjects.js";
 import { createEnvironment } from "../environment/createEnvironment.js";
 import { createLights } from "../lighting/createLights.js";
 import { createShadowsController } from "../lighting/createShadowsController.js";
@@ -88,6 +89,11 @@ export function createScene(mountElement, options = {}) {
 
     createShadowsController(renderer, dataset);
     createLights(scene, dataset.lighting);
+
+    const sceneObjects = createSceneObjects(
+        scene,
+        dataset.sceneObjects
+    );
 
     mountElement.appendChild(renderer.domElement);
 
@@ -238,6 +244,7 @@ export function createScene(mountElement, options = {}) {
             }
         });
 
+        sceneObjects.clear();
         renderer.dispose();
 
         if (renderer.domElement.parentElement) {
@@ -302,6 +309,10 @@ export function createScene(mountElement, options = {}) {
             return () => {
                 beforeRenderListeners.delete(listener);
             };
+        },
+
+        getSceneObject(objectId) {
+            return sceneObjects.get(objectId) ?? null;
         },
         
         resize: handleResize,
