@@ -6,11 +6,19 @@ export function createExtrudedGeometry(settings) {
     }
 
     const shapes = settings.shapes.map((definition) => {
-        const shape = new THREE.Shape(definition.outline);
+        const shape = new THREE.Shape();
+
+        if (definition.commands) {
+            applyPathCommand(shape, definition.commands);
+        } else {
+            shape.setFromPoints(
+                createOutlinePoints(definition.outline)
+            );
+        }
 
         shape.autoClose = true;
 
-        shape.hole = (definition.holes ?? []).map((outline) => {
+        shape.holes = (definition.holes ?? []).map((outline) => {
             const hole = new THREE.Path(createOutlinePoints(outline));
             hole.autoClose = true;
             return hole;
@@ -25,6 +33,7 @@ export function createExtrudedGeometry(settings) {
         depth,
         steps: 1,
         bevelEnabled: false,
+        curveSegments: settings.curveSegments ?? 12,
     });
 
     geometry.translate(0, 0, -depth / 2);
@@ -42,5 +51,24 @@ function createOutlinePoints(points) {
             throw new Error("Outline points must contain two finite numbers.");
         }
         return new THREE.Vector2(point[0], point[1]);
-    })
+    });
+}
+
+function applyPathCommand(path, commands) {
+    const commandDefinitions = {
+        M: { method: "moveTo", arguments: 2 },
+        L: { method: "lineTo", arguments: 2 },
+        C: { method: "bezierCurveTo", arguments: 6 },
+        Z: { method: "closePath", arguments: 0 },
+    };
+
+    commands.forEach(([command, ...values]) => {
+        const definition = commandDefinitions[command];
+
+        if (!definition || values.length !== definition.arguments || !values.every(Number.isFinite)) {
+            throw new Error(`Invalid outline command: ${command}`);
+        }
+
+        path[definition.method](...values);
+    });
 }

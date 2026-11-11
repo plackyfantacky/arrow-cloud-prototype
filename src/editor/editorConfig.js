@@ -1,3 +1,3 @@
 export const editorConfig = {
-    enabled: true,
+    enabled: false,
 };

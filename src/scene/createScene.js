@@ -11,7 +11,7 @@ import { createBackgroundShader } from "../shaders/createBackgroundShader.js";
 
 import { createPlaybackController } from "../animation/createPlaybackController.js";
 import { updateArrowAnimations } from "../animation/updateArrowAnimations.js";
-import { applyViewportOffset, handleResize as responsiveResize } from "./responsive.js";
+import { applyViewportOffset, handleResize as responsiveResize, updateSceneObjectLayout } from "./responsive.js";
 
 import { renderArrowPaths } from "../arrows/renderArrowPaths.js";
 
@@ -176,6 +176,8 @@ export function createScene(mountElement, options = {}) {
             currentTime,
             ambientTime,
         });
+
+        updateSceneObjectLayout(sceneObjects, camera);
 
         renderFrame();
     }

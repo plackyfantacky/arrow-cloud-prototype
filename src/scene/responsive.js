@@ -108,3 +108,52 @@ function getViewportBoundsAtZ(camera, container, worldZ) {
 function getContainerAspect(container) {
     return container.clientWidth / Math.max(container.clientHeight, 1);
 }
+
+export function updateSceneObjectLayout(sceneObjects, camera) {
+    camera.updateWorldMatrix(true, false);
+
+    const anchorPosition = new THREE.Vector3();
+
+    sceneObjects.forEach((object) => {
+        const anchor = object.parent;
+        const layout = anchor?.userData.viewportLayout;
+
+        if (!layout) {
+            return;
+        }
+
+        const x = layout.x ?? 0.5;
+        const y = layout.y ?? 0.5;
+        const distance = layout.distance ?? 6;
+
+        if (
+            !Number.isFinite(x) ||
+            !Number.isFinite(y) ||
+            !Number.isFinite(distance) ||
+            distance <= 0
+        ) {
+            throw new Error("Invalid viewport layout coordinates or distance.");
+        }
+
+        anchorPosition.set(
+            x * 2 - 1,
+            1 - y * 2,
+            0
+        ).unproject(camera);
+
+        camera.worldToLocal(anchorPosition);
+
+        anchorPosition.multiplyScalar(
+            distance / -anchorPosition.z
+        );
+
+        camera.localToWorld(anchorPosition);
+        anchor.position.copy(anchorPosition);
+
+        if (layout.faceCamera ?? true) {
+            camera.getWorldQuaternion(anchor.quaternion);
+        } else {
+            anchor.quaternion.identity();
+        }
+    });
+}

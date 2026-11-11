@@ -43,7 +43,17 @@ export function createSceneObjects(scene, definitions = []) {
         mesh.castShadow = definition.castShadow ?? true;
         mesh.receiveShadow = definition.receiveShadow ?? true;
 
-        scene.add(mesh);
+        if (definition.layout?.space === "viewport") {
+            const anchor = new THREE.Group();
+
+            anchor.userData.viewportLayout = definition.layout;
+            anchor.add(mesh);
+
+            scene.add(anchor);
+        } else {
+            scene.add(mesh);
+        }
+
         objectsById.set(definition.id, mesh);
     });
 
