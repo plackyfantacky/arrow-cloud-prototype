@@ -2,24 +2,26 @@ import { updateArrowReveal } from "../arrows/reveal.js";
 import { updateArrowIdleMotion } from "../arrows/idle.js";
 import { setPathComponentReveal } from "../arrows/createArrowPathComponents.js";
 
-export function updateArrowAnimations({ renderedArrowItems, currentTime }) {
+export function updateArrowAnimations({
+    renderedArrowItems,
+    currentTime,
+    ambientTime
+}) {
     renderedArrowItems.forEach((renderedArrowItem) => {
-        const { arrow, motionGroup, componentMeshes } = renderedArrowItem;
+        const {
+            arrow,
+            motionGroup,
+            componentMeshes
+        } = renderedArrowItem;
 
         updateArrowReveal(arrow, currentTime);
-
-        const idleSettings = motionGroup.userData.idle;
-
-        if (idleSettings) {
-            const revealEndTime = arrow.userData.timing.delay + arrow.userData.timing.duration;
-
-            if (currentTime < revealEndTime) {
-                motionGroup.position.copy(motionGroup.userData.basePosition);
-                motionGroup.rotation.set(0, 0, 0);
-            } else {
-                updateArrowIdleMotion(motionGroup, idleSettings, currentTime - revealEndTime);
-            }
-        }
+        
+        updateIdleMotion({
+            arrow,
+            motionGroup,
+            currentTime,
+            ambientTime
+        });
 
         componentMeshes.forEach((componentMesh) => {
             const { delay, duration } = componentMesh.userData.timing;
@@ -31,4 +33,35 @@ export function updateArrowAnimations({ renderedArrowItems, currentTime }) {
             setPathComponentReveal(componentMesh, revealProgress);
         });
     });
+}
+
+function updateIdleMotion({
+    arrow,
+    motionGroup,
+    currentTime,
+    ambientTime
+}) {
+    const idleSettings = motionGroup.userData.idle;
+
+    if (!idleSettings) {
+        return;
+    }
+
+    const revealEndTime = arrow.userData.timing.delay + arrow.userData.timing.duration;
+
+    if (motionGroup.userData.idleStartTime === undefined && currentTime >= revealEndTime) {
+        motionGroup.userData.idleStartTime = ambientTime;
+    }
+
+    const idleStartTime = motionGroup.userData.idleStartTime;
+
+    if (!idleStartTime === undefined) {
+        return;
+    }
+
+    updateArrowIdleMotion(
+        motionGroup,
+        idleSettings,
+        ambientTime - idleStartTime
+    );
 }

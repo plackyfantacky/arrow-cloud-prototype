@@ -110,7 +110,6 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
     let renderedArrowItems = [];
     let arrows = [];
-    let pathComponentMeshes = [];
 
     const debug = animationSettings.debugMode
         ? createArrowCloudEditor({
@@ -203,6 +202,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         updateArrowAnimations({
             renderedArrowItems,
             currentTime,
+            ambientTime: timer.getElapsed(),
         });
 
         if (document.body.classList.contains("editor-ui-hidden")) {

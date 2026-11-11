@@ -122,6 +122,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
         updateArrowAnimations({
             renderedArrowItems,
             currentTime,
+            ambientTime: timer.getElapsed(),
         });
 
         renderer.render(scene, camera);
