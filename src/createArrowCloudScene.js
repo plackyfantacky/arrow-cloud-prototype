@@ -3,6 +3,11 @@ import * as THREE from "three";
 import { getStageSize } from "./stage.js";
 import { updateCameraTrack } from "./camera.js";
 
+import { createEnvironment } from "./environment/createEnvironment.js";
+import { createLights } from "./lighting/createLights.js";
+import { createShadowsController } from "./lighting/createShadowsController.js";
+import { createBackgroundShader } from "./shaders/createBackgroundShader.js";
+
 import { createPlaybackController } from "./animation/createPlaybackController.js";
 import { updateArrowAnimations } from "./animation/updateArrowAnimations.js";
 import { applyViewportOffset, handleResize as responsiveResize } from "./responsive.js";
@@ -25,14 +30,35 @@ export function createArrowCloudScene(mountElement, options = {}) {
 
     const playback = createPlaybackController(animationSettings);
 
-    const arrowPaths = options.arrowPaths || dataset.arrowPaths;
+    let arrowPaths = options.arrowPaths || dataset.arrowPaths;
     const cameraTrack = options.cameraTrack || dataset.cameraTrack || null;
     const stageSize = getStageSize(mountElement);
+    
     const scene = new THREE.Scene();
 
-    scene.background = new THREE.Color(0xffffff);
+    createEnvironment(scene, dataset.environment);
 
-    const camera = new THREE.PerspectiveCamera(45, stageSize.width / stageSize.height, 0.1, 100);
+    const backgroundShader = createBackgroundShader(
+        scene,
+        dataset.shaders?.background
+    );
+
+    if (backgroundShader) {
+        const backgroundSettings = dataset.shaders.background;
+
+        scene.fog = new THREE.Fog(
+            backgroundSettings.horizonColour ?? "#FFE4D3",
+            backgroundSettings.fogNear ?? 10,
+            backgroundSettings.fogFar ?? 35
+        );
+    }
+
+    const camera = new THREE.PerspectiveCamera(
+        arrowCloudSettings.camera.fieldOfView,
+        stageSize.width / stageSize.height,
+        arrowCloudSettings.camera.near,
+        arrowCloudSettings.camera.far
+    );
 
     const staticCamera = dataset.staticCamera;
 
@@ -60,6 +86,9 @@ export function createArrowCloudScene(mountElement, options = {}) {
     renderer.setSize(stageSize.width, stageSize.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+    createShadowsController(renderer, dataset);
+    createLights(scene, dataset.lighting);
+
     mountElement.appendChild(renderer.domElement);
 
     const arrowMaterial = new THREE.MeshStandardMaterial({
@@ -70,9 +99,13 @@ export function createArrowCloudScene(mountElement, options = {}) {
         side: THREE.FrontSide,
     });
 
+    const frameListeners = new Set();
+    const pathRebuildListeners = new Set();
+
+    let cameraTrackEnabled = true;
+
     let renderedArrowItems = [];
     let arrows = [];
-    let pathComponentMeshes = [];
 
     function rebuildArrowPaths() {
         const renderState = renderArrowPaths({
@@ -80,7 +113,12 @@ export function createArrowCloudScene(mountElement, options = {}) {
             pathLayoutCamera,
             mountElement,
             createArrowMaterial() {
-                return arrowMaterial;
+                const material = arrowMaterial.clone();
+
+                material.transparent = true;
+                material.opacity = 1;
+
+                return material;
             },
             fieldSettings: arrowCloudSettings.field,
             previousRenderedArrowItems: renderedArrowItems,
@@ -89,17 +127,13 @@ export function createArrowCloudScene(mountElement, options = {}) {
 
         renderedArrowItems = renderState.renderedArrowItems;
         arrows = renderState.arrows;
-        pathComponentMeshes = renderState.pathComponentMeshes;
+
+        pathRebuildListeners.forEach((listener) => {
+            listener(renderedArrowItems);
+        });
     }
 
     rebuildArrowPaths();
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    directionalLight.position.set(4, 6, 8);
-    scene.add(directionalLight);
 
     const timer = new THREE.Timer();
     let animationFrameId = null;
@@ -113,16 +147,26 @@ export function createArrowCloudScene(mountElement, options = {}) {
         animationFrameId = requestAnimationFrame(animate);
         timer.update();
 
-        const currentTime = playback.update(timer.getDelta());
+        const deltaTime = timer.getDelta();
+        const currentTime = playback.update(deltaTime);
+        const ambientTime = timer.getElapsed();
 
-        if (cameraTrack) {
+        frameListeners.forEach((listener) => {
+            listener({
+                deltaTime,
+                currentTime,
+                ambientTime,
+            });
+        });
+
+        if (cameraTrack && cameraTrackEnabled) {
             updateCameraTrack(mountElement, cameraTrack, camera, currentTime);
         }
 
         updateArrowAnimations({
             renderedArrowItems,
             currentTime,
-            ambientTime: timer.getElapsed(),
+            ambientTime,
         });
 
         renderer.render(scene, camera);
@@ -181,6 +225,53 @@ export function createArrowCloudScene(mountElement, options = {}) {
     animate();
 
     return {
+        scene,
+        camera,
+        renderer,
+        mountElement,
+        playback,
+
+        getArrowPaths() {
+            return arrowPaths;
+        },
+
+        setArrowPaths(nextArrowPaths) {
+            arrowPaths = nextArrowPaths;
+            rebuildArrowPaths();
+        },
+
+        getRenderedArrowItems() {
+            return renderedArrowItems;
+        },
+
+        getArrows() {
+            return arrows;
+        },
+
+        getCameraTrack() {
+            return cameraTrack;
+        },
+
+        setCameraTrackEnabled(isEnabled) {
+            cameraTrackEnabled = isEnabled;
+        },
+
+        onFrame(listener) {
+            frameListeners.add(listener);
+
+            return () => {
+                frameListeners.delete(listener);
+            };
+        },
+
+        onPathsRebuilt(listener) {
+            pathRebuildListeners.add(listener);
+
+            return () => {
+                pathRebuildListeners.delete(listener);
+            };
+        },
+
         resize: handleResize,
         destroy,
     };

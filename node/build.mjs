@@ -49,6 +49,7 @@ const buildInfo = getBuildInfo();
 
 const options = {
     ...configurations[target],
+    logLevel: 'info',
     define: {
         __ARROW_CLOUD_BUILD__: JSON.stringify(buildInfo),
     },

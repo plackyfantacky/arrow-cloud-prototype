@@ -5,7 +5,7 @@ async function initialise() {
 
     const mountElement = document.querySelector('[data-arrow-cloud]') || document.body;
 
-    const dataset = await loadArrowDataset('demo');
+    const dataset = await loadArrowDataset('flatpack2');
 
     createArrowCloudScene(
         mountElement, {

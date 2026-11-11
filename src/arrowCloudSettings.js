@@ -12,7 +12,7 @@ export const arrowCloudSettings = {
         headLength: 0.8,
         headWidth: 0.9,
         headMorphSegments: 36,
-        headDiscRadius: 0.45,
+        headDiscRadius: 0.35,
         headDiscThickness: 0.2,
         headDiscCentreX: 0,
     
@@ -20,5 +20,10 @@ export const arrowCloudSettings = {
         cornerSteps: 14,
         twistSteps: 64,
         cornerOverlap: 0.04
-    }
+    },
+    camera: {
+        fieldOfView: 45,
+        near: 0.5,
+        far: 500,
+    },
 };

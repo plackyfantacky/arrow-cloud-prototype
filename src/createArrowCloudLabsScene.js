@@ -8,7 +8,7 @@ import { applyViewportOffset, handleResize as responsiveResize } from "./respons
 
 import { renderArrowPaths } from "./arrows/renderArrowPaths.js";
 
-import { arrowCloudLabsSettings } from "./arrowCloudLabsSettings.js";
+import { arrowCloudSettings } from "./arrowCloudSettings.js"
 
 import { createEnvironment } from "./environment/createEnvironment.js";
 import { createLights } from "./lighting/createLights.js";
@@ -55,7 +55,12 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         scene.fog = new THREE.Fog(backgroundSettings.horizonColour ?? "#FFE4D3", backgroundSettings.fogNear ?? 10, backgroundSettings.fogFar ?? 35);
     }
 
-    const camera = new THREE.PerspectiveCamera(45, stageSize.width / stageSize.height, 0.5, 500);
+    const camera = new THREE.PerspectiveCamera(
+        arrowCloudSettings.camera.fieldOfView,
+        stageSize.width / stageSize.height,
+        arrowCloudSettings.camera.near,
+        arrowCloudSettings.camera.far
+    );
 
     const staticCamera = dataset.staticCamera;
 
@@ -162,7 +167,7 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
                 return material;
             },
-            fieldSettings: arrowCloudLabsSettings.field,
+            fieldSettings: arrowCloudSettings.field,
             initialRevealProgress: animationSettings.debugMode ? null : 0,
             previousRenderedArrowItems: renderedArrowItems,
             arrowPaths,
@@ -170,7 +175,6 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
 
         renderedArrowItems = renderState.renderedArrowItems;
         arrows = renderState.arrows;
-        pathComponentMeshes = renderState.pathComponentMeshes;
 
         debug?.syncRenderedArrowItems();
     }
@@ -269,6 +273,8 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
         }
 
         isDestroyed = true;
+        frameListeners.clear();
+        pathRebuildListeners.clear();
 
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
