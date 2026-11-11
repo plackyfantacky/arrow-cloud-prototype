@@ -11,7 +11,7 @@ import { createBackgroundShader } from "../shaders/createBackgroundShader.js";
 
 import { createPlaybackController } from "../animation/createPlaybackController.js";
 import { updateArrowAnimations } from "../animation/updateArrowAnimations.js";
-import { applyViewportOffset, handleResize as responsiveResize, updateSceneObjectLayout } from "./responsive.js";
+import { applyViewportOffset, handleResize as responsiveResize, positionSceneObjectsForViewport } from "./responsive.js";
 
 import { renderArrowPaths } from "../arrows/renderArrowPaths.js";
 
@@ -34,31 +34,24 @@ export function createScene(mountElement, options = {}) {
     let arrowPaths = options.arrowPaths || dataset.arrowPaths;
     const cameraTrack = options.cameraTrack || dataset.cameraTrack || null;
     const stageSize = getStageSize(mountElement);
-    
+
     const scene = new THREE.Scene();
 
     createEnvironment(scene, dataset.environment);
 
-    const backgroundShader = createBackgroundShader(
-        scene,
-        dataset.shaders?.background
-    );
+    const backgroundShader = createBackgroundShader(scene, dataset.shaders?.background);
 
     if (backgroundShader) {
         const backgroundSettings = dataset.shaders.background;
 
-        scene.fog = new THREE.Fog(
-            backgroundSettings.horizonColour ?? "#FFE4D3",
-            backgroundSettings.fogNear ?? 10,
-            backgroundSettings.fogFar ?? 35
-        );
+        scene.fog = new THREE.Fog(backgroundSettings.horizonColour ?? "#FFE4D3", backgroundSettings.fogNear ?? 10, backgroundSettings.fogFar ?? 35);
     }
 
     const camera = new THREE.PerspectiveCamera(
         sceneSettings.camera.fieldOfView,
         stageSize.width / stageSize.height,
         sceneSettings.camera.near,
-        sceneSettings.camera.far
+        sceneSettings.camera.far,
     );
 
     const staticCamera = dataset.staticCamera;
@@ -90,10 +83,9 @@ export function createScene(mountElement, options = {}) {
     createShadowsController(renderer, dataset);
     createLights(scene, dataset.lighting);
 
-    const sceneObjects = createSceneObjects(
-        scene,
-        dataset.sceneObjects
-    );
+    const sceneObjects = createSceneObjects(scene, dataset.sceneObjects);
+
+    positionSceneObjectsForViewport(sceneObjects, pathLayoutCamera, mountElement);
 
     mountElement.appendChild(renderer.domElement);
 
@@ -177,8 +169,6 @@ export function createScene(mountElement, options = {}) {
             ambientTime,
         });
 
-        updateSceneObjectLayout(sceneObjects, camera);
-
         renderFrame();
     }
 
@@ -208,6 +198,8 @@ export function createScene(mountElement, options = {}) {
         applyViewportOffset(camera, mountElement, dataset.viewport);
 
         applyViewportOffset(pathLayoutCamera, mountElement, dataset.viewport);
+
+        positionSceneObjectsForViewport(sceneObjects, pathLayoutCamera, mountElement);
 
         rebuildArrowPaths();
     }
@@ -316,7 +308,7 @@ export function createScene(mountElement, options = {}) {
         getSceneObject(objectId) {
             return sceneObjects.get(objectId) ?? null;
         },
-        
+
         resize: handleResize,
         destroy,
     };

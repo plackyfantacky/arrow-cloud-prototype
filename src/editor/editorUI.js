@@ -13,6 +13,7 @@ const defaults = {
     lineLabelsVisible: true,
     cameraFrustumVisible: false,
     sceneOriginVisible: true,
+    uiVisible: true,
 };
 
 export function createEditorPreferences() {

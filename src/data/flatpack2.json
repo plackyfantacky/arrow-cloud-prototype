@@ -24,10 +24,6 @@
             "z": -10.837
         }
     },
-    "viewport": {
-        "offsetX": 0.28,
-        "offsetY": 0.02
-    },
     "environment": {
         "type": "box",
         "colour": "#232323",
@@ -254,7 +250,7 @@
             "type": "mesh",
             "geometry": {
                 "type": "extrude",
-                "depth": 0.25,
+                "depth": 0.01,
                 "curveSegments": 8,
                 "shapes": [
                     {
@@ -302,16 +298,20 @@
                 "roughness": 0.4,
                 "metalness": 0.15
             },
-            "position": [6, 2, -4],
-            "rotation": [0, 0.4, 0],
-            "scale": [0.5, 0.5, 0.5],
             "layout": {
                 "space": "viewport",
-                "x": 0.5,
-                "y": 0.5,
+                "anchor": "top-left",
+                "inset": {
+                    "x": 24,
+                    "y": 24
+                },
+                "width": 96,
                 "distance": 6,
                 "faceCamera": true
-            }
+            },
+            "position": [0, 0, 0],
+            "rotation": [0, 0, 0],
+            "scale": [1, 1, 1]
         }
     ]
 }

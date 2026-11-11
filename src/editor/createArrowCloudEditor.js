@@ -250,22 +250,32 @@ export function createArrowCloudEditor({
 
     //helpers
 
+    
     function createUIVisibilityToggle() {
         const element = document.createElement("label");
         element.className = "editor-ui-toggle editor-panel ui";
         element.innerHTML = `
-            <input type="checkbox" checked>
+            <input type="checkbox">
             Show UI
         `;
 
         const checkbox = element.querySelector("input");
 
-        function handleChange() {
+        checkbox.checked = preferences.get("uiVisible");
+
+        function applyVisibility() {
             document.body.classList.toggle("editor-ui-hidden", !checkbox.checked);
+        }
+
+        function handleChange() {
+            preferences.set("uiVisible", checkbox.checked);
+            applyVisibility();
         }
 
         checkbox.addEventListener("change", handleChange);
         document.body.append(element);
+
+        applyVisibility();
 
         return {
             destroy() {
