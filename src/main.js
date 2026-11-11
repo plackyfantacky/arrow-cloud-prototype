@@ -1,5 +1,5 @@
-import { createArrowCloudScene } from "./createArrowCloudScene.js";
-import { loadArrowDataset } from "./loadArrowDataset.js";
+import { createScene } from "./scene/createScene.js";
+import { loadArrowDataset } from "./data/loadDataset.js";
 
 async function initialise() {
     const mountElement = document.querySelector("[data-arrow-cloud]") || document.body;
@@ -40,7 +40,7 @@ async function initialise() {
 
     const dataset = await loadArrowDataset(datasetName);
 
-    const runtime = createArrowCloudScene(mountElement, {
+    const runtime = createScene(mountElement, {
         dataset,
     });
 

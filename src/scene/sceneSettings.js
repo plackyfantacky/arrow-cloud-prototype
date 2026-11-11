@@ -1,4 +1,4 @@
-export const arrowCloudSettings = {
+export const sceneSettings = {
     animation: {
         speed: 1,
         isPlaying: true,

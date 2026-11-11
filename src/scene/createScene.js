@@ -3,20 +3,20 @@ import * as THREE from "three";
 import { getStageSize } from "./stage.js";
 import { updateCameraTrack } from "./camera.js";
 
-import { createEnvironment } from "./environment/createEnvironment.js";
-import { createLights } from "./lighting/createLights.js";
-import { createShadowsController } from "./lighting/createShadowsController.js";
-import { createBackgroundShader } from "./shaders/createBackgroundShader.js";
+import { createEnvironment } from "../environment/createEnvironment.js";
+import { createLights } from "../lighting/createLights.js";
+import { createShadowsController } from "../lighting/createShadowsController.js";
+import { createBackgroundShader } from "../shaders/createBackgroundShader.js";
 
-import { createPlaybackController } from "./animation/createPlaybackController.js";
-import { updateArrowAnimations } from "./animation/updateArrowAnimations.js";
+import { createPlaybackController } from "../animation/createPlaybackController.js";
+import { updateArrowAnimations } from "../animation/updateArrowAnimations.js";
 import { applyViewportOffset, handleResize as responsiveResize } from "./responsive.js";
 
-import { renderArrowPaths } from "./arrows/renderArrowPaths.js";
+import { renderArrowPaths } from "../arrows/renderArrowPaths.js";
 
-import { arrowCloudSettings } from "./arrowCloudSettings.js";
+import { sceneSettings } from "./sceneSettings.js";
 
-export function createArrowCloudScene(mountElement, options = {}) {
+export function createScene(mountElement, options = {}) {
     if (!mountElement) {
         throw new Error("createArrowCloudScene requires a mount element.");
     }
@@ -54,10 +54,10 @@ export function createArrowCloudScene(mountElement, options = {}) {
     }
 
     const camera = new THREE.PerspectiveCamera(
-        arrowCloudSettings.camera.fieldOfView,
+        sceneSettings.camera.fieldOfView,
         stageSize.width / stageSize.height,
-        arrowCloudSettings.camera.near,
-        arrowCloudSettings.camera.far
+        sceneSettings.camera.near,
+        sceneSettings.camera.far
     );
 
     const staticCamera = dataset.staticCamera;
@@ -128,7 +128,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
 
                 return material;
             },
-            fieldSettings: arrowCloudSettings.field,
+            fieldSettings: sceneSettings.field,
             previousRenderedArrowItems: renderedArrowItems,
             arrowPaths,
         });

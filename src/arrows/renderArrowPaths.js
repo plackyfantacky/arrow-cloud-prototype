@@ -1,4 +1,4 @@
-import { positionArrowPathForViewport } from "../responsive.js";
+import { positionArrowPathForViewport } from "../scene/responsive.js";
 import { createArrow } from "./createArrow.js";
 import { createArrowRenderPieces } from "./createArrowRenderPieces.js";
 import { createArrowPathSegments } from "./createArrowPaths.js";
