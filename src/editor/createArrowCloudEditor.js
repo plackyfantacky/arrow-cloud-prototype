@@ -67,7 +67,6 @@ export function createArrowCloudEditor({
         cameraControls.updateCameraViewButtons();
     });
 
-
     const cameraControls = createCameraControls({
         container: sidebar,
 
@@ -326,6 +325,39 @@ export function createArrowCloudEditor({
         });
     }
 
+    function prepareRender() {
+        if (!document.body.classList.contains("editor-ui-hidden")) {
+            return;
+        }
+
+        const helperVisibility = new Map();
+        const highlightMaterials = new Map();
+
+        scene.traverse((object) => {
+            if (object.userData.editorHelper) {
+                helperVisibility.set(object, object.visible);
+                object.visible = false;
+            }
+
+            const originalMaterial = object.userData.pathHighlightOriginalMaterial;
+
+            if (originalMaterial) {
+                highlightMaterials.set(object, object.material);
+                object.material = originalMaterial;
+            }
+        });
+
+        return () => {
+            helperVisibility.forEach((wasVisible, object) => {
+                object.visible = wasVisible;
+            });
+
+            highlightMaterials.forEach((material, object) => {
+                object.material = material;
+            });
+        };
+    }
+
     function destroy() {
         uiVisibilityToggle.destroy();
         timelineControls.destroy();
@@ -351,6 +383,7 @@ export function createArrowCloudEditor({
         setArrowPaths,
         setAnimationSettings,
         syncRenderedArrowItems,
+        prepareRender,
         destroy,
     };
 }

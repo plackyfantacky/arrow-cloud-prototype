@@ -99,6 +99,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
         side: THREE.FrontSide,
     });
 
+    const beforeRenderListeners = new Set();
     const frameListeners = new Set();
     const pathRebuildListeners = new Set();
 
@@ -107,6 +108,13 @@ export function createArrowCloudScene(mountElement, options = {}) {
     let renderedArrowItems = [];
     let arrows = [];
 
+    rebuildArrowPaths();
+
+    const timer = new THREE.Timer();
+    let animationFrameId = null;
+    let isDestroyed = false;
+
+    // helpers
     function rebuildArrowPaths() {
         const renderState = renderArrowPaths({
             scene,
@@ -132,12 +140,6 @@ export function createArrowCloudScene(mountElement, options = {}) {
             listener(renderedArrowItems);
         });
     }
-
-    rebuildArrowPaths();
-
-    const timer = new THREE.Timer();
-    let animationFrameId = null;
-    let isDestroyed = false;
 
     function animate() {
         if (isDestroyed) {
@@ -169,7 +171,27 @@ export function createArrowCloudScene(mountElement, options = {}) {
             ambientTime,
         });
 
-        renderer.render(scene, camera);
+        renderFrame();
+    }
+
+    function renderFrame() {
+        const restoreCallbacks = [];
+
+        try {
+            beforeRenderListeners.forEach((listener) => {
+                const restore = listener();
+
+                if (typeof restore === "function") {
+                    restoreCallbacks.push(restore);
+                }
+            });
+
+            renderer.render(scene, camera);
+        } finally {
+            restoreCallbacks.reverse().forEach((restore) => {
+                restore();
+            });
+        }
     }
 
     function handleResize() {
@@ -182,14 +204,15 @@ export function createArrowCloudScene(mountElement, options = {}) {
         rebuildArrowPaths();
     }
 
-    window.addEventListener("resize", handleResize);
-
     function destroy() {
         if (isDestroyed) {
             return;
         }
 
         isDestroyed = true;
+        frameListeners.clear();
+        pathRebuildListeners.clear();
+        beforeRenderListeners.clear();
 
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
@@ -222,6 +245,7 @@ export function createArrowCloudScene(mountElement, options = {}) {
         }
     }
 
+    window.addEventListener("resize", handleResize);
     animate();
 
     return {
@@ -272,6 +296,14 @@ export function createArrowCloudScene(mountElement, options = {}) {
             };
         },
 
+        onBeforeRender(listener) {
+            beforeRenderListeners.add(listener);
+
+            return () => {
+                beforeRenderListeners.delete(listener);
+            };
+        },
+        
         resize: handleResize,
         destroy,
     };

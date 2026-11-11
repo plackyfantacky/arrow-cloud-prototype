@@ -1,4 +1,6 @@
-import { createArrowCloudLabsScene } from "./createArrowCloudLabsScene.js";
+import { createArrowCloudScene } from "./createArrowCloudScene.js";
+import { attachArrowCloudEditor } from "./editor/attachArrowCloudEditor.js";
+
 import { loadArrowDataset } from "./loadArrowDataset.js";
 import datasetNames from "./generated/datasets.json";
 
@@ -25,15 +27,27 @@ async function initialise() {
 
     const dataset = await loadArrowDataset(datasetName);
 
-    createArrowCloudLabsScene(mountElement, {
+    const runtime = createArrowCloudScene(mountElement, {
         dataset,
-        loadDataset: loadArrowDataset,
+    });
+
+    const editorAttachment = attachArrowCloudEditor(runtime, {
         cameraView,
         cameraDistance,
-        animationSettings: {
-            debugMode: true,
+        cameraTarget: dataset.staticCamera?.target,
+
+        onDatasetChange(nextDatasetName) {
+            const url = new URL(window.location.href);
+
+            url.searchParams.set("dataset", nextDatasetName);
+            window.location.assign(url);
         },
     });
+
+    window.addEventListener("pagehide", () => {
+        editorAttachment.destroy();
+        runtime.destroy();
+    }, { once: true });
 }
 
 initialise();
