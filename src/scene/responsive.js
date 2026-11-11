@@ -105,7 +105,7 @@ export function positionSceneObjectsForViewport(sceneObjects, camera, container)
     camera.updateWorldMatrix(true, false);
 
     sceneObjects.forEach((object) => {
-        const anchor = object.parent;
+        const anchor = object.userData.viewportAnchor;
         const layout = anchor?.userData.viewportLayout;
 
         if (!layout) {

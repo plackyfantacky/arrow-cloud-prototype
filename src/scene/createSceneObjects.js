@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import { createGeometry } from "../primitives/geometry/createGeometry.js";
+import { createIdleMotion } from "../animation/createIdleMotion.js";
 
 export function createSceneObjects(scene, definitions = []) {
     const objectsById = new Map();
@@ -43,15 +44,25 @@ export function createSceneObjects(scene, definitions = []) {
         mesh.castShadow = definition.castShadow ?? true;
         mesh.receiveShadow = definition.receiveShadow ?? true;
 
+        const motionGroup = new THREE.Group();
+
+        motionGroup.add(mesh);
+
+        if (definition.idle) {
+            mesh.userData.idleMotion = createIdleMotion(motionGroup, definition.idle);
+        }
+
         if (definition.layout?.space === "viewport") {
             const anchor = new THREE.Group();
 
             anchor.userData.viewportLayout = definition.layout;
-            anchor.add(mesh);
+            anchor.add(motionGroup);
+
+            mesh.userData.viewportAnchor = anchor;
 
             scene.add(anchor);
         } else {
-            scene.add(mesh);
+            scene.add(motionGroup);
         }
 
         objectsById.set(definition.id, mesh);

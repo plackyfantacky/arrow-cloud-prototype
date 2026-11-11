@@ -169,6 +169,10 @@ export function createScene(mountElement, options = {}) {
             ambientTime,
         });
 
+        sceneObjects.forEach((object) => {
+            object.userData.idleMotion?.update(ambientTime);
+        });
+
         renderFrame();
     }
 
