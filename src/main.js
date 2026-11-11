@@ -14,6 +14,16 @@ async function initialise() {
         const { editorConfig } = await import("./editor/editorConfig.js");
 
         if (editorConfig.enabled) {
+            const stylesheet = document.createElement("link");
+
+            stylesheet.rel = "stylesheet";
+            stylesheet.href = new URL(
+                "./main.css",
+                import.meta.url
+            ).href;
+
+            document.head.appendChild(stylesheet);
+
             const { default: datasetNames } = await import("./generated/datasets.json");
 
             if (!datasetNames.includes(datasetName)) {
