@@ -12,7 +12,7 @@
         "serve": "browser-sync start --server . --files 'index.html, src/**/*.js, src/**/*.json, dist/**/*.js'",
         "dev": "npm-run-all --parallel watch watch:datasets serve",
         "dev:prod": "npm-run-all --parallel watch:production serve",
-        "build": "npm-run-all build:prod build:labs",
+        "build": "npm-run-all build:prod",
         "generate:datasets": "node node/generateDatasetManifest.mjs",
         "watch:datasets": "node node/generateDatasetManifest.mjs --watch",
         "predev": "npm run generate:datasets"

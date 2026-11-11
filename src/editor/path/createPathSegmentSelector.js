@@ -29,6 +29,10 @@ export function createPathSegmentSelector({
         pointerDownPosition = {
             x: event.clientX,
             y: event.clientY,
+            ignoreClick: shouldIgnoreClick(
+                event.clientX,
+                event.clientY
+            ),
         };
     }
 
@@ -41,12 +45,14 @@ export function createPathSegmentSelector({
             event.clientX - pointerDownPosition.x,
             event.clientY - pointerDownPosition.y,
         );
-
-        resetPointer();
-
-        if (shouldIgnoreClick(event.clientX, event.clientY)) {
+        
+        const ignoreClick = pointerDownPosition.ignoreClick;
+        
+        if (ignoreClick || shouldIgnoreClick(event.clientX, event.clientY)) {
             return;
         }
+
+        resetPointer();
         
         if (distance > clickThreshold) {
             return;

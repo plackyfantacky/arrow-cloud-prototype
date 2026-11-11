@@ -33,7 +33,7 @@ export function createPathTools({
 
     function rebuild() {
         segmentHighlight?.clear();
-        onPathsChange();
+        onPathsChange(pathEditor.getArrowPaths());
         originMarkers.sync(pathEditor.getArrowPaths());
     }
 
