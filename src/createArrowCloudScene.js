@@ -4,18 +4,12 @@ import { getStageSize } from "./stage.js";
 import { updateCameraTrack } from "./camera.js";
 
 import { createPlaybackController } from "./animation/createPlaybackController.js";
-import { applyViewportOffset, handleResize as responsiveResize, positionArrowPathForViewport } from "./responsive.js";
+import { updateArrowAnimations } from "./animation/updateArrowAnimations.js";
+import { applyViewportOffset, handleResize as responsiveResize } from "./responsive.js";
 
 import { renderArrowPaths } from "./arrows/renderArrowPaths.js";
-import { setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
-import { updateArrowReveal } from "./arrows/reveal.js";
-import { updateArrowIdleMotion } from "./arrows/idle.js";
 
 import { arrowCloudSettings } from "./arrowCloudSettings.js";
-import { setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
-import { updateArrowReveal } from "./arrows/reveal.js";
-
-import { updateArrowIdleMotion } from "./arrows/idle.js";
 
 export function createArrowCloudScene(mountElement, options = {}) {
     if (!mountElement) {
@@ -125,36 +119,9 @@ export function createArrowCloudScene(mountElement, options = {}) {
             updateCameraTrack(mountElement, cameraTrack, camera, currentTime);
         }
 
-        arrows.forEach((arrow) => {
-            updateArrowReveal(arrow, currentTime);
-        });
-
-        renderedArrowItems.forEach((renderedArrowItem) => {
-            const { arrow, motionGroup } = renderedArrowItem;
-            const idleSettings = motionGroup.userData.idle;
-
-            if (!idleSettings) {
-                return;
-            }
-
-            const revealEndTime = arrow.userData.timing.delay + arrow.userData.timing.duration;
-
-            const idleTime = Math.max(0, timer.getElapsed() - revealEndTime);
-
-            if (currentTime < revealEndTime) {
-                return;
-            }
-
-            updateArrowIdleMotion(motionGroup, idleSettings, idleTime);
-        });
-
-        pathComponentMeshes.forEach((componentMesh) => {
-            const delay = componentMesh.userData.timing.delay;
-            const duration = componentMesh.userData.timing.duration;
-
-            const revealProgress = THREE.MathUtils.clamp((currentTime - delay) / duration, 0, 1);
-
-            setPathComponentReveal(componentMesh, revealProgress);
+        updateArrowAnimations({
+            renderedArrowItems,
+            currentTime,
         });
 
         renderer.render(scene, camera);

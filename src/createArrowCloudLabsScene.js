@@ -3,12 +3,10 @@ import * as THREE from "three";
 import { getStageSize } from "./stage.js";
 
 import { createPlaybackController } from "./animation/createPlaybackController.js";
+import { updateArrowAnimations } from "./animation/updateArrowAnimations.js";
 import { applyViewportOffset, handleResize as responsiveResize } from "./responsive.js";
 
 import { renderArrowPaths } from "./arrows/renderArrowPaths.js";
-import { setPathComponentReveal } from "./arrows/createArrowPathComponents.js";
-import { updateArrowReveal } from "./arrows/reveal.js";
-import { updateArrowIdleMotion } from "./arrows/idle.js";
 
 import { arrowCloudLabsSettings } from "./arrowCloudLabsSettings.js";
 
@@ -202,36 +200,9 @@ export function createArrowCloudLabsScene(mountElement, options = {}) {
             currentTime,
         });
 
-        arrows.forEach((arrow) => {
-            updateArrowReveal(arrow, currentTime);
-        });
-
-        renderedArrowItems.forEach((renderedArrowItem) => {
-            const { arrow, motionGroup } = renderedArrowItem;
-            const idleSettings = motionGroup.userData.idle;
-
-            if (!idleSettings) {
-                return;
-            }
-
-            const revealEndTime = arrow.userData.timing.delay + arrow.userData.timing.duration;
-
-            const idleTime = Math.max(0, timer.getElapsed() - revealEndTime);
-
-            if (currentTime < revealEndTime) {
-                return;
-            }
-
-            updateArrowIdleMotion(motionGroup, idleSettings, idleTime);
-        });
-
-        pathComponentMeshes.forEach((componentMesh) => {
-            const delay = componentMesh.userData.timing.delay;
-            const duration = componentMesh.userData.timing.duration;
-
-            const revealProgress = THREE.MathUtils.clamp((currentTime - delay) / duration, 0, 1);
-
-            setPathComponentReveal(componentMesh, revealProgress);
+        updateArrowAnimations({
+            renderedArrowItems,
+            currentTime,
         });
 
         if (document.body.classList.contains("editor-ui-hidden")) {

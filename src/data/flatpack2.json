@@ -1,27 +1,27 @@
 {
     "name": "flatpack",
     "animationSettings": {
-        "timelineDuration": 5,
+        "timelineDuration": 8,
         "speed": 1,
         "isPlaying": true,
         "isLooping": false
     },
     "staticCamera": {
         "position": {
-            "x": 12.174,
-            "y": 0.791,
-            "z": 0.276
+            "x": 10.01,
+            "y": 2.325,
+            "z": 1.943
         },
         "quaternion": {
-            "x": 0.042195,
-            "y": 0.272873,
-            "z": -0.011981,
-            "w": 0.96105
+            "x": 0.002406,
+            "y": 0.285669,
+            "z": -0.000717,
+            "w": 0.958325
         },
         "target": {
-            "x": 4.179,
-            "y": 2.13,
-            "z": -12.669
+            "x": 1.647,
+            "y": 2.402,
+            "z": -10.837
         }
     },
     "viewport": {
@@ -37,8 +37,8 @@
             "z": 120
         },
         "position": {
-           "x": 40,
-            "y": 29.75,
+            "x": 40,
+            "y": 30,
             "z": 49.75
         },
         "grid": {
@@ -89,293 +89,40 @@
             }
         ]
     },
-    "inactiveArrowPaths": [
-        {
-            "name": "arrow-1",
-            "origin": [0, 0, 0],
-            "initialDirection": "+x",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 3],
-                ["turnRight", 1],
-                ["turnRight", 8],
-                ["turnRight", 2],
-                ["turnLeft", 4],
-                ["turnRight", 5],
-                ["turnLeft", 2],
-                ["turnLeft", 2],
-                ["turnRight", 1],
-                ["turnLeft", 1],
-                ["turnLeft", 1],
-                ["turnRight", 1],
-                ["turnRight", 5]
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
-            "name": "arrow-4",
-            "origin": [13, 0, 1],
-            "initialDirection": "+z",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 3],
-                ["turnRight", 2],
-                ["turnLeft", 1],
-                ["turnRight", 2],
-                ["turnLeft", 2],
-                ["turnRight", 1],
-                ["turnLeft", 1],
-                ["turnRight", 2],
-                ["turnLeft", 2],
-                ["turnRight", 3],
-                ["turnLeft", 1],
-                ["turnRight", 3],
-                ["turnLeft", 1]
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
-            "name": "arrow-6",
-            "origin": [12, 0, 5],
-            "initialDirection": "+z",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 1],
-                ["turnRight", 2],
-                ["turnLeft", 2],
-                ["turnRight", 1],
-                ["turnLeft", 1],
-                ["turnLeft", 2],
-                ["turnRight", 1],
-                ["turnRight", 3],
-                ["turnRight", 1],
-                ["turnLeft", 1],
-                ["turnLeft", 2],
-                ["turnRight", 3],
-                ["turnLeft", 1]
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
-            "name": "arrow-7",
-            "origin": [4, 0, 3],
-            "initialDirection": "-x",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 2],
-                ["turnLeft", 4],
-                ["turnRight", 2],
-                ["turnLeft", 1],
-                ["turnRight", 3],
-                ["turnRight", 1],
-                ["turnLeft", 1],
-                ["turnRight", 4],
-                ["turnLeft", 1],
-                ["turnLeft", 7],
-                ["turnLeft", 4],
-                ["turnRight", 4]
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
-            "name": "arrow-8",
-            "origin": [1, 0, 9],
-            "initialDirection": "-z",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 1],
-                ["turnRight", 2],
-                ["turnLeft", 4],
-                ["turnRight", 3],
-                ["turnLeft", 1],
-                ["turnLeft", 1],
-                ["turnRight", 1],
-                ["turnRight", 1],
-                ["turnLeft", 3],
-                ["turnRight", 1],
-                ["turnRight", 4],
-                ["turnLeft", 2],
-                ["turnLeft", 5],
-                ["turnRight", 2],
-                ["turnLeft", 4],
-                ["turnRight", 2]               
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
-            "name": "arrow-9",
-            "origin": [-4, 0, 13],
-            "initialDirection": "+z",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 1],
-                ["turnRight", 1],
-                ["turnRight", 1],
-                ["turnLeft", 3],
-                ["turnRight", 3],
-                ["turnLeft", 2],
-                ["turnRight", 5],
-                ["turnLeft", 1],
-                ["turnRight", 4],
-                ["turnLeft", 2],
-                ["turnRight", 2],
-                ["turnLeft", 2]             
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
-            "name": "arrow-10",
-            "origin": [-4, 0, 8],
-            "initialDirection": "+z",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 1],
-                ["turnLeft", 4],
-                ["turnRight", 1],
-                ["turnLeft", 2],
-                ["turnLeft", 1],
-                ["turnRight", 3],
-                ["turnLeft", 1],
-                ["turnLeft", 1],
-                ["turnRight", 1],
-                ["turnRight", 1],
-                ["turnLeft", 1],
-                ["turnLeft", 1],
-                ["turnRight", 1],
-                ["turnRight", 2],
-                ["turnRight", 2],
-                ["turnLeft", 1],
-                ["turnLeft", 1],
-                ["turnRight", 1],
-                ["turnLeft", 1],
-                ["turnLeft", 1],
-                ["turnRight", 1],
-                ["turnRight", 3],
-                ["turnLeft", 1],
-                ["turnRight", 2],
-                ["turnLeft", 2],
-                ["turnLeft", 1],
-                ["turnLeft", 1],
-                ["turnRight", 1],
-                ["turnRight", 3],
-                ["turnRight", 1],
-                ["turnRight", 1],
-                ["turnLeft", 3],
-                ["turnLeft", 1],
-                ["turnLeft", 2],
-                ["turnRight", 4],
-                ["turnRight", 2]
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
-            "name": "arrow-12",
-            "origin": [-4, 0, 2],
-            "initialDirection": "-x",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 4],
-                ["turnRight", 1],
-                ["turnRight", 2],
-                ["turnLeft", 1],
-                ["turnLeft", 3],
-                ["turnLeft", 3],
-                ["turnLeft", 3],
-                ["turnRight", 8],
-                ["turnLeft", 4],
-                ["turnRight", 2]               
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
-            "name": "arrow-15",
-            "origin": [-10, 0, -5],
-            "initialDirection": "+z",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 4],
-                ["turnRight", 2],
-                ["turnLeft", 1],
-                ["turnLeft", 2],
-                ["turnRight", 4],
-                ["turnLeft", 1],
-                ["turnRight", 3],
-                ["turnLeft", 1],
-                ["turnLeft", 3],
-                ["turnRight", 1],
-                ["turnRight", 4],
-                ["turnRight", 2],
-                ["turnLeft", 1],
-                ["turnLeft", 2],
-                ["turnRight", 3],
-                ["turnLeft", 4],
-                ["turnRight", 3]               
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
-            "name": "arrow-16",
-            "origin": [-7, 0, -7],
-            "initialDirection": "-z",
-            "initialNormal": "+y",
-            "moves": [
-                ["forward", 2],
-                ["turnLeft", 1],
-                ["turnLeft", 1],
-                ["turnRight", 5],
-                ["turnLeft", 2],
-                ["turnRight", 3],
-                ["turnLeft", 1],
-                ["turnLeft", 2],
-                ["turnRight", 1],
-                ["turnRight", 2]               
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        }
-    ],
     "arrowPaths": [
         {
-            "name": "arrow-2",
-            "origin": [-1, 0, -5],
-            "initialDirection": [0, 0, -1],
-            "initialNormal": [0, 1, 0],
+            "name": "path-1",
+            "origin": [-3, 0.25, 4.75],
+            "initialDirection": "-z",
+            "initialNormal": "+y",
             "moves": [
+                ["forward", 5],
+                ["bendUp", 1],
+                ["bendDown", 2],
+                ["bendDown", 1],
+                ["bendUp", 1],
+                ["turnRight", 2],
+                ["turnLeft", 2],
                 ["turnRight", 4],
-                ["turnLeft", 5],
-                ["bendUp", 0.8],
+                ["turnLeft", 4.75],
+                ["bendUp", 0.75],
                 ["turnLeft", 1],
                 ["turnRight", 6]
             ],
+            "idle": {
+                "position": {
+                    "x": 0,
+                    "y": 0.005,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0.01
+                },
+                "speed": 2,
+                "phase": 0
+            },
             "timing": {
                 "delay": 0,
                 "duration": 4
@@ -383,7 +130,7 @@
         },
         {
             "name": "arrow-3",
-            "origin": [7, 0, -2],
+            "origin": [7, 0.25, -2],
             "initialDirection": "-z",
             "initialNormal": "+y",
             "moves": [
@@ -405,10 +152,10 @@
                 "duration": 4
             }
         },
-        
+
         {
             "name": "arrow-5",
-            "origin": [8, 0, 2],
+            "origin": [8, 0.25, 2],
             "initialDirection": "-z",
             "initialNormal": "+y",
             "moves": [
@@ -429,31 +176,8 @@
             }
         },
         {
-            "name": "arrow-11",
-            "origin": [6, 0, -7],
-            "initialDirection": [0, 0, -1],
-            "initialNormal": [0, 1, 0],
-            "moves": [
-                ["turnLeft", 2],
-                ["turnRight", 2],
-                ["turnRight", 1],
-                ["turnRight", 1],
-                ["turnLeft", 1],
-                ["turnLeft", 2],
-                ["bendUp", 0.8],
-                ["turnLeft", 2],
-                ["turnRight", 1],
-                ["turnLeft", 1],
-                ["turnRight", 3]
-            ],
-            "timing": {
-                "delay": 0,
-                "duration": 4
-            }
-        },
-        {
             "name": "arrow-13",
-            "origin": [-2, 0, -6],
+            "origin": [-2, 0.25, -6],
             "initialDirection": [0, 0, -1],
             "initialNormal": [0, 1, 0],
             "moves": [
@@ -474,7 +198,7 @@
         },
         {
             "name": "arrow-14",
-            "origin": [-3, 0, -6],
+            "origin": [-3, 0.25, -6],
             "initialDirection": [1, 0, 0],
             "initialNormal": [0, 1, 0],
             "moves": [
@@ -496,31 +220,32 @@
         },
         {
             "name": "arrow-17",
-            "origin": [-5, 0, -8],
-            "initialDirection": "-x",
+            "origin": [-5, 0.25, -0.25],
+            "initialDirection": "+x",
             "initialNormal": "+y",
             "moves": [
                 ["forward", 1],
-                ["turnRight", 1],
+                ["turnLeft", 1],
                 ["turnRight", 4],
-                ["turnRight", 1],
-                ["turnRight", 2],
                 ["turnLeft", 1],
                 ["turnRight", 2],
                 ["turnLeft", 1],
                 ["turnRight", 2],
+                ["turnLeft", 6],
                 ["turnRight", 1],
-                ["turnLeft", 4],
+                ["turnRight", 1],
+                ["turnLeft", 1],
+                ["turnLeft", 1.75],
+                ["bendUp", 0.8],
                 ["turnLeft", 2],
                 ["turnRight", 1],
-                ["turnLeft", 2],
-                ["turnRight", 1]
+                ["turnLeft", 1],
+                ["turnRight", 3]
             ],
             "timing": {
                 "delay": 0,
                 "duration": 4
             }
         }
-
     ]
 }
