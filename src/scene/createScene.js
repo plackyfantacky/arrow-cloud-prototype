@@ -10,6 +10,7 @@ import { createShadowsController } from "../lighting/createShadowsController.js"
 import { createBackgroundShader } from "../shaders/createBackgroundShader.js";
 
 import { createPlaybackController } from "../animation/createPlaybackController.js";
+import { createSceneObjectAnimations } from "../animation/createSceneObjectAnimations.js";
 import { updateArrowAnimations } from "../animation/updateArrowAnimations.js";
 import { applyViewportOffset, handleResize as responsiveResize, positionSceneObjectsForViewport } from "./responsive.js";
 
@@ -86,6 +87,7 @@ export function createScene(mountElement, options = {}) {
     const sceneObjects = createSceneObjects(scene, dataset.sceneObjects);
 
     positionSceneObjectsForViewport(sceneObjects, pathLayoutCamera, mountElement);
+    const objectAnimations = createSceneObjectAnimations(sceneObjects, dataset.sequences);
 
     mountElement.appendChild(renderer.domElement);
 
@@ -169,9 +171,7 @@ export function createScene(mountElement, options = {}) {
             ambientTime,
         });
 
-        sceneObjects.forEach((object) => {
-            object.userData.idleMotion?.update(ambientTime);
-        });
+        objectAnimations.update(currentTime, ambientTime);
 
         renderFrame();
     }

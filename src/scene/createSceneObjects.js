@@ -47,9 +47,14 @@ export function createSceneObjects(scene, definitions = []) {
         mesh.castShadow = definition.castShadow ?? true;
         mesh.receiveShadow = definition.receiveShadow ?? true;
 
+        const poseGroup = new THREE.Group();
         const motionGroup = new THREE.Group();
 
+        poseGroup.add(motionGroup);
         motionGroup.add(mesh);
+
+        mesh.userData.poseGroup = poseGroup;
+        mesh.userData.animation = definition.animation ?? {};
 
         if (definition.idle) {
             mesh.userData.idleMotion = createIdleMotion(motionGroup, definition.idle);
@@ -59,13 +64,13 @@ export function createSceneObjects(scene, definitions = []) {
             const anchor = new THREE.Group();
 
             anchor.userData.viewportLayout = definition.layout;
-            anchor.add(motionGroup);
+            anchor.add(poseGroup);
 
             mesh.userData.viewportAnchor = anchor;
 
             scene.add(anchor);
         } else {
-            scene.add(motionGroup);
+            scene.add(poseGroup);
         }
 
         objectsById.set(definition.id, mesh);
