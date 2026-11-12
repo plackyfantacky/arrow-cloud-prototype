@@ -70,6 +70,32 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
         const startPerspective = readPerspective(keyframes[0].projection?.perspective, projection.perspective);
         const endPerspective = readPerspective(keyframes[1].projection?.perspective, startPerspective);
 
+        const startModifiers = keyframes[0].modifiers ?? {};
+        const endModifiers = keyframes[1].modifiers ?? {};
+
+        const modifierIds = new Set([...Object.keys(startModifiers), ...Object.keys(endModifiers)]);
+
+        const modifierTransitions = [...modifierIds].map((id) => {
+            const state = object.userData.modifiers?.[id];
+
+            if (!state) {
+                throw new Error(`Unknown modifier "${id}" in "${binding.play}".`);
+            }
+
+            const startAmount = startModifiers[id]?.amount ?? state.amount;
+            const endAmount = endModifiers[id]?.amount ?? startAmount;
+
+            if (!Number.isFinite(startAmount) || !Number.isFinite(endAmount)) {
+                throw new Error(`Invalid amount for modifier "${id}".`);
+            }
+
+            return {
+                state,
+                startAmount,
+                endAmount,
+            };
+        });
+
         const worldRotation = new THREE.Quaternion();
         const parentRotation = new THREE.Quaternion();
 
@@ -87,6 +113,10 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
                 poseGroup.quaternion.copy(parentRotation.invert()).multiply(worldRotation);
 
                 projection.perspective = startPerspective + (endPerspective - startPerspective) * easedProgress;
+
+                modifierTransitions.forEach(({ state, startAmount, endAmount }) => {
+                    state.amount = startAmount + (endAmount - startAmount) * easedProgress;
+                });
 
                 if (progress === 1 && idleStartTime === null) {
                     idleStartTime = ambientTime;
@@ -120,7 +150,6 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
 
             return perspective;
         }
-
     });
 
     //output
@@ -130,5 +159,5 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
                 controller.update(currentTime, ambientTime);
             });
         },
-    }
+    };
 }
