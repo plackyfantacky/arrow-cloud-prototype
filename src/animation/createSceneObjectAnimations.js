@@ -1,14 +1,14 @@
 import * as THREE from "three";
 
+import { resolveAnimationBindings } from "./resolveAnimationBindings.js";
+
 export function createSceneObjectAnimations(sceneObjects, sequences = {}, events) {
     const controllers = [];
     const unsubscribeEvents = [];
     const activations = new Map();
 
     sceneObjects.forEach((object) => {
-        const bindings = Object.entries(object.userData.animation ?? {}).map(([name, binding]) => {
-            return [name, typeof binding === "string" ? { play: binding } : binding];
-        });
+        const bindings = resolveAnimationBindings(object.userData.animation, object.userData.sceneObjectId);
 
         const bindingControllers = new Map();
         const scheduledControllers = [];
@@ -19,26 +19,7 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
 
         activations.set(object.userData.sceneObjectId, objectActivations);
 
-        if (bindings.length === 0) {
-            controllers.push({
-                update(currentTime, ambientTime) {
-                    object.userData.idleMotion?.update(ambientTime);
-                },
-            });
-
-            return;
-        }
-
-        bindings.forEach(([bindingName, binding]) => {
-            const definesAt = binding.at !== undefined;
-            const definesOn = binding.on !== undefined;
-
-            const hasAt = definesAt && !definesOn;
-            const hasOn = definesOn && !definesAt;
-
-            if (definesAt && definesOn) {
-                console.warn(`Animation "${object.userData.sceneObjectId}.${bindingName}" ` + 'defines both "at" and "on". Automatic activation disabled.');
-            }
+        bindings.forEach(({ name: bindingName, binding, hasAt, hasOn }) => {
 
             const sequence = sequences[binding.play];
 
@@ -54,8 +35,6 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
 
             // this is a bit extreme - we should rework this
             if (
-                (hasAt && (!Number.isFinite(binding.at) || binding.at < 0)) ||
-                (hasOn && (typeof binding.on !== "string" || binding.on.trim() === "")) ||
                 !Number.isFinite(duration) ||
                 duration <= 0 ||
                 sequence.rotationSpace !== "world" ||
@@ -198,6 +177,16 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
                 return perspective;
             }
         });
+
+        if (bindingControllers.size === 0) {
+            controllers.push({
+                update(_currentTime, ambientTime) {
+                    object.userData.idleMotion?.update(ambientTime);
+                },
+            });
+
+            return;
+        }
 
         scheduledControllers.sort((first, second) => {
             return first.at - second.at;

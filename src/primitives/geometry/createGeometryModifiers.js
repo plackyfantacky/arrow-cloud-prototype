@@ -83,8 +83,14 @@ export function createGeometryModifiers(geometry, definitions = []) {
         }
 
         geometry.applyMatrix4(combinedMatrix);
-        geometry.computeBoundingBox();
-        geometry.computeBoundingSphere();
+
+        if (!geometry.boundingBox) {
+            geometry.computeBoundingBox();
+        }
+
+        if (!geometry.boundingSphere) {
+            geometry.computeBoundingSphere();
+        }
 
         previousAmounts = amounts;
     }

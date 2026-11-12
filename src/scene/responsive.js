@@ -141,11 +141,7 @@ export function positionSceneObjectsForViewport(sceneObjects, camera, container)
                 throw new Error("Invalid viewport width or inset.");
             }
 
-            if (!object.geometry.boundingBox) {
-                object.geometry.computeBoundingBox();
-            }
-
-            const bounds = object.geometry.boundingBox;
+            const bounds = object.userData.layoutBounds;
             const geometryWidth = bounds.max.x - bounds.min.x;
 
             if (geometryWidth <= 0) {

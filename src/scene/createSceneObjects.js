@@ -38,6 +38,12 @@ export function createSceneObjects(scene, definitions = []) {
         });
 
         const mesh = new THREE.Mesh(geometry, material);
+        if (!geometry.boundingBox) {
+            geometry.computeBoundingBox();
+        }
+
+        mesh.userData.layoutBounds = geometry.boundingBox.clone();
+
         applyObjectProjection(mesh, definition.projection);
 
         mesh.name = definition.name ?? definition.id;
