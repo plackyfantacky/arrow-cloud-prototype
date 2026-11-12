@@ -62,6 +62,7 @@ export function createSceneObjects(scene, definitions = []) {
 
         mesh.userData.poseGroup = poseGroup;
         mesh.userData.animation = definition.animation ?? {};
+        mesh.userData.interactions = definition.interactions ?? {};
 
         if (definition.idle) {
             mesh.userData.idleMotion = createIdleMotion(motionGroup, definition.idle);

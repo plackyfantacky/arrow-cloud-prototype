@@ -9,8 +9,13 @@ import { createLights } from "../lighting/createLights.js";
 import { createShadowsController } from "../lighting/createShadowsController.js";
 import { createBackgroundShader } from "../shaders/createBackgroundShader.js";
 
+import { createEventBus } from "../events/createEventBus.js";
 import { createPlaybackController } from "../animation/createPlaybackController.js";
 import { createSceneObjectAnimations } from "../animation/createSceneObjectAnimations.js";
+
+import { createObjectLocator } from "../interactions/createObjectLocator.js";
+import { createObjectInteractions } from "../interactions/createObjectInteractions.js";
+
 import { updateArrowAnimations } from "../animation/updateArrowAnimations.js";
 import { applyViewportOffset, handleResize as responsiveResize, positionSceneObjectsForViewport } from "./responsive.js";
 
@@ -30,6 +35,7 @@ export function createScene(mountElement, options = {}) {
         ...options.animationSettings,
     };
 
+    const events = createEventBus();
     const playback = createPlaybackController(animationSettings);
 
     let arrowPaths = options.arrowPaths || dataset.arrowPaths;
@@ -109,6 +115,20 @@ export function createScene(mountElement, options = {}) {
     let arrows = [];
 
     rebuildArrowPaths();
+
+    const getObjectAtPointer = createObjectLocator(
+    scene,
+    camera,
+    renderer.domElement
+);
+
+    const objectInteractions = createObjectInteractions(
+        renderer.domElement,
+        {
+            getObjectAtPointer,
+            emit: events.emit,
+        }
+    );
 
     const timer = new THREE.Timer();
     let animationFrameId = null;
@@ -217,6 +237,8 @@ export function createScene(mountElement, options = {}) {
             return;
         }
 
+        events.clear();
+
         isDestroyed = true;
         frameListeners.clear();
         pathRebuildListeners.clear();
@@ -246,6 +268,7 @@ export function createScene(mountElement, options = {}) {
             }
         });
 
+        objectInteractions.destroy();
         sceneObjects.clear();
         renderer.dispose();
 
@@ -262,6 +285,8 @@ export function createScene(mountElement, options = {}) {
         camera,
         renderer,
         mountElement,
+        on: events.on,
+        emit: events.emit,
         playback,
 
         getArrowPaths() {
@@ -316,6 +341,8 @@ export function createScene(mountElement, options = {}) {
         getSceneObject(objectId) {
             return sceneObjects.get(objectId) ?? null;
         },
+
+        setInteractionsEnabled: objectInteractions.setEnabled,
 
         resize: handleResize,
         destroy,

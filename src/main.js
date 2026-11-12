@@ -17,10 +17,7 @@ async function initialise() {
             const stylesheet = document.createElement("link");
 
             stylesheet.rel = "stylesheet";
-            stylesheet.href = new URL(
-                "./main.css",
-                import.meta.url
-            ).href;
+            stylesheet.href = new URL("./main.css", import.meta.url).href;
 
             document.head.appendChild(stylesheet);
 
@@ -42,6 +39,10 @@ async function initialise() {
 
     const runtime = createScene(mountElement, {
         dataset,
+    });
+
+    const unsubscribeNavigate = runtime.on("navigate", (event) => {
+        console.log("Navigation requested:", event.params.url, event);
     });
 
     let editorAttachment = null;
@@ -68,6 +69,7 @@ async function initialise() {
         "pagehide",
         () => {
             editorAttachment?.destroy();
+            unsubscribeNavigate();
             runtime.destroy();
         },
         { once: true },

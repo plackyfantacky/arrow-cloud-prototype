@@ -355,7 +355,15 @@
                     "by": "y",
                     "amount": 0
                 }
-            ]
+            ],
+            "interactions": {
+                "click": {
+                    "emit": "navigate",
+                    "params": {
+                        "url": "/"
+                    }
+                }
+            }
         }
     ],
     "sequences": {

@@ -39,6 +39,7 @@ export function createArrowCloudEditor({
     getArrows,
     onArrowPathsChange,
     onDatasetChange,
+    onUIVisibilityChange = () => {},
 }) {
     const preferences = createEditorPreferences();
 
@@ -265,6 +266,7 @@ export function createArrowCloudEditor({
 
         function applyVisibility() {
             document.body.classList.toggle("editor-ui-hidden", !checkbox.checked);
+            onUIVisibilityChange(checkbox.checked);
         }
 
         function handleChange() {

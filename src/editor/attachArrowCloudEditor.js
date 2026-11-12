@@ -19,12 +19,13 @@ export function attachArrowCloudEditor(runtime, options = {}) {
 
         onArrowPathsChange: runtime.setArrowPaths,
         onDatasetChange: options.onDatasetChange,
+        onUIVisibilityChange(isVisible) {
+            runtime.setInteractionsEnabled(!isVisible);
+        },
     });
 
     const unsubscribeFrame = runtime.onFrame((frame) => {
-        runtime.setCameraTrackEnabled(
-            !editor.isCameraOverridden()
-        );
+        runtime.setCameraTrackEnabled(!editor.isCameraOverridden());
 
         editor.update(frame);
     });
@@ -53,6 +54,7 @@ export function attachArrowCloudEditor(runtime, options = {}) {
         unsubscribeRender();
 
         editor.destroy();
+        runtime.setInteractionsEnabled(true);
         runtime.setCameraTrackEnabled(true);
     }
 
