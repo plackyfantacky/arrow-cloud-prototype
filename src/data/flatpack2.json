@@ -320,7 +320,7 @@
             "animation": {
                 "settle": {
                     "play": "logo-settle",
-                    "on": "navigate"
+                    "at": 1
                 }
             },
             "idle": {

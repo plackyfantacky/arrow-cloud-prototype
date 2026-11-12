@@ -43,6 +43,7 @@ async function initialise() {
 
     const unsubscribeNavigate = runtime.on("navigate", (event) => {
         console.log("Navigation requested:", event.params.url, event);
+        runtime.playAnimation("logo-placeholder", "settle");
     });
 
     let editorAttachment = null;

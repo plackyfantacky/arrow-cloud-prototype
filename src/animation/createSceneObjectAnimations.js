@@ -3,30 +3,18 @@ import * as THREE from "three";
 export function createSceneObjectAnimations(sceneObjects, sequences = {}, events) {
     const controllers = [];
     const unsubscribeEvents = [];
+    const activations = new Map();
 
     sceneObjects.forEach((object) => {
-        const automaticBindings = Object.entries(object.userData.animation ?? {}).filter(([name, binding]) => {
-            if (typeof binding === "string") {
-                return false;
-            }
-
-            const hasAt = binding.at !== undefined;
-            const hasOn = binding.on !== undefined;
-
-            if (hasAt && hasOn) {
-                console.warn(`Animation "${object.userData.sceneObjectId}.${name}" defines both "at" and "on". Automatic activation disabled.`);
-
-                return false;
-            }
-
-            return hasAt || hasOn;
+        const bindings = Object.entries(object.userData.animation ?? {}).map(([name, binding]) => {
+            return [name, typeof binding === "string" ? { play: binding } : binding];
         });
 
-        if (automaticBindings.length > 1) {
+        if (bindings.length > 1) {
             throw new Error("Multiple scheduled bindings per object are not implemented yet.");
         }
 
-        if (automaticBindings.length === 0) {
+        if (bindings.length === 0) {
             controllers.push({
                 update(currentTime, ambientTime) {
                     object.userData.idleMotion?.update(ambientTime);
@@ -36,9 +24,17 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
             return;
         }
 
-        const [, binding] = automaticBindings[0];
-        const hasAt = binding.at !== undefined;
-        const hasOn = binding.on !== undefined;
+        const [bindingName, binding] = bindings[0];
+
+        const definesAt = binding.at !== undefined;
+        const definesOn = binding.on !== undefined;
+
+        const hasAt = definesAt && !definesOn;
+        const hasOn = definesOn && !definesAt;
+
+        if (definesAt && definesOn) {
+            console.warn(`Animation "${object.userData.sceneObjectId}.${bindingName}" ` + 'defines both "at" and "on". Automatic activation disabled.');
+        }
 
         const sequence = sequences[binding.play];
 
@@ -104,32 +100,38 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
         const parentRotation = new THREE.Quaternion();
 
         let idleStartTime = null;
-        let eventStartTime = null;
+        let activationTime = null;
         let activationPending = false;
 
+        function activate() {
+            activationPending = true;
+        }
+
+        activations.set(object.userData.sceneObjectId, new Map([[bindingName, activate]]));
+
         if (hasOn) {
-            unsubscribeEvents.push(
-                events.on(binding.on, () => {
-                    activationPending = true;
-                }),
-            );
+            unsubscribeEvents.push(events.on(binding.on, activate));
         }
 
         controllers.push({
             update(currentTime, ambientTime) {
                 if (activationPending) {
                     activationPending = false;
-                    eventStartTime = ambientTime;
+                    activationTime = ambientTime;
                     idleStartTime = null;
 
                     object.userData.idleMotion?.update(0);
                 }
 
-                if (hasOn && eventStartTime === null) {
+                let elapsedTime;
+
+                if (activationTime !== null) {
+                    elapsedTime = ambientTime - activationTime;
+                } else if (hasAt) {
+                    elapsedTime = currentTime - binding.at;
+                } else {
                     return;
                 }
-
-                const elapsedTime = hasAt ? currentTime - binding.at : ambientTime - eventStartTime;
 
                 const progress = Math.max(0, Math.min(1, elapsedTime / duration));
 
@@ -182,6 +184,15 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
 
     //output
     return {
+        play(objectId, bindingName) {
+            const activate = activations.get(objectId)?.get(bindingName);
+
+            if (!activate) {
+                throw new Error(`Unknown animation binding: ${objectId}.${bindingName}`);
+            }
+
+            activate();
+        },
         update(currentTime, ambientTime) {
             controllers.forEach((controller) => {
                 controller.update(currentTime, ambientTime);
@@ -191,6 +202,7 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
             unsubscribeEvents.forEach((unsubscribe) => {
                 unsubscribe();
             });
+            activations.clear();
             controllers.length = 0;
         },
     };
