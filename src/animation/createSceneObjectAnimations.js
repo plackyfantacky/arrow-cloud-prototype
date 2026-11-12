@@ -8,13 +8,10 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
 
     sceneObjects.forEach((object) => {
         const bindings = resolveAnimationBindings(object.userData.animation, object.userData.sceneObjectId);
-
         const bindingControllers = new Map();
-        const scheduledControllers = [];
         const objectActivations = new Map();
 
-        let activeBinding = null;
-        let previousController = null;
+        const layers = new Map();
 
         activations.set(object.userData.sceneObjectId, objectActivations);
 
@@ -28,7 +25,27 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
                 return;
             }
 
-            const evaluator = createObjectSequenceEvaluator(object, sequence, binding.play);
+            const layerName = binding.layer ?? "primary";
+            if (!["primary", "additive"].includes(layerName)) {
+                throw new Error(`Unknown animation layer: ${layerName}`);
+            }
+
+            if (layerName === "additive" && sequence.rotationSpace !== "local") {
+                throw new Error("Additive animation requires local rotation space.");
+            }
+
+            if (!layers.has(layerName)) {
+                layers.set(layerName, {
+                    activeBinding: null,
+                    previousController: null,
+                    scheduled: [],
+                });
+            }
+
+            const layer = layers.get(layerName);
+            const target = layerName === "additive" ? object.userData.motionGroup : object.userData.poseGroup;
+
+            const evaluator = createObjectSequenceEvaluator(object, sequence, binding.play, target);
 
             const duration = evaluator.duration;
 
@@ -37,7 +54,7 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
             let activationPending = false;
 
             function activate() {
-                activeBinding = bindingName;
+                layer.activeBinding = bindingName;
                 activationPending = true;
             }
 
@@ -57,17 +74,12 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
                         object.userData.idleMotion?.update(0);
                     }
 
-                    let elapsedTime;
-
-                    if (activationTime !== null) {
-                        elapsedTime = ambientTime - activationTime;
-                    } else if (hasAt) {
-                        elapsedTime = currentTime - binding.at;
-                    } else {
-                        return;
+                    if (binding.loop && hasAt && activationTime === null && currentTime >= binding.at) {
+                        activationTime = ambientTime;
                     }
 
-                    const progress = Math.max(0, Math.min(1, elapsedTime / duration));
+                    const elapsed = Math.max(0, elapsedTime);
+                    const progress = binding.loop ? (elapsed % duration) / duration : Math.min(1, elapsed / duration);
 
                     evaluator.apply(progress);
 
@@ -84,7 +96,7 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
             bindingControllers.set(bindingName, controller);
 
             if (hasAt) {
-                scheduledControllers.push({
+                layer.scheduled.push({
                     at: binding.at,
                     controller,
                 });
@@ -101,36 +113,40 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
             return;
         }
 
-        scheduledControllers.sort((first, second) => {
-            return first.at - second.at;
+        layers.forEach((layer) => {
+            layer.scheduled.sort((first, second) => {
+                return first.at - second.at;
+            });
         });
 
         controllers.push({
             update(currentTime, ambientTime) {
-                let controller;
+                layers.forEach((layer) => {
+                    let controller;
 
-                if (activeBinding !== null) {
-                    controller = bindingControllers.get(activeBinding);
-                } else {
-                    controller = scheduledControllers[0]?.controller;
+                    if (layer.activeBinding !== null) {
+                        controller = bindingControllers.get(layer.activeBinding);
+                    } else {
+                        controller = layer.scheduled[0]?.controller;
 
-                    for (const scheduled of scheduledControllers) {
-                        if (scheduled.at <= currentTime) {
-                            controller = scheduled.controller;
+                        for (const scheduled of layer.scheduled) {
+                            if (scheduled.at <= currentTime) {
+                                controller = scheduled.controller;
+                            }
                         }
                     }
-                }
 
-                if (!controller) {
-                    return;
-                }
+                    if (!controller) {
+                        return;
+                    }
 
-                if (controller !== previousController) {
-                    object.userData.idleMotion?.update(0);
-                    previousController = controller;
-                }
+                    if (controller !== layer.previousController) {
+                        object.userData.idleMotion?.update(0);
+                        layer.previousController = controller;
+                    }
 
-                controller.update(currentTime, ambientTime);
+                    controller.update(currentTime, ambientTime);
+                });
             },
         });
     });

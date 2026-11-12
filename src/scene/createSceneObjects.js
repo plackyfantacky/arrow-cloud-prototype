@@ -67,6 +67,8 @@ export function createSceneObjects(scene, definitions = []) {
         motionGroup.add(mesh);
 
         mesh.userData.poseGroup = poseGroup;
+        mesh.userData.motionGroup = motionGroup;
+        
         mesh.userData.animation = definition.animation ?? {};
         mesh.userData.interactions = definition.interactions ?? {};
 
