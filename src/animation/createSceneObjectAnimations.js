@@ -78,6 +78,16 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
                         activationTime = ambientTime;
                     }
 
+                    let elapsedTime;
+
+                    if (activationTime !== null) {
+                        elapsedTime = ambientTime - activationTime;
+                    } else if (hasAt) {
+                        elapsedTime = currentTime - binding.at;
+                    } else {
+                        return;
+                    }
+
                     const elapsed = Math.max(0, elapsedTime);
                     const progress = binding.loop ? (elapsed % duration) / duration : Math.min(1, elapsed / duration);
 
