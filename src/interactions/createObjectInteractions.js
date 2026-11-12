@@ -1,4 +1,4 @@
-export function createObjectInteractions(element, { pickObject: getObjectAtPointer, emit }) {
+export function createObjectInteractions(element, { getObjectAtPointer, emit }) {
     let isEnabled = true;
     let pointer = null;
 
