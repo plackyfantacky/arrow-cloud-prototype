@@ -173,6 +173,10 @@ export function createScene(mountElement, options = {}) {
 
         objectAnimations.update(currentTime, ambientTime);
 
+        sceneObjects.forEach((object) => {
+            object.userData.updateModifiers?.();
+        });
+
         renderFrame();
     }
 

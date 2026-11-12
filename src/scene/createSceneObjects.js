@@ -5,6 +5,8 @@ import { applyObjectProjection } from "../shaders/applyObjectProjection.js";
 import { createGeometry } from "../primitives/geometry/createGeometry.js";
 import { createIdleMotion } from "../animation/createIdleMotion.js";
 
+import { createGeometryModifiers } from "../primitives/geometry/createGeometryModifiers.js";
+
 export function createSceneObjects(scene, definitions = []) {
     const objectsById = new Map();
 
@@ -22,6 +24,8 @@ export function createSceneObjects(scene, definitions = []) {
         }
 
         const geometry = createGeometry(definition.geometry);
+        const geometryModifiers = createGeometryModifiers(geometry, definition.modifiers);
+
         const materialSettings = definition.material ?? {};
         const opacity = materialSettings.opacity ?? 1;
 
@@ -38,6 +42,9 @@ export function createSceneObjects(scene, definitions = []) {
 
         mesh.name = definition.name ?? definition.id;
         mesh.userData.sceneObjectId = definition.id;
+
+        mesh.userData.modifiers = geometryModifiers.states;
+        mesh.userData.updateModifiers = geometryModifiers.update;
 
         mesh.position.fromArray(definition.position ?? [0, 0, 0]);
         mesh.rotation.set(...(definition.rotation ?? [0, 0, 0]));
