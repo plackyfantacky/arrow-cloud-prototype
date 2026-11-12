@@ -321,6 +321,10 @@
                 "settle": {
                     "play": "logo-settle",
                     "at": 1
+                },
+                "turn": {
+                    "play": "logo-turn",
+                    "on": "navigate"
                 }
             },
             "idle": {
@@ -417,6 +421,26 @@
                 {
                     "time": 16,
                     "rotation": [0, 0, 0]
+                }
+            ]
+        },
+        "logo-turn": {
+            "duration": 2,
+            "rotationSpace": "world",
+            "keyframes": [
+                {
+                    "time": 0,
+                    "rotation": [0.25, 1.1, 0],
+                    "projection": {
+                        "perspective": 1
+                    }
+                },
+                {
+                    "time": 2,
+                    "rotation": [0.25, 0.75, 0],
+                    "projection": {
+                        "perspective": 1
+                    }
                 }
             ]
         }

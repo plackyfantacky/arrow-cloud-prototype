@@ -10,9 +10,14 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
             return [name, typeof binding === "string" ? { play: binding } : binding];
         });
 
-        if (bindings.length > 1) {
-            throw new Error("Multiple scheduled bindings per object are not implemented yet.");
-        }
+        const bindingControllers = new Map();
+        const scheduledControllers = [];
+        const objectActivations = new Map();
+
+        let activeBinding = null;
+        let previousController = null;
+
+        activations.set(object.userData.sceneObjectId, objectActivations);
 
         if (bindings.length === 0) {
             controllers.push({
@@ -24,162 +29,208 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}, events
             return;
         }
 
-        const [bindingName, binding] = bindings[0];
+        bindings.forEach(([bindingName, binding]) => {
+            const definesAt = binding.at !== undefined;
+            const definesOn = binding.on !== undefined;
 
-        const definesAt = binding.at !== undefined;
-        const definesOn = binding.on !== undefined;
+            const hasAt = definesAt && !definesOn;
+            const hasOn = definesOn && !definesAt;
 
-        const hasAt = definesAt && !definesOn;
-        const hasOn = definesOn && !definesAt;
-
-        if (definesAt && definesOn) {
-            console.warn(`Animation "${object.userData.sceneObjectId}.${bindingName}" ` + 'defines both "at" and "on". Automatic activation disabled.');
-        }
-
-        const sequence = sequences[binding.play];
-
-        if (!sequence) {
-            throw new Error(`Unknown sequence: ${binding.play}`);
-        }
-
-        const duration = sequence.duration;
-        const keyframes = sequence.keyframes;
-
-        // this is a bit extreme - we should rework this
-        if (
-            (hasAt && (!Number.isFinite(binding.at) || binding.at < 0)) ||
-            (hasOn && (typeof binding.on !== "string" || binding.on.trim() === "")) ||
-            !Number.isFinite(duration) ||
-            duration <= 0 ||
-            sequence.rotationSpace !== "world" ||
-            !Array.isArray(keyframes) ||
-            keyframes.length !== 2 ||
-            keyframes[0].time !== 0 ||
-            keyframes[1].time !== duration
-        ) {
-            throw new Error(`Sequence "${binding.play}" requires two endpoint keyframes, ` + 'a positive duration and rotationSpace: "world".');
-        }
-
-        const poseGroup = object.userData.poseGroup;
-        const projection = object.userData.projection;
-
-        const initialRotation = poseGroup.getWorldQuaternion(new THREE.Quaternion());
-        const startRotation = readRotation(keyframes[0].rotation, initialRotation);
-        const endRotation = readRotation(keyframes[1].rotation, startRotation);
-
-        const startPerspective = readPerspective(keyframes[0].projection?.perspective, projection.perspective);
-        const endPerspective = readPerspective(keyframes[1].projection?.perspective, startPerspective);
-
-        const startModifiers = keyframes[0].modifiers ?? {};
-        const endModifiers = keyframes[1].modifiers ?? {};
-
-        const modifierIds = new Set([...Object.keys(startModifiers), ...Object.keys(endModifiers)]);
-
-        const modifierTransitions = [...modifierIds].map((id) => {
-            const state = object.userData.modifiers?.[id];
-
-            if (!state) {
-                throw new Error(`Unknown modifier "${id}" in "${binding.play}".`);
+            if (definesAt && definesOn) {
+                console.warn(`Animation "${object.userData.sceneObjectId}.${bindingName}" ` + 'defines both "at" and "on". Automatic activation disabled.');
             }
 
-            const startAmount = startModifiers[id]?.amount ?? state.amount;
-            const endAmount = endModifiers[id]?.amount ?? startAmount;
+            const sequence = sequences[binding.play];
 
-            if (!Number.isFinite(startAmount) || !Number.isFinite(endAmount)) {
-                throw new Error(`Invalid amount for modifier "${id}".`);
+            if (!sequence) {
+                console.warn(
+                    `Animation "${object.userData.sceneObjectId}.${bindingName}" ` + `references undefined sequence "${binding.play}". Binding skipped.`,
+                );
+                return;
             }
 
-            return {
-                state,
-                startAmount,
-                endAmount,
+            const duration = sequence.duration;
+            const keyframes = sequence.keyframes;
+
+            // this is a bit extreme - we should rework this
+            if (
+                (hasAt && (!Number.isFinite(binding.at) || binding.at < 0)) ||
+                (hasOn && (typeof binding.on !== "string" || binding.on.trim() === "")) ||
+                !Number.isFinite(duration) ||
+                duration <= 0 ||
+                sequence.rotationSpace !== "world" ||
+                !Array.isArray(keyframes) ||
+                keyframes.length !== 2 ||
+                keyframes[0].time !== 0 ||
+                keyframes[1].time !== duration
+            ) {
+                throw new Error(`Sequence "${binding.play}" requires two endpoint keyframes, ` + 'a positive duration and rotationSpace: "world".');
+            }
+
+            const poseGroup = object.userData.poseGroup;
+            const projection = object.userData.projection;
+
+            const initialRotation = poseGroup.getWorldQuaternion(new THREE.Quaternion());
+            const startRotation = readRotation(keyframes[0].rotation, initialRotation);
+            const endRotation = readRotation(keyframes[1].rotation, startRotation);
+
+            const startPerspective = readPerspective(keyframes[0].projection?.perspective, projection.perspective);
+            const endPerspective = readPerspective(keyframes[1].projection?.perspective, startPerspective);
+
+            const startModifiers = keyframes[0].modifiers ?? {};
+            const endModifiers = keyframes[1].modifiers ?? {};
+
+            const modifierIds = new Set([...Object.keys(startModifiers), ...Object.keys(endModifiers)]);
+
+            const modifierTransitions = [...modifierIds].map((id) => {
+                const state = object.userData.modifiers?.[id];
+
+                if (!state) {
+                    throw new Error(`Unknown modifier "${id}" in "${binding.play}".`);
+                }
+
+                const startAmount = startModifiers[id]?.amount ?? state.amount;
+                const endAmount = endModifiers[id]?.amount ?? startAmount;
+
+                if (!Number.isFinite(startAmount) || !Number.isFinite(endAmount)) {
+                    throw new Error(`Invalid amount for modifier "${id}".`);
+                }
+
+                return {
+                    state,
+                    startAmount,
+                    endAmount,
+                };
+            });
+
+            const worldRotation = new THREE.Quaternion();
+            const parentRotation = new THREE.Quaternion();
+
+            let idleStartTime = null;
+            let activationTime = null;
+            let activationPending = false;
+
+            function activate() {
+                activeBinding = bindingName;
+                activationPending = true;
+            }
+
+            objectActivations.set(bindingName, activate);
+
+            if (hasOn) {
+                unsubscribeEvents.push(events.on(binding.on, activate));
+            }
+
+            const controller = {
+                update(currentTime, ambientTime) {
+                    if (activationPending) {
+                        activationPending = false;
+                        activationTime = ambientTime;
+                        idleStartTime = null;
+
+                        object.userData.idleMotion?.update(0);
+                    }
+
+                    let elapsedTime;
+
+                    if (activationTime !== null) {
+                        elapsedTime = ambientTime - activationTime;
+                    } else if (hasAt) {
+                        elapsedTime = currentTime - binding.at;
+                    } else {
+                        return;
+                    }
+
+                    const progress = Math.max(0, Math.min(1, elapsedTime / duration));
+
+                    const easedProgress = progress * progress * (3 - 2 * progress);
+
+                    worldRotation.slerpQuaternions(startRotation, endRotation, easedProgress);
+
+                    poseGroup.parent.getWorldQuaternion(parentRotation);
+                    poseGroup.quaternion.copy(parentRotation.invert()).multiply(worldRotation);
+
+                    projection.perspective = startPerspective + (endPerspective - startPerspective) * easedProgress;
+
+                    modifierTransitions.forEach(({ state, startAmount, endAmount }) => {
+                        state.amount = startAmount + (endAmount - startAmount) * easedProgress;
+                    });
+
+                    if (progress === 1 && idleStartTime === null) {
+                        idleStartTime = ambientTime;
+                    }
+
+                    if (idleStartTime !== null) {
+                        object.userData.idleMotion?.update(ambientTime - idleStartTime);
+                    }
+                },
             };
+
+            bindingControllers.set(bindingName, controller);
+
+            if (hasAt) {
+                scheduledControllers.push({
+                    at: binding.at,
+                    controller,
+                });
+            }
+
+            //helpers
+            function readRotation(values, fallback) {
+                if (values === undefined) {
+                    return fallback.clone();
+                }
+
+                if (!Array.isArray(values) || values.length !== 3 || !values.every(Number.isFinite)) {
+                    throw new Error(`Invalid rotation in "${binding.play}".`);
+                }
+
+                return new THREE.Quaternion().setFromEuler(new THREE.Euler(...values));
+            }
+
+            function readPerspective(value, fallback) {
+                const perspective = value ?? fallback;
+
+                if (!Number.isFinite(perspective) || perspective < 0 || perspective > 1) {
+                    throw new Error(`Invalid perspective in "${binding.play}".`);
+                }
+
+                return perspective;
+            }
         });
 
-        const worldRotation = new THREE.Quaternion();
-        const parentRotation = new THREE.Quaternion();
-
-        let idleStartTime = null;
-        let activationTime = null;
-        let activationPending = false;
-
-        function activate() {
-            activationPending = true;
-        }
-
-        activations.set(object.userData.sceneObjectId, new Map([[bindingName, activate]]));
-
-        if (hasOn) {
-            unsubscribeEvents.push(events.on(binding.on, activate));
-        }
+        scheduledControllers.sort((first, second) => {
+            return first.at - second.at;
+        });
 
         controllers.push({
             update(currentTime, ambientTime) {
-                if (activationPending) {
-                    activationPending = false;
-                    activationTime = ambientTime;
-                    idleStartTime = null;
+                let controller;
 
-                    object.userData.idleMotion?.update(0);
+                if (activeBinding !== null) {
+                    controller = bindingControllers.get(activeBinding);
+                } else {
+                    controller = scheduledControllers[0]?.controller;
+
+                    for (const scheduled of scheduledControllers) {
+                        if (scheduled.at <= currentTime) {
+                            controller = scheduled.controller;
+                        }
+                    }
                 }
 
-                let elapsedTime;
-
-                if (activationTime !== null) {
-                    elapsedTime = ambientTime - activationTime;
-                } else if (hasAt) {
-                    elapsedTime = currentTime - binding.at;
-                } else {
+                if (!controller) {
                     return;
                 }
 
-                const progress = Math.max(0, Math.min(1, elapsedTime / duration));
-
-                const easedProgress = progress * progress * (3 - 2 * progress);
-
-                worldRotation.slerpQuaternions(startRotation, endRotation, easedProgress);
-
-                poseGroup.parent.getWorldQuaternion(parentRotation);
-                poseGroup.quaternion.copy(parentRotation.invert()).multiply(worldRotation);
-
-                projection.perspective = startPerspective + (endPerspective - startPerspective) * easedProgress;
-
-                modifierTransitions.forEach(({ state, startAmount, endAmount }) => {
-                    state.amount = startAmount + (endAmount - startAmount) * easedProgress;
-                });
-
-                if (progress === 1 && idleStartTime === null) {
-                    idleStartTime = ambientTime;
+                if (controller !== previousController) {
+                    object.userData.idleMotion?.update(0);
+                    previousController = controller;
                 }
 
-                if (idleStartTime !== null) {
-                    object.userData.idleMotion?.update(ambientTime - idleStartTime);
-                }
+                controller.update(currentTime, ambientTime);
             },
         });
-
-        //helpers
-        function readRotation(values, fallback) {
-            if (values === undefined) {
-                return fallback.clone();
-            }
-
-            if (!Array.isArray(values) || values.length !== 3 || !values.every(Number.isFinite)) {
-                throw new Error(`Invalid rotation in "${binding.play}".`);
-            }
-
-            return new THREE.Quaternion().setFromEuler(new THREE.Euler(...values));
-        }
-
-        function readPerspective(value, fallback) {
-            const perspective = value ?? fallback;
-
-            if (!Number.isFinite(perspective) || perspective < 0 || perspective > 1) {
-                throw new Error(`Invalid perspective in "${binding.play}".`);
-            }
-
-            return perspective;
-        }
     });
 
     //output
