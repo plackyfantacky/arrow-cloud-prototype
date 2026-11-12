@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+import { applyObjectProjection } from "../shaders/applyObjectProjection.js";
+
 import { createGeometry } from "../primitives/geometry/createGeometry.js";
 import { createIdleMotion } from "../animation/createIdleMotion.js";
 
@@ -32,6 +34,7 @@ export function createSceneObjects(scene, definitions = []) {
         });
 
         const mesh = new THREE.Mesh(geometry, material);
+        applyObjectProjection(mesh, definition.projection);
 
         mesh.name = definition.name ?? definition.id;
         mesh.userData.sceneObjectId = definition.id;
