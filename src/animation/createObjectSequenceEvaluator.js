@@ -1,62 +1,85 @@
 import * as THREE from "three";
 
 export function createObjectSequenceEvaluator(object, sequence, sequenceName) {
-    const duration = sequence.duration;
     const keyframes = sequence.keyframes;
 
-    // this is a bit extreme - we should rework this
+    if (!Array.isArray(keyframes) || keyframes.length < 2) {
+        throw new Error(`Sequence "${sequenceName}" requires at least two keyframes.`);
+    }
+
+    const duration = sequence.duration ?? keyframes[keyframes.length - 1].time;
+
     if (
         !Number.isFinite(duration) ||
         duration <= 0 ||
         sequence.rotationSpace !== "world" ||
-        !Array.isArray(keyframes) ||
-        keyframes.length !== 2 ||
         keyframes[0].time !== 0 ||
-        keyframes[1].time !== duration
+        keyframes[keyframes.length - 1].time !== duration
     ) {
-        throw new Error(`Sequence "${sequenceName}" requires two endpoint keyframes, ` + 'a positive duration and rotationSpace: "world".');
+        throw new Error(`Sequence "${sequenceName}" requires a positive duration, ` + 'rotationSpace: "world", and keyframes spanning its duration.');
     }
+
+    keyframes.forEach((keyframe, index) => {
+        if (!Number.isFinite(keyframe.time) || (index > 0 && keyframe.time <= keyframes[index - 1].time)) {
+            throw new Error(`Keyframe times must increase in "${sequenceName}".`);
+        }
+    });
 
     const poseGroup = object.userData.poseGroup;
     const projection = object.userData.projection;
 
-    const initialRotation = poseGroup.getWorldQuaternion(new THREE.Quaternion());
-    const startRotation = readRotation(keyframes[0].rotation, initialRotation);
-    const endRotation = readRotation(keyframes[1].rotation, startRotation);
+    const modifierIds = new Set();
 
-    const startPerspective = readPerspective(keyframes[0].projection?.perspective, projection.perspective);
-    const endPerspective = readPerspective(keyframes[1].projection?.perspective, startPerspective);
+    keyframes.forEach((keyframe) => {
+        Object.keys(keyframe.modifiers ?? {}).forEach((id) => {
+            modifierIds.add(id);
+        });
+    });
 
-    const startModifiers = keyframes[0].modifiers ?? {};
-    const endModifiers = keyframes[1].modifiers ?? {};
-
-    const modifierIds = new Set([...Object.keys(startModifiers), ...Object.keys(endModifiers)]);
-
-    const modifierTransitions = [...modifierIds].map((id) => {
+    const modifiers = [...modifierIds].map((id) => {
         const state = object.userData.modifiers?.[id];
 
         if (!state) {
             throw new Error(`Unknown modifier "${id}" in "${sequenceName}".`);
         }
 
-        const startAmount = startModifiers[id]?.amount ?? state.amount;
-        const endAmount = endModifiers[id]?.amount ?? startAmount;
+        return { id, state };
+    });
 
-        if (!Number.isFinite(startAmount) || !Number.isFinite(endAmount)) {
-            throw new Error(`Invalid amount for modifier "${id}".`);
-        }
+    let previousRotation = poseGroup.getWorldQuaternion(new THREE.Quaternion());
+    let previousPerspective = projection.perspective;
+    let previousAmounts = modifiers.map(({ state }) => state.amount);
+
+    const frames = keyframes.map((keyframe) => {
+        const rotation = readRotation(keyframe.rotation, previousRotation);
+
+        const perspective = readPerspective(keyframe.projection?.perspective, previousPerspective);
+
+        const amounts = modifiers.map(({ id }, index) => {
+            const amount = keyframe.modifiers?.[id]?.amount ?? previousAmounts[index];
+
+            if (!Number.isFinite(amount)) {
+                throw new Error(`Invalid amount for modifier "${id}".`);
+            }
+
+            return amount;
+        });
+
+        previousRotation = rotation;
+        previousPerspective = perspective;
+        previousAmounts = amounts;
 
         return {
-            state,
-            startAmount,
-            endAmount,
+            time: keyframe.time,
+            rotation,
+            perspective,
+            amounts,
         };
     });
 
     const worldRotation = new THREE.Quaternion();
     const parentRotation = new THREE.Quaternion();
 
-    //helpers
     function readRotation(values, fallback) {
         if (values === undefined) {
             return fallback.clone();
@@ -80,18 +103,28 @@ export function createObjectSequenceEvaluator(object, sequence, sequenceName) {
     }
 
     function apply(progress) {
-        const easedProgress = progress * progress * (3 - 2 * progress);
+        const time = Math.max(0, Math.min(1, progress)) * duration;
 
-        worldRotation.slerpQuaternions(startRotation, endRotation, easedProgress);
+        let nextIndex = 1;
 
+        while (nextIndex < frames.length - 1 && time > frames[nextIndex].time) {
+            nextIndex++;
+        }
+
+        const previousFrame = frames[nextIndex - 1];
+        const nextFrame = frames[nextIndex];
+
+        const segmentProgress = (time - previousFrame.time) / (nextFrame.time - previousFrame.time);
+        const easedProgress = segmentProgress * segmentProgress * (3 - 2 * segmentProgress);
+
+        worldRotation.slerpQuaternions(previousFrame.rotation, nextFrame.rotation, easedProgress);
         poseGroup.parent.getWorldQuaternion(parentRotation);
         poseGroup.quaternion.copy(parentRotation.invert()).multiply(worldRotation);
+        projection.perspective = previousFrame.perspective + (nextFrame.perspective - previousFrame.perspective) * easedProgress;
 
-        projection.perspective = startPerspective + (endPerspective - startPerspective) * easedProgress;
-
-        modifierTransitions.forEach(({ state, startAmount, endAmount }) => {
-            state.amount = startAmount + (endAmount - startAmount) * easedProgress;
-        });
+        for (let i = 0; i < modifiers.length; i++) {
+            modifiers[i].state.amount = previousFrame.amounts[i] + (nextFrame.amounts[i] - previousFrame.amounts[i]) * easedProgress;
+        }
     }
 
     return {
