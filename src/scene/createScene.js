@@ -93,7 +93,7 @@ export function createScene(mountElement, options = {}) {
     const sceneObjects = createSceneObjects(scene, dataset.sceneObjects);
 
     positionSceneObjectsForViewport(sceneObjects, pathLayoutCamera, mountElement);
-    const objectAnimations = createSceneObjectAnimations(sceneObjects, dataset.sequences);
+    const objectAnimations = createSceneObjectAnimations(sceneObjects, dataset.sequences, events);
 
     mountElement.appendChild(renderer.domElement);
 
@@ -269,6 +269,7 @@ export function createScene(mountElement, options = {}) {
         });
 
         objectInteractions.destroy();
+        objectAnimations.destroy();
         sceneObjects.clear();
         renderer.dispose();
 

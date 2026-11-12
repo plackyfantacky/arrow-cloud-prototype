@@ -1,10 +1,11 @@
 import * as THREE from "three";
 
-export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
+export function createSceneObjectAnimations(sceneObjects, sequences = {}, events) {
     const controllers = [];
+    const unsubscribeEvents = [];
 
     sceneObjects.forEach((object) => {
-        const scheduleBindings = Object.entries(object.userData.animation ?? {}).filter(([name, binding]) => {
+        const automaticBindings = Object.entries(object.userData.animation ?? {}).filter(([name, binding]) => {
             if (typeof binding === "string") {
                 return false;
             }
@@ -18,14 +19,14 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
                 return false;
             }
 
-            return hasAt;
+            return hasAt || hasOn;
         });
 
-        if (scheduleBindings.length > 1) {
+        if (automaticBindings.length > 1) {
             throw new Error("Multiple scheduled bindings per object are not implemented yet.");
         }
 
-        if (scheduleBindings.length === 0) {
+        if (automaticBindings.length === 0) {
             controllers.push({
                 update(currentTime, ambientTime) {
                     object.userData.idleMotion?.update(ambientTime);
@@ -35,7 +36,10 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
             return;
         }
 
-        const [, binding] = scheduleBindings[0];
+        const [, binding] = automaticBindings[0];
+        const hasAt = binding.at !== undefined;
+        const hasOn = binding.on !== undefined;
+
         const sequence = sequences[binding.play];
 
         if (!sequence) {
@@ -47,8 +51,8 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
 
         // this is a bit extreme - we should rework this
         if (
-            !Number.isFinite(binding.at) ||
-            binding.at < 0 ||
+            (hasAt && (!Number.isFinite(binding.at) || binding.at < 0)) ||
+            (hasOn && (typeof binding.on !== "string" || binding.on.trim() === "")) ||
             !Number.isFinite(duration) ||
             duration <= 0 ||
             sequence.rotationSpace !== "world" ||
@@ -100,10 +104,34 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
         const parentRotation = new THREE.Quaternion();
 
         let idleStartTime = null;
+        let eventStartTime = null;
+        let activationPending = false;
+
+        if (hasOn) {
+            unsubscribeEvents.push(
+                events.on(binding.on, () => {
+                    activationPending = true;
+                }),
+            );
+        }
 
         controllers.push({
             update(currentTime, ambientTime) {
-                const progress = Math.max(0, Math.min(1, (currentTime - binding.at) / duration));
+                if (activationPending) {
+                    activationPending = false;
+                    eventStartTime = ambientTime;
+                    idleStartTime = null;
+
+                    object.userData.idleMotion?.update(0);
+                }
+
+                if (hasOn && eventStartTime === null) {
+                    return;
+                }
+
+                const elapsedTime = hasAt ? currentTime - binding.at : ambientTime - eventStartTime;
+
+                const progress = Math.max(0, Math.min(1, elapsedTime / duration));
 
                 const easedProgress = progress * progress * (3 - 2 * progress);
 
@@ -158,6 +186,12 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
             controllers.forEach((controller) => {
                 controller.update(currentTime, ambientTime);
             });
+        },
+        destroy() {
+            unsubscribeEvents.forEach((unsubscribe) => {
+                unsubscribe();
+            });
+            controllers.length = 0;
         },
     };
 }
