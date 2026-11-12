@@ -84,7 +84,7 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
                 worldRotation.slerpQuaternions(startRotation, endRotation, easedProgress);
 
                 poseGroup.parent.getWorldQuaternion(parentRotation);
-                poseGroup.quaternion.copy(parentRotation.invert()).multiplyScalar(worldRotation);
+                poseGroup.quaternion.copy(parentRotation.invert()).multiply(worldRotation);
 
                 projection.perspective = startPerspective + (endPerspective - startPerspective) * easedProgress;
 
@@ -121,13 +121,14 @@ export function createSceneObjectAnimations(sceneObjects, sequences = {}) {
             return perspective;
         }
 
-        //output
-        return {
-            update(currentTime, ambientTime) {
-                controllers.forEach((controller) => {
-                    controller.update(currentTime, ambientTime);
-                });
-            },
-        }
     });
+
+    //output
+    return {
+        update(currentTime, ambientTime) {
+            controllers.forEach((controller) => {
+                controller.update(currentTime, ambientTime);
+            });
+        },
+    }
 }
